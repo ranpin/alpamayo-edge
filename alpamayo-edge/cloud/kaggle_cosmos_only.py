@@ -74,10 +74,11 @@ _B_new = (
     '    except Exception as _edge_e:\n'
     '        print("[edge-patch] skip model.to(dtype) under device_map:", _edge_e, flush=True)'
 )
-_C_old = (
-    '    os.makedirs(output_dir, exist_ok=True)\n'
-    '    with torch.inference_mode(), _skip_resmooth_for_hybrid('
-)
+# NOTE (2026-07-26): upstream inserted a comment block between `os.makedirs` and the
+# `with torch.inference_mode()` line, so the old two-line needle stopped matching and the
+# assert killed a run (working as designed - see docs/PROBLEMS.md G1). Anchor on the single
+# `os.makedirs(output_dir, ...)` line instead, which is still unique in the file.
+_C_old = '    os.makedirs(output_dir, exist_ok=True)\n'
 _C_new = (
     '    _dm = getattr(model, "hf_device_map", None)\n'
     '    if _dm and len({str(v) for v in _dm.values()}) > 1:\n'
@@ -96,7 +97,6 @@ _C_new = (
     '        print("[edge-patch] consolidated sharded model -> CPU for export", flush=True)\n'
     '\n'
     '    os.makedirs(output_dir, exist_ok=True)\n'
-    '    with torch.inference_mode(), _skip_resmooth_for_hybrid('
 )
 assert _src.count(_A_old) == 1, "PATCH A needle not found — TRTEdge source changed upstream"
 assert _src.count(_B_old) == 1, "PATCH B needle not found — TRTEdge source changed upstream"
