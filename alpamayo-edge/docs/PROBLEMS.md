@@ -35,6 +35,16 @@
 - **解决**：kernel-metadata 加 `"machine_shape":"NvidiaTeslaT4"` 锁定 **T4×2（sm_75）**。
 - **教训**：API 推送**默认不给 T4×2**，必须显式指定 `machine_shape`；否则 GPU 类型随机、可能撞上不受支持的架构。
 
+### A6. 把两个"权限报错"误判成"凭据过期"，而两套凭据都是好的（2026-07-31）
+- **现象**：闸门 3 开始时，① `whoami` 报 `Invalid user token`；② `kaggle kernels pull ranpin/alpamayo-edge-export` 报 **403 Forbidden**。我据此判定"HF token 与 Kaggle key 均已失效"，并给用户写了一整套轮换步骤。**用户反问"我看网站上凭证没失效呀"，一查全错。**
+- **根因（两条独立，都不是凭据问题）**：
+  1. **Kaggle owner 用错**：正确 owner 是 **`mamihlapinatapai`**，`ranpin` 是 **HF** 的 whoami。Kaggle 对"该 owner 下不存在的资源"返回 **403**，与"key 无效"同形。
+  2. **HF 测的是陈旧本地文件**：`~/.cache/huggingface/token` 是 **2025-09** 的，且据本项目自己的记录**从来就没有** Cosmos 门控权限；真正有权限的 `hf_gbJ…` 实测对 PhysicalAI-AV 与 CR2 门控**都是 `True`**。
+- **同一轮里我还犯了同类的第三次**：`hf_hub_download('EPFL-DrivingVQA', 'images.zip')` 报 **401 Unauthorized**，我又想归因到凭据——实际是 repo_id 少写了一半（应为 `EPFL-DrivingVQA/DrivingVQA`）。**HF 对不存在的 repo 一律返回 401**（不泄露存在性），Kaggle 返回 403，两家都把"找不到"伪装成"没权限"。
+- **解决**：先跑一条**已知可用**的调用做隔离——`kaggle datasets list`（通 ⇒ key 没问题）、`whoami(token=…)` + `HfApi().file_exists(gated_repo)`（后者才真正验门控）。隔离后 5 分钟内定位完毕，**用户无需做任何轮换**。
+- **教训**：**权限形状的报错不等于权限问题。** 401/403 只说明"这次请求不被接受"，可能是**凭据**，也可能是**路径/owner/repo 不存在**。定位顺序必须是"先用已知可用的调用证明凭据活着，再怀疑资源"，否则会把成本转嫁给用户（我差点让用户白轮换两套密钥）。
+  这与本文件 G3、I1 的教训同源：**不要把新失败挂到手边那个"已知可疑项"上**——`device_layout.md` 与记忆里其实都写着正确的 owner，我没查。
+
 ## B. Orin 构建
 
 ### B1.（最硬）FMHA 崩溃 `There must be one kernel to implement the MHA`
