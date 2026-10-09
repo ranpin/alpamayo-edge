@@ -15,7 +15,7 @@
 | pc-3070 `vision@30.245.40.164` | `/home/vision/chenrunbin/` | 104 K（`agentguide`，他项目） | **无本项目文件** | — |
 | **scm** `chenrunbin.crb@100.82.100.41` | 待建 | **18 TB 空闲** | **归档盘**（2026-07-29 定位）：**不能下载** —— `huggingface.co` TCP 443 不可达（`pypi.org` 通 ⇒ 白名单受限出网）、且无 ffmpeg/ffprobe。用途 = 存本地"即下即删"产出的帧与标注长期副本 | — |
 | **Kaggle 云** | 私有 kernel `alpamayo-edge-export` / `-2b` / `-lmhead` | — | 量化 + ONNX 导出 + FP16 参考；**输出即时下载，云端不留** | `cloud/README.md` |
-| **GitHub** | `ranpin/qwen-trajectory-prediction` | — | `main`（旧项目）· `alpamayo-edge`（源）· `gh-pages`（[已发布站点](https://ranpin.github.io/qwen-trajectory-prediction/)） | — |
+| **GitHub** | `ranpin/alpamayo-edge`（2026-10-09 由 `qwen-trajectory-prediction` 改名） | — | `main`（旧项目）· `alpamayo-edge`（源）· `gh-pages`（[已发布站点](https://ranpin.github.io/alpamayo-edge/)） | — |
 
 ## 二、两台 Orin 的统一分类
 
