@@ -124,10 +124,11 @@ clip `01d3588e-….camera_front_wide_120fov.mp4` = **1920×1080 @ 30 fps, HEVC, 
 
 ## P1（零技术风险，但决定有没有人看得懂）：包装
 
-1. **仓库拆分**：项目叫 Alpamayo-Edge，仓库叫 `qwen-trajectory-prediction` —— 名不对实是实打实的减分项。
-   用已有的 `pages-subsite` skill 拆成独立仓库 + 独立子站，老仓库留指针页。
-   **注意**：拆分会改变站点 URL（`ranpin.github.io/qwen-trajectory-prediction/`），需同步更新
-   edge-ai-docs 的 `docs.json` 与所有文档内链。
+1. **仓库改名**：~~项目叫 Alpamayo-Edge，仓库叫 `qwen-trajectory-prediction` —— 名不对实是实打实的减分项。~~
+   **✅ 已完成（2026-10-09）**：仓库已改名 `ranpin/alpamayo-edge`，站点 URL 随之变为
+   `ranpin.github.io/alpamayo-edge/`，edge-ai-docs `docs.json` 与站内链接已同步更新。
+   （原"拆成独立仓库"的方案被直接改名取代——整个仓库改名后 `main` 分支的旧轨迹项目仍在同仓库，
+   如需彻底分离再拆。）
 2. **英文一页版**：英文 README + 摘要 + 四张总览图的英文标注。目标若含 NVIDIA/Qualcomm/外资 AV 团队，
    全中文是硬障碍。
 

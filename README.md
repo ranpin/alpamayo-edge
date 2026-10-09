@@ -38,8 +38,8 @@
 ### 安装依赖
 
 ```bash
-git clone https://github.com/ranpin/qwen-trajectory-prediction.git
-cd qwen-trajectory-prediction
+git clone https://github.com/ranpin/alpamayo-edge.git
+cd alpamayo-edge
 pip install -r requirements.txt
 ```
 
@@ -78,7 +78,7 @@ python demo/app.py --agent_type vehicle --normalize translate_rotate
 ## 项目结构
 
 ```
-qwen-trajectory-prediction/
+alpamayo-edge/
 ├── data/
 │   ├── raw/              # 原始数据集
 │   ├── processed/        # 预处理后的数据
