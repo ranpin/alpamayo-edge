@@ -94,3 +94,14 @@ ADE/FDE/MR+CI · CVM 基线 · 评估驱动 · BEV 可视化 —— 见 `eval/`�
 | K4 | CR2-2B vs 8B Pareto | ⛔ **阻塞（需用户操作）**：`nvidia/Cosmos-Reason2-2B` 用有效 token 返回 **HTTP 403** —— 8B 的许可已接受、2B 未接受。需在 HF 上接受 2B 许可后即可继续 |
 
 详见 `docs/METHODOLOGY.md` §3.5「sm_87 上的量化选项空间」。
+
+## 2026-10-09 批次（状态）
+
+| # | 事项 | 状态 |
+|---|---|---|
+| — | 仓库改名 `qwen-trajectory-prediction` → **`ranpin/alpamayo-edge`**（P1.1 的名不对实问题） | ✅ 完成 —— 站点 URL 变为 `ranpin.github.io/alpamayo-edge/`（**旧 Pages URL 直接 404，GitHub 不为 Pages 做改名重定向**）；站内链接 / README / device_layout / edge-ai-docs `docs.json` 与 3 篇 md 已同步 |
+| P0-1 | **驾驶域精度评测（n=184，PhysicalAI-AV OOD，三精度同帧）** | ✅ 完成 —— FP16 51.6% / INT8 47.8%(−3.8, p=0.143) / INT4 50.5%(−1.1, p=0.815)，**均不显著** ⇒ 「量化无显著掉点」迁移到驾驶域成立；产物 `eval/accuracy/driving/`，站点 §1.11（图 20 / 表 11–12） |
+| P0-2 | 分辨率 Pareto（448 / 720p / 原生 1080p） | ⏳ 未开始 —— 4096 引擎与原生 1080p 帧均已就位 |
+| 闸门 4 | Alpamayo 权重 20GB 内加载 | ⏳ 未开始 |
+
+注：上表 2026-07-26 批次中 K3'（lm_head INT4）已于 07-28 完成（+19.6%）、K4（2B Pareto）已于 07-26 完成（掉 11 pts 显著），状态以 `next_plan.md` 与站点为准。

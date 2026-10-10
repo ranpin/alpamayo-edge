@@ -96,6 +96,24 @@ Kaggle(T4x2) 量化+导出 → 打包 → 下载/校验 → scp 到 Orin → TRT
 
 > **FP16 基线（经 64GB orin-goat 补全）+ 量化加速比**：FP16 引擎在 32GB dog `llm_build` 期 OOM（**峰值实测 54.8GB**，远超 30GB；运行时激活仅 8MB → 是 build 内存墙、非推理）。改在 **64GB orin-goat** build+跑得同机三方：TTFT FP16 298 / INT8 159 / INT4 305 ms，TPOT FP16 89.3 / INT8 52.4 / INT4 33.6 ms。**decode 加速 vs FP16：INT4 2.66×、INT8 1.70×；prefill：INT8 1.87×、INT4≈FP16；E2E(512+128) 11.7→4.6s(2.5×)**。**实测:FP16 引擎(15GB)在 32GB dog 连载入都 OOM**(deserialize 申请 15GB 时仅 ~11GB free,引擎文件页缓存吃满)→ FP16 build 与 load 在 32GB 上双双不可行,只在 64GB goat 跑;dog 部署 INT4/INT8。跨设备 INT4/INT8 两机 <3% 已复现。**能效(goat 同机,tok/J)**:decode FP16 0.42/INT8 0.90/INT4 1.31 → INT4 decode 能效比 FP16 高 **3.1×**;prefill FP16 30.1/INT8 62.0/INT4 26.9。详见 `eval/perf/fp16_speedup_goat.json`、[orin_goat_migration_plan.md](orin_goat_migration_plan.md)。
 
+### 主（驾驶域）：PhysicalAI-AV OOD 场景分类（n=184，8 选 1，2026-10-09 新增）
+
+**第一份驾驶域精度证据**——此前全部精度证据来自具身机器人操作（上节 n=210），而项目标题是自动驾驶。评测集自建自 NVIDIA PhysicalAI-AV `reasoning/ood_reasoning.parquet`（人工核验标注，卡片原话 "intended to support VLA model evaluation"）：8 类 × 23、答案字母 A–H 各 23（随机基线 12.5%）、排除无正面定义的兜底类；构造记录见 `data/ood_eval/README.md`（闸门 3）。
+
+| 精度 | 设备 | 正确率 | Wilson 95%CI | vs FP16 | McNemar p |
+|---|---|---|---|---|---|
+| FP16 参考 | goat | **51.6%** | [44.5,58.7] | — | — |
+| INT8 (SmoothQuant) | dog | 47.8% | [40.7,55.0] | −3.8 pts | 0.143 不显著 |
+| INT4 (AWQ) | dog | 50.5% | [43.4,57.7] | −1.1 pts | 0.815 不显著 |
+
+协议与 n=210 逐项对齐：每 clip 6 帧、长边 448、贪心、`max_generate_length 12`、同帧同题三精度对比；引擎为 n=210 同款（dog `engines/{int4,int8}`、goat `engines/fp16`，共享 fp16 视觉引擎——goat 侧本次从 dog 拷入）。552 条输出全部单字母、EOS、零截断、零解析失败。
+
+- **结论：「量化无显著正确率损失」迁移到驾驶域成立**（两个掉点均低于 MDE ≈ 7 pts）。
+- 分类分项差异大（work zones 87.0% ↔ cyclists 21.7%@FP16）但每类 n=23、CI ±15–20 pts，不可过度解读；INT8 的 cyclists 8.7% 是放大 FP16 自己就有的混淆（FP16 也仅 5/23，多误判为行人/路口）——任务固有歧义，非量化新失败模式。三方预测选项分布几乎一致，无系统性类别偏好漂移。
+- 跨基准：机器人域 INT4 掉更多（−2.4 vs −1.0）、驾驶域 INT8 掉更多（−3.8 vs −1.1）⇒ 谁掉得多是噪声，稳定结论只有「都不显著」。
+- **诚实边界**：标注是 clip 级事件聚类（非逐帧感知标签）；train split 占 154/184、无法排除 CR2 训练见过这些 clip ⇒ 不能声称未见数据上的绝对能力；两者对三精度同等作用，掉点结论不受影响。绝对分不能与 n=210 比（8 选 1 vs 二选一）。
+- 产物与复现：`eval/accuracy/driving/`（输入构造 / 打分脚本 / 三方原始输出 / RESULTS.json / README）。图 `docs/figures/driving_accuracy.png`（`eval/driving_viz.py` 从 RESULTS.json 生成）。
+
 ### 辅：细粒度 perplexity 探针（12 prompt）
 
 FP16 参考在 Kaggle T4×2 上用 PyTorch 加载 `nvidia/Cosmos-Reason2-8B`（Orin 无外网、8B fp16≈16GB 本地装不下，故走云端一次性），对**同一批 12 条固定 prompt**（驾驶物理推理+决策+常识，贪心 `top_k=1` 确定性）产出：产物与复现脚本见 [`eval/accuracy/`](../eval/accuracy/)。
