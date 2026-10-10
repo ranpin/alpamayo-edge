@@ -76,3 +76,7 @@ temp/
 # 驾驶域 OOD 评测集的帧（190 MB）：由 alpamayo-edge/data/harvest_ood_eval.py 按固定
 # 种子确定性重建，manifest.json 已钉住 clip_id 与答案 ⇒ 属"可重建大件"，不入 git。
 alpamayo-edge/data/ood_eval/frames/
+
+# 缩放到 448 长边的评测帧（可确定性重建，见 eval/accuracy/driving/build_ood_input.py）
+alpamayo-edge/data/ood_eval/frames_448/
+alpamayo-edge/eval/accuracy/driving/ood_input_*.json
