@@ -1,0 +1,1295 @@
+{
+    "input_file": "bench/ood_eval/ood_input_1080_retry30.json",
+    "responses": [
+        {
+            "batch_idx": 0,
+            "finish_reason": "end-of-sequence",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A complex intersection interaction\nB. Cyclists or micromobility users in a complex interaction\nC. Road debris or safety traces on the roadway\nD. An emergency or incident scene\nE. High pedestrian density, or pedestrians in close proximity to the vehicle\nF. Animals, birds, or roadkill\nG. A special or uncommon vehicle behaviour\nH. A work zone or temporary traffic control setup\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_019_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_019_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_019_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_019_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_019_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_019_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A complex intersection interaction\nB. Cyclists or micromobility users in a complex interaction\nC. Road debris or safety traces on the roadway\nD. An emergency or incident scene\nE. High pedestrian density, or pedestrians in close proximity to the vehicle\nF. Animals, birds, or roadkill\nG. A special or uncommon vehicle behaviour\nH. A work zone or temporary traffic control setup\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "H",
+            "request_idx": 0
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "end-of-sequence",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A special or uncommon vehicle behaviour\nB. Road debris or safety traces on the roadway\nC. An emergency or incident scene\nD. Animals, birds, or roadkill\nE. A work zone or temporary traffic control setup\nF. A complex intersection interaction\nG. High pedestrian density, or pedestrians in close proximity to the vehicle\nH. Cyclists or micromobility users in a complex interaction\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_098_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_098_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_098_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_098_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_098_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_098_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A special or uncommon vehicle behaviour\nB. Road debris or safety traces on the roadway\nC. An emergency or incident scene\nD. Animals, birds, or roadkill\nE. A work zone or temporary traffic control setup\nF. A complex intersection interaction\nG. High pedestrian density, or pedestrians in close proximity to the vehicle\nH. Cyclists or micromobility users in a complex interaction\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "A",
+            "request_idx": 1
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "end-of-sequence",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Cyclists or micromobility users in a complex interaction\nB. A special or uncommon vehicle behaviour\nC. A complex intersection interaction\nD. A work zone or temporary traffic control setup\nE. An emergency or incident scene\nF. High pedestrian density, or pedestrians in close proximity to the vehicle\nG. Road debris or safety traces on the roadway\nH. Animals, birds, or roadkill\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_099_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_099_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_099_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_099_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_099_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_099_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Cyclists or micromobility users in a complex interaction\nB. A special or uncommon vehicle behaviour\nC. A complex intersection interaction\nD. A work zone or temporary traffic control setup\nE. An emergency or incident scene\nF. High pedestrian density, or pedestrians in close proximity to the vehicle\nG. Road debris or safety traces on the roadway\nH. Animals, birds, or roadkill\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "D",
+            "request_idx": 2
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "end-of-sequence",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Road debris or safety traces on the roadway\nB. Animals, birds, or roadkill\nC. Cyclists or micromobility users in a complex interaction\nD. A special or uncommon vehicle behaviour\nE. An emergency or incident scene\nF. A work zone or temporary traffic control setup\nG. A complex intersection interaction\nH. High pedestrian density, or pedestrians in close proximity to the vehicle\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_100_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_100_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_100_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_100_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_100_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_100_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Road debris or safety traces on the roadway\nB. Animals, birds, or roadkill\nC. Cyclists or micromobility users in a complex interaction\nD. A special or uncommon vehicle behaviour\nE. An emergency or incident scene\nF. A work zone or temporary traffic control setup\nG. A complex intersection interaction\nH. High pedestrian density, or pedestrians in close proximity to the vehicle\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "G",
+            "request_idx": 3
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "end-of-sequence",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Animals, birds, or roadkill\nB. Road debris or safety traces on the roadway\nC. A complex intersection interaction\nD. An emergency or incident scene\nE. Cyclists or micromobility users in a complex interaction\nF. A special or uncommon vehicle behaviour\nG. A work zone or temporary traffic control setup\nH. High pedestrian density, or pedestrians in close proximity to the vehicle\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_101_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_101_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_101_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_101_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_101_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_101_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Animals, birds, or roadkill\nB. Road debris or safety traces on the roadway\nC. A complex intersection interaction\nD. An emergency or incident scene\nE. Cyclists or micromobility users in a complex interaction\nF. A special or uncommon vehicle behaviour\nG. A work zone or temporary traffic control setup\nH. High pedestrian density, or pedestrians in close proximity to the vehicle\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "F",
+            "request_idx": 4
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "end-of-sequence",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Animals, birds, or roadkill\nB. A complex intersection interaction\nC. A special or uncommon vehicle behaviour\nD. A work zone or temporary traffic control setup\nE. Cyclists or micromobility users in a complex interaction\nF. High pedestrian density, or pedestrians in close proximity to the vehicle\nG. An emergency or incident scene\nH. Road debris or safety traces on the roadway\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_102_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_102_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_102_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_102_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_102_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_102_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Animals, birds, or roadkill\nB. A complex intersection interaction\nC. A special or uncommon vehicle behaviour\nD. A work zone or temporary traffic control setup\nE. Cyclists or micromobility users in a complex interaction\nF. High pedestrian density, or pedestrians in close proximity to the vehicle\nG. An emergency or incident scene\nH. Road debris or safety traces on the roadway\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "D",
+            "request_idx": 5
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Animals, birds, or roadkill\nB. An emergency or incident scene\nC. Cyclists or micromobility users in a complex interaction\nD. A work zone or temporary traffic control setup\nE. A special or uncommon vehicle behaviour\nF. Road debris or safety traces on the roadway\nG. High pedestrian density, or pedestrians in close proximity to the vehicle\nH. A complex intersection interaction\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_103_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_103_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_103_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_103_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_103_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_103_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Animals, birds, or roadkill\nB. An emergency or incident scene\nC. Cyclists or micromobility users in a complex interaction\nD. A work zone or temporary traffic control setup\nE. A special or uncommon vehicle behaviour\nF. Road debris or safety traces on the roadway\nG. High pedestrian density, or pedestrians in close proximity to the vehicle\nH. A complex intersection interaction\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 6
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "end-of-sequence",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. An emergency or incident scene\nB. Road debris or safety traces on the roadway\nC. Animals, birds, or roadkill\nD. Cyclists or micromobility users in a complex interaction\nE. A work zone or temporary traffic control setup\nF. High pedestrian density, or pedestrians in close proximity to the vehicle\nG. A special or uncommon vehicle behaviour\nH. A complex intersection interaction\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_104_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_104_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_104_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_104_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_104_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_104_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. An emergency or incident scene\nB. Road debris or safety traces on the roadway\nC. Animals, birds, or roadkill\nD. Cyclists or micromobility users in a complex interaction\nE. A work zone or temporary traffic control setup\nF. High pedestrian density, or pedestrians in close proximity to the vehicle\nG. A special or uncommon vehicle behaviour\nH. A complex intersection interaction\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "F",
+            "request_idx": 7
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "end-of-sequence",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A complex intersection interaction\nB. A special or uncommon vehicle behaviour\nC. An emergency or incident scene\nD. Road debris or safety traces on the roadway\nE. Animals, birds, or roadkill\nF. High pedestrian density, or pedestrians in close proximity to the vehicle\nG. Cyclists or micromobility users in a complex interaction\nH. A work zone or temporary traffic control setup\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_108_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_108_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_108_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_108_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_108_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_108_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A complex intersection interaction\nB. A special or uncommon vehicle behaviour\nC. An emergency or incident scene\nD. Road debris or safety traces on the roadway\nE. Animals, birds, or roadkill\nF. High pedestrian density, or pedestrians in close proximity to the vehicle\nG. Cyclists or micromobility users in a complex interaction\nH. A work zone or temporary traffic control setup\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "H",
+            "request_idx": 8
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "end-of-sequence",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A special or uncommon vehicle behaviour\nB. Cyclists or micromobility users in a complex interaction\nC. Animals, birds, or roadkill\nD. High pedestrian density, or pedestrians in close proximity to the vehicle\nE. A work zone or temporary traffic control setup\nF. An emergency or incident scene\nG. A complex intersection interaction\nH. Road debris or safety traces on the roadway\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_109_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_109_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_109_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_109_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_109_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_109_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A special or uncommon vehicle behaviour\nB. Cyclists or micromobility users in a complex interaction\nC. Animals, birds, or roadkill\nD. High pedestrian density, or pedestrians in close proximity to the vehicle\nE. A work zone or temporary traffic control setup\nF. An emergency or incident scene\nG. A complex intersection interaction\nH. Road debris or safety traces on the roadway\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "E",
+            "request_idx": 9
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "end-of-sequence",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Animals, birds, or roadkill\nB. Cyclists or micromobility users in a complex interaction\nC. A work zone or temporary traffic control setup\nD. Road debris or safety traces on the roadway\nE. A complex intersection interaction\nF. An emergency or incident scene\nG. High pedestrian density, or pedestrians in close proximity to the vehicle\nH. A special or uncommon vehicle behaviour\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_110_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_110_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_110_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_110_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_110_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_110_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Animals, birds, or roadkill\nB. Cyclists or micromobility users in a complex interaction\nC. A work zone or temporary traffic control setup\nD. Road debris or safety traces on the roadway\nE. A complex intersection interaction\nF. An emergency or incident scene\nG. High pedestrian density, or pedestrians in close proximity to the vehicle\nH. A special or uncommon vehicle behaviour\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "F",
+            "request_idx": 10
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "end-of-sequence",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. An emergency or incident scene\nB. Road debris or safety traces on the roadway\nC. Animals, birds, or roadkill\nD. High pedestrian density, or pedestrians in close proximity to the vehicle\nE. Cyclists or micromobility users in a complex interaction\nF. A complex intersection interaction\nG. A work zone or temporary traffic control setup\nH. A special or uncommon vehicle behaviour\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_111_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_111_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_111_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_111_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_111_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_111_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. An emergency or incident scene\nB. Road debris or safety traces on the roadway\nC. Animals, birds, or roadkill\nD. High pedestrian density, or pedestrians in close proximity to the vehicle\nE. Cyclists or micromobility users in a complex interaction\nF. A complex intersection interaction\nG. A work zone or temporary traffic control setup\nH. A special or uncommon vehicle behaviour\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "F",
+            "request_idx": 11
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Road debris or safety traces on the roadway\nB. Animals, birds, or roadkill\nC. High pedestrian density, or pedestrians in close proximity to the vehicle\nD. A special or uncommon vehicle behaviour\nE. A complex intersection interaction\nF. Cyclists or micromobility users in a complex interaction\nG. A work zone or temporary traffic control setup\nH. An emergency or incident scene\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_112_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_112_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_112_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_112_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_112_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_112_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Road debris or safety traces on the roadway\nB. Animals, birds, or roadkill\nC. High pedestrian density, or pedestrians in close proximity to the vehicle\nD. A special or uncommon vehicle behaviour\nE. A complex intersection interaction\nF. Cyclists or micromobility users in a complex interaction\nG. A work zone or temporary traffic control setup\nH. An emergency or incident scene\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 12
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A special or uncommon vehicle behaviour\nB. A work zone or temporary traffic control setup\nC. Road debris or safety traces on the roadway\nD. Animals, birds, or roadkill\nE. An emergency or incident scene\nF. High pedestrian density, or pedestrians in close proximity to the vehicle\nG. Cyclists or micromobility users in a complex interaction\nH. A complex intersection interaction\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_113_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_113_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_113_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_113_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_113_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_113_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A special or uncommon vehicle behaviour\nB. A work zone or temporary traffic control setup\nC. Road debris or safety traces on the roadway\nD. Animals, birds, or roadkill\nE. An emergency or incident scene\nF. High pedestrian density, or pedestrians in close proximity to the vehicle\nG. Cyclists or micromobility users in a complex interaction\nH. A complex intersection interaction\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 13
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Road debris or safety traces on the roadway\nB. A work zone or temporary traffic control setup\nC. High pedestrian density, or pedestrians in close proximity to the vehicle\nD. A special or uncommon vehicle behaviour\nE. Animals, birds, or roadkill\nF. A complex intersection interaction\nG. An emergency or incident scene\nH. Cyclists or micromobility users in a complex interaction\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_114_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_114_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_114_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_114_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_114_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_114_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Road debris or safety traces on the roadway\nB. A work zone or temporary traffic control setup\nC. High pedestrian density, or pedestrians in close proximity to the vehicle\nD. A special or uncommon vehicle behaviour\nE. Animals, birds, or roadkill\nF. A complex intersection interaction\nG. An emergency or incident scene\nH. Cyclists or micromobility users in a complex interaction\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 14
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A complex intersection interaction\nB. Road debris or safety traces on the roadway\nC. Cyclists or micromobility users in a complex interaction\nD. A work zone or temporary traffic control setup\nE. Animals, birds, or roadkill\nF. An emergency or incident scene\nG. A special or uncommon vehicle behaviour\nH. High pedestrian density, or pedestrians in close proximity to the vehicle\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_115_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_115_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_115_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_115_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_115_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_115_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A complex intersection interaction\nB. Road debris or safety traces on the roadway\nC. Cyclists or micromobility users in a complex interaction\nD. A work zone or temporary traffic control setup\nE. Animals, birds, or roadkill\nF. An emergency or incident scene\nG. A special or uncommon vehicle behaviour\nH. High pedestrian density, or pedestrians in close proximity to the vehicle\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 15
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. High pedestrian density, or pedestrians in close proximity to the vehicle\nB. Road debris or safety traces on the roadway\nC. A work zone or temporary traffic control setup\nD. An emergency or incident scene\nE. A complex intersection interaction\nF. Animals, birds, or roadkill\nG. A special or uncommon vehicle behaviour\nH. Cyclists or micromobility users in a complex interaction\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_116_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_116_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_116_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_116_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_116_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_116_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. High pedestrian density, or pedestrians in close proximity to the vehicle\nB. Road debris or safety traces on the roadway\nC. A work zone or temporary traffic control setup\nD. An emergency or incident scene\nE. A complex intersection interaction\nF. Animals, birds, or roadkill\nG. A special or uncommon vehicle behaviour\nH. Cyclists or micromobility users in a complex interaction\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 16
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. High pedestrian density, or pedestrians in close proximity to the vehicle\nB. Cyclists or micromobility users in a complex interaction\nC. An emergency or incident scene\nD. Road debris or safety traces on the roadway\nE. Animals, birds, or roadkill\nF. A work zone or temporary traffic control setup\nG. A special or uncommon vehicle behaviour\nH. A complex intersection interaction\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_126_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_126_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_126_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_126_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_126_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_126_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. High pedestrian density, or pedestrians in close proximity to the vehicle\nB. Cyclists or micromobility users in a complex interaction\nC. An emergency or incident scene\nD. Road debris or safety traces on the roadway\nE. Animals, birds, or roadkill\nF. A work zone or temporary traffic control setup\nG. A special or uncommon vehicle behaviour\nH. A complex intersection interaction\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 17
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. High pedestrian density, or pedestrians in close proximity to the vehicle\nB. Cyclists or micromobility users in a complex interaction\nC. A work zone or temporary traffic control setup\nD. A complex intersection interaction\nE. A special or uncommon vehicle behaviour\nF. Animals, birds, or roadkill\nG. An emergency or incident scene\nH. Road debris or safety traces on the roadway\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_127_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_127_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_127_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_127_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_127_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_127_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. High pedestrian density, or pedestrians in close proximity to the vehicle\nB. Cyclists or micromobility users in a complex interaction\nC. A work zone or temporary traffic control setup\nD. A complex intersection interaction\nE. A special or uncommon vehicle behaviour\nF. Animals, birds, or roadkill\nG. An emergency or incident scene\nH. Road debris or safety traces on the roadway\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 18
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A special or uncommon vehicle behaviour\nB. A complex intersection interaction\nC. Cyclists or micromobility users in a complex interaction\nD. A work zone or temporary traffic control setup\nE. Road debris or safety traces on the roadway\nF. Animals, birds, or roadkill\nG. High pedestrian density, or pedestrians in close proximity to the vehicle\nH. An emergency or incident scene\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_128_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_128_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_128_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_128_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_128_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_128_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A special or uncommon vehicle behaviour\nB. A complex intersection interaction\nC. Cyclists or micromobility users in a complex interaction\nD. A work zone or temporary traffic control setup\nE. Road debris or safety traces on the roadway\nF. Animals, birds, or roadkill\nG. High pedestrian density, or pedestrians in close proximity to the vehicle\nH. An emergency or incident scene\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 19
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Animals, birds, or roadkill\nB. A special or uncommon vehicle behaviour\nC. An emergency or incident scene\nD. A work zone or temporary traffic control setup\nE. Cyclists or micromobility users in a complex interaction\nF. A complex intersection interaction\nG. High pedestrian density, or pedestrians in close proximity to the vehicle\nH. Road debris or safety traces on the roadway\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_129_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_129_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_129_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_129_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_129_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_129_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Animals, birds, or roadkill\nB. A special or uncommon vehicle behaviour\nC. An emergency or incident scene\nD. A work zone or temporary traffic control setup\nE. Cyclists or micromobility users in a complex interaction\nF. A complex intersection interaction\nG. High pedestrian density, or pedestrians in close proximity to the vehicle\nH. Road debris or safety traces on the roadway\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 20
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A special or uncommon vehicle behaviour\nB. Road debris or safety traces on the roadway\nC. High pedestrian density, or pedestrians in close proximity to the vehicle\nD. An emergency or incident scene\nE. A work zone or temporary traffic control setup\nF. A complex intersection interaction\nG. Cyclists or micromobility users in a complex interaction\nH. Animals, birds, or roadkill\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_130_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_130_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_130_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_130_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_130_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_130_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A special or uncommon vehicle behaviour\nB. Road debris or safety traces on the roadway\nC. High pedestrian density, or pedestrians in close proximity to the vehicle\nD. An emergency or incident scene\nE. A work zone or temporary traffic control setup\nF. A complex intersection interaction\nG. Cyclists or micromobility users in a complex interaction\nH. Animals, birds, or roadkill\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 21
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "end-of-sequence",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Road debris or safety traces on the roadway\nB. A special or uncommon vehicle behaviour\nC. A complex intersection interaction\nD. Cyclists or micromobility users in a complex interaction\nE. An emergency or incident scene\nF. Animals, birds, or roadkill\nG. A work zone or temporary traffic control setup\nH. High pedestrian density, or pedestrians in close proximity to the vehicle\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_131_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_131_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_131_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_131_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_131_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_131_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Road debris or safety traces on the roadway\nB. A special or uncommon vehicle behaviour\nC. A complex intersection interaction\nD. Cyclists or micromobility users in a complex interaction\nE. An emergency or incident scene\nF. Animals, birds, or roadkill\nG. A work zone or temporary traffic control setup\nH. High pedestrian density, or pedestrians in close proximity to the vehicle\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "F",
+            "request_idx": 22
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. An emergency or incident scene\nB. A work zone or temporary traffic control setup\nC. A complex intersection interaction\nD. High pedestrian density, or pedestrians in close proximity to the vehicle\nE. Animals, birds, or roadkill\nF. Road debris or safety traces on the roadway\nG. Cyclists or micromobility users in a complex interaction\nH. A special or uncommon vehicle behaviour\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_132_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_132_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_132_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_132_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_132_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_132_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. An emergency or incident scene\nB. A work zone or temporary traffic control setup\nC. A complex intersection interaction\nD. High pedestrian density, or pedestrians in close proximity to the vehicle\nE. Animals, birds, or roadkill\nF. Road debris or safety traces on the roadway\nG. Cyclists or micromobility users in a complex interaction\nH. A special or uncommon vehicle behaviour\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 23
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Cyclists or micromobility users in a complex interaction\nB. A complex intersection interaction\nC. Animals, birds, or roadkill\nD. An emergency or incident scene\nE. A special or uncommon vehicle behaviour\nF. Road debris or safety traces on the roadway\nG. A work zone or temporary traffic control setup\nH. High pedestrian density, or pedestrians in close proximity to the vehicle\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_166_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_166_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_166_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_166_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_166_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_166_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Cyclists or micromobility users in a complex interaction\nB. A complex intersection interaction\nC. Animals, birds, or roadkill\nD. An emergency or incident scene\nE. A special or uncommon vehicle behaviour\nF. Road debris or safety traces on the roadway\nG. A work zone or temporary traffic control setup\nH. High pedestrian density, or pedestrians in close proximity to the vehicle\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 24
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Road debris or safety traces on the roadway\nB. A work zone or temporary traffic control setup\nC. A special or uncommon vehicle behaviour\nD. Cyclists or micromobility users in a complex interaction\nE. High pedestrian density, or pedestrians in close proximity to the vehicle\nF. A complex intersection interaction\nG. Animals, birds, or roadkill\nH. An emergency or incident scene\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_167_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_167_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_167_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_167_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_167_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_167_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. Road debris or safety traces on the roadway\nB. A work zone or temporary traffic control setup\nC. A special or uncommon vehicle behaviour\nD. Cyclists or micromobility users in a complex interaction\nE. High pedestrian density, or pedestrians in close proximity to the vehicle\nF. A complex intersection interaction\nG. Animals, birds, or roadkill\nH. An emergency or incident scene\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 25
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A special or uncommon vehicle behaviour\nB. Cyclists or micromobility users in a complex interaction\nC. Road debris or safety traces on the roadway\nD. High pedestrian density, or pedestrians in close proximity to the vehicle\nE. A work zone or temporary traffic control setup\nF. Animals, birds, or roadkill\nG. An emergency or incident scene\nH. A complex intersection interaction\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_168_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_168_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_168_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_168_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_168_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_168_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A special or uncommon vehicle behaviour\nB. Cyclists or micromobility users in a complex interaction\nC. Road debris or safety traces on the roadway\nD. High pedestrian density, or pedestrians in close proximity to the vehicle\nE. A work zone or temporary traffic control setup\nF. Animals, birds, or roadkill\nG. An emergency or incident scene\nH. A complex intersection interaction\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 26
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A special or uncommon vehicle behaviour\nB. A complex intersection interaction\nC. Road debris or safety traces on the roadway\nD. Cyclists or micromobility users in a complex interaction\nE. An emergency or incident scene\nF. High pedestrian density, or pedestrians in close proximity to the vehicle\nG. Animals, birds, or roadkill\nH. A work zone or temporary traffic control setup\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_169_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_169_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_169_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_169_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_169_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_169_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A special or uncommon vehicle behaviour\nB. A complex intersection interaction\nC. Road debris or safety traces on the roadway\nD. Cyclists or micromobility users in a complex interaction\nE. An emergency or incident scene\nF. High pedestrian density, or pedestrians in close proximity to the vehicle\nG. Animals, birds, or roadkill\nH. A work zone or temporary traffic control setup\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 27
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. High pedestrian density, or pedestrians in close proximity to the vehicle\nB. Cyclists or micromobility users in a complex interaction\nC. A work zone or temporary traffic control setup\nD. Animals, birds, or roadkill\nE. A special or uncommon vehicle behaviour\nF. Road debris or safety traces on the roadway\nG. An emergency or incident scene\nH. A complex intersection interaction\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_170_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_170_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_170_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_170_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_170_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_170_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. High pedestrian density, or pedestrians in close proximity to the vehicle\nB. Cyclists or micromobility users in a complex interaction\nC. A work zone or temporary traffic control setup\nD. Animals, birds, or roadkill\nE. A special or uncommon vehicle behaviour\nF. Road debris or safety traces on the roadway\nG. An emergency or incident scene\nH. A complex intersection interaction\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 28
+        },
+        {
+            "batch_idx": 0,
+            "finish_reason": "max-length",
+            "formatted_complete_request": "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|>You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A complex intersection interaction\nB. A work zone or temporary traffic control setup\nC. A special or uncommon vehicle behaviour\nD. Cyclists or micromobility users in a complex interaction\nE. Animals, birds, or roadkill\nF. Road debris or safety traces on the roadway\nG. An emergency or incident scene\nH. High pedestrian density, or pedestrians in close proximity to the vehicle\nAnswer with ONLY the single letter of the correct option.<|im_end|>\n<|im_start|>assistant\n",
+            "formatted_system_prompt": "",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_171_0.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_171_1.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_171_2.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_171_3.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_171_4.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/vision/chenrunbin/alpamayo-edge/bench/ood_eval/frames_1080/ood_171_5.jpg",
+                            "type": "image"
+                        },
+                        {
+                            "text": "You are shown 6 frames sampled in order from a video.\nThese frames come from the front-facing wide camera of a driving vehicle, in order. Which option best describes the most safety-relevant situation in this scene?\nOptions:\nA. A complex intersection interaction\nB. A work zone or temporary traffic control setup\nC. A special or uncommon vehicle behaviour\nD. Cyclists or micromobility users in a complex interaction\nE. Animals, birds, or roadkill\nF. Road debris or safety traces on the roadway\nG. An emergency or incident scene\nH. High pedestrian density, or pedestrians in close proximity to the vehicle\nAnswer with ONLY the single letter of the correct option.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "",
+            "request_idx": 29
+        }
+    ]
+}

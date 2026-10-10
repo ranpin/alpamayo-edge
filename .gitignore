@@ -80,3 +80,6 @@ alpamayo-edge/data/ood_eval/frames/
 # 缩放到 448 长边的评测帧（可确定性重建，见 eval/accuracy/driving/build_ood_input.py）
 alpamayo-edge/data/ood_eval/frames_448/
 alpamayo-edge/eval/accuracy/driving/ood_input_*.json
+alpamayo-edge/data/ood_eval/frames_720/
+alpamayo-edge/data/ood_eval/frames_1080/
+alpamayo-edge/eval/accuracy/driving/pareto/ood_input_*.json
