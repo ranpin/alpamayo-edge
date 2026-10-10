@@ -114,6 +114,22 @@ Kaggle(T4x2) 量化+导出 → 打包 → 下载/校验 → scp 到 Orin → TRT
 - **诚实边界**：标注是 clip 级事件聚类（非逐帧感知标签）；train split 占 154/184、无法排除 CR2 训练见过这些 clip ⇒ 不能声称未见数据上的绝对能力；两者对三精度同等作用，掉点结论不受影响。绝对分不能与 n=210 比（8 选 1 vs 二选一）。
 - 产物与复现：`eval/accuracy/driving/`（输入构造 / 打分脚本 / 三方原始输出 / RESULTS.json / README）。图 `docs/figures/driving_accuracy.png`（`eval/driving_viz.py` 从 RESULTS.json 生成）。
 
+### 主（驾驶域·分辨率轴）：分辨率 Pareto 448 / 720p / 原生 1080p（2026-10-10 新增）
+
+6 帧固定、只变每帧分辨率（n=184×3 档×2 精度，协议与上节逐位相同）。len4096 装不下 720p/1080p 的 6 帧 ⇒ 新建 len16384 引擎（INT4 build 峰值 25.7G；**INT8 29.45G 恰好挤进 32G 机——按 INT4 长度增量外推的 ~37G 被实测推翻**）+ 视觉引擎 maxImageTokens 16384/perImage 2048。能耗 = tegrastats 功率窗口对齐（引擎加载完才采样）× 逐请求 E2E（日志逐请求毫秒时间戳）。
+
+| 档位 | INT8 正确率（vs 448 McNemar） | INT8 E2E / 能耗 | INT4 正确率 | INT4 E2E / 能耗 |
+|---|---|---|---|---|
+| 448 | 47.8% [40.7,55.0] | 0.50 s / 27.5 J / 2.02 Hz | 50.5% [43.4,57.7] | 0.68 s / 45.1 J |
+| 720p | **54.9%（+7.1，p=0.047）** | 3.45 s / 202 J / 0.29 Hz | 53.8%（+3.3，p=0.392） | 5.50 s / 345 J |
+| 原生 1080p | **56.0%（+8.2，p=0.011；vs 720p +1.1，p=0.774）** | 11.26 s / 650 J / 0.089 Hz | 44.0%†（−6.5，p=0.111） | 15.99 s / 966 J |
+
+- **结论：分辨率买得到正确率，拐点在 720p**（+8.2 pts 里的 +7.1 在 720p 已拿到；1080p 再花 3.2× 成本只换 +1.1 不显著）。**INT8 每档同时赢 INT4 的速度/能耗/正确率**（prefill 主导，与 §1.9 一致）⇒ 此类负载部署选 INT8。
+- † **INT4@1080p 有 30/184（16.3%）空输出**（不可解码 token 计为答错）——INT4(AWQ) 特有：INT8 同帧同题 552/552 全干净；30 题孤立重跑 12 题恢复 ⇒ 部分依赖运行时累积状态（PROBLEMS **J1**，机理未明）。干净 154 题上 INT4@1080p 52.6% vs INT8 54.5%。
+- **INT8@1080p 需 KV 预留 16448 引擎**：KV32768 版运行时 RAM 从第一题起 28.6G 边缘（tegrastats 实测，无泄漏），~140 题处尖峰 30.4G 被 OOM 杀；缩 KV 省 2.41G 后全程 26.2G 跑完 184/184（PROBLEMS **J2**，已解决）。
+- 统计口径：预注册 4 次 vs-448 比较，Bonferroni α=0.0125 下 1080p p=0.011 存活、720p p=0.047 不存活；单调趋势 + INT4 同方向 ⇒ 定性结论稳健。FP16 不在 Pareto 内（不可部署）。
+- 产物与复现：`eval/accuracy/driving/pareto/`（README / 打分与计时解析脚本 / 6 组原始输出 / RESULTS / timing_power JSON）。图 `docs/figures/resolution_pareto.png`（`pareto_viz.py` 从 JSON 生成）。站点 §1.12（图 21 / 表 13）。
+
 ### 辅：细粒度 perplexity 探针（12 prompt）
 
 FP16 参考在 Kaggle T4×2 上用 PyTorch 加载 `nvidia/Cosmos-Reason2-8B`（Orin 无外网、8B fp16≈16GB 本地装不下，故走云端一次性），对**同一批 12 条固定 prompt**（驾驶物理推理+决策+常识，贪心 `top_k=1` 确定性）产出：产物与复现脚本见 [`eval/accuracy/`](../eval/accuracy/)。

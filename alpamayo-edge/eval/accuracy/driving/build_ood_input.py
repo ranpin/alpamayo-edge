@@ -48,7 +48,7 @@ PROMPT_TEMPLATE = (
 )
 
 
-def scale_frames(items, out_dir, long_edge=448):
+def scale_frames(items, out_dir, long_edge=448, native_copy=False):
     os.makedirs(out_dir, exist_ok=True)
     made, skipped = 0, 0
     for i, item in enumerate(items):
@@ -57,11 +57,16 @@ def scale_frames(items, out_dir, long_edge=448):
             if os.path.exists(dst):
                 skipped += 1
                 continue
-            im = Image.open(os.path.join(OOD, rel)).convert("RGB")
-            w, h = im.size
-            s = long_edge / max(w, h)
-            im = im.resize((round(w * s), round(h * s)), Image.LANCZOS)
-            im.save(dst, quality=90)
+            if native_copy:
+                # byte-identical copy of the harvested native frame (no re-encode)
+                with open(os.path.join(OOD, rel), "rb") as src, open(dst, "wb") as out:
+                    out.write(src.read())
+            else:
+                im = Image.open(os.path.join(OOD, rel)).convert("RGB")
+                w, h = im.size
+                s = long_edge / max(w, h)
+                im = im.resize((round(w * s), round(h * s)), Image.LANCZOS)
+                im.save(dst, quality=90)
             made += 1
     sizes = {Image.open(os.path.join(out_dir, f)).size
              for f in os.listdir(out_dir) if f.endswith(".jpg")}
@@ -94,12 +99,15 @@ def main():
                     help="absolute frames dir ON THE DEVICE that will run inference")
     ap.add_argument("--json-out", required=True)
     ap.add_argument("--long-edge", type=int, default=448)
+    ap.add_argument("--native-copy", action="store_true",
+                    help="byte-copy the harvested native frames instead of resizing "
+                         "(used for the native-1080p Pareto tier)")
     a = ap.parse_args()
 
     man = json.load(open(os.path.join(OOD, "manifest.json")))
     items = man["items"]
     assert len(items) == man["n_items"] == 184, len(items)
-    scale_frames(items, a.out_dir, a.long_edge)
+    scale_frames(items, a.out_dir, a.long_edge, native_copy=a.native_copy)
     build_json(items, a.frames_root.rstrip("/"), a.json_out)
 
 
