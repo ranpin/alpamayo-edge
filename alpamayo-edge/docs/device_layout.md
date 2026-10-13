@@ -23,10 +23,11 @@
 
 | 子目录 | 内容 | dog | goat | 可重建？ |
 |---|---|---|---|---|
-| `engines/` | TensorRT 引擎（**sm_87 专用**，不可跨架构） | 28 G（int4/int8/int8_domain/2b） | 30 G（**fp16 16 G** + int4 + int8） | ✅ 由 `onnx/` 经 `llm_build` |
-| `onnx/` | 云端量化导出的 ONNX（建引擎的输入） | 44 G | 32 G | ✅ 由 `tarballs/` 解包 |
-| `tarballs/` | 传输/迁移打包 | 26 G | 40 G | ✅ **纯冗余，可删** |
-| `bench/` | n=210 基准输入 / 输出 / 日志 / 1260 采样帧 | 35 M | — | ⚠️ 输出是实测记录 |
+| `engines/` | TensorRT 引擎（**sm_87 专用**，不可跨架构） | 28 G + len16384 三件（int4 5.7G / int8_kv32768 8.9G【OOM 实物证据】/ int8_kv16448 8.9G）+ int4_len16384/visual | 30 G（**fp16 16 G** + int4【含 visual，2026-10-09 从 dog 拷入】+ int8） | ✅ 由 `onnx/` 经 `llm_build` |
+| `onnx/` | 云端量化导出的 ONNX（建引擎的输入） | 44 G | 32 G | ✅ 原由 `tarballs/` 解包 |
+| `tarballs/` | 传输/迁移打包 | 26 G | **已删（2026-10-12，回收 40 G）**——解包对应物逐一核实后执行，本节预授权 | ✅ **纯冗余，可删** |
+| `bench/` | n=210 基准 + `ood_eval/`（驾驶域 n=184：448/720/1080 三档帧 3.4G + 输入/输出/日志） | ~3.5 G | `ood_eval/` 仅曾用于 FP16 n=184（190 M 帧） | ⚠️ 输出是实测记录 |
+| `alpamayo1.5/` + `alpamayo_gate4/` | 闸门 4：NVlabs 仓库 clone + a1_5_venv（py3.12/torch2.8 CPU）+ **Alpamayo-1.5-10B 权重 22 G** + staging + 结果 | — | ~26 G | ✅ 权重可重下（公开、须 `HF_HUB_DISABLE_XET=1`）；见 `eval/vla_gate4/README.md` |
 | `io/` | 各次推理的请求/响应 JSON | 152 K | — | ❌ 实测记录 |
 | `logs/` | 构建 / 功耗 / 运行原始日志 | 1.3 M | 316 K | ❌ 实测记录 |
 | `prof/` | Nsight Systems 剖析 | 6.6 M | — | ❌ 实测记录 |

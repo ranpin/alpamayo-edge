@@ -130,6 +130,23 @@ Kaggle(T4x2) 量化+导出 → 打包 → 下载/校验 → scp 到 Orin → TRT
 - 统计口径：预注册 4 次 vs-448 比较，Bonferroni α=0.0125 下 1080p p=0.011 存活、720p p=0.047 不存活；单调趋势 + INT4 同方向 ⇒ 定性结论稳健。FP16 不在 Pareto 内（不可部署）。
 - 产物与复现：`eval/accuracy/driving/pareto/`（README / 打分与计时解析脚本 / 6 组原始输出 / RESULTS / timing_power JSON）。图 `docs/figures/resolution_pareto.png`（`pareto_viz.py` 从 JSON 生成）。站点 §1.12（图 21 / 表 13）。
 
+### VLA 轨道闸门（Alpamayo-1.5-10B 边缘可行性，2026-10-12）
+
+next_plan 闸门 4 的实测结论（全部记录：`eval/vla_gate4/README.md`、PROBLEMS J3）：
+
+- **判据 ✅**：goat（64GB）上 22.16 GB bf16 权重加载 5.7s（safetensors mmap），CPU（bf16+SDPA）
+  单次前向 3505s 完成：输出 64 路点 @10Hz = 6.4s 视界轨迹 + CoT（"Keep lane since the lane is
+  clear ahead"）；静止合成 ego 历史 ⇒ 平缓起步（0.08→1.5 m/s）直线轨迹，物理自洽。
+  RAM 峰值 46.0G/61G（与其他用户 33G 共存，靠 mmap 页可回收挤下）。
+- **"20GB 内" ❌**：FP16-only 权重 22.16G > 20G；官方单样本推理 ~24 GB VRAM（README 硬件表）；
+  无量化路径（TRTEdge 不支持 Alpamayo 架构）⇒ **32GB 级 Orin 部署不可行**。
+- **VLA 轨道（ADE/FDE）受阻三点（写成结论，非 future work）**：① 20GB 边缘预算装不下；
+  ② CUDA torch 无安装源（goat 白名单出网：pypi.org 通、pypi.jetson.org 与
+  developer.download.nvidia.com 不通）；③ CPU 前向 58 min/次 ⇒ 100 clips ≈ 4 天，大规模评测不可行。
+- 离线适配 4 处（config patch / processor 目录补 Qwen3-VL-8B config / 上游默认值 sed /
+  离线环境变量）——含一个上游设计地雷：transformers `to_diff_dict` 用无参默认值重构 config，
+  而该 config 类 `__init__` 带网络副作用 ⇒ 离线必炸（J3）。
+
 ### 辅：细粒度 perplexity 探针（12 prompt）
 
 FP16 参考在 Kaggle T4×2 上用 PyTorch 加载 `nvidia/Cosmos-Reason2-8B`（Orin 无外网、8B fp16≈16GB 本地装不下，故走云端一次性），对**同一批 12 条固定 prompt**（驾驶物理推理+决策+常识，贪心 `top_k=1` 确定性）产出：产物与复现脚本见 [`eval/accuracy/`](../eval/accuracy/)。
