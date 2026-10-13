@@ -1,0 +1,17 @@
+{
+ "load_s": 5.702253580093384,
+ "forward_s": 3505.432831287384,
+ "ram_used_peak_g": 46.04620361328125,
+ "traj_shape": [
+  1,
+  1,
+  1,
+  64,
+  3
+ ],
+ "input_ids_shape": [
+  1,
+  3086
+ ],
+ "cot_head": "[['Keep lane since the lane is clear ahead']]"
+}

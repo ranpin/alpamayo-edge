@@ -467,3 +467,28 @@ batch=1 后临时张量小一个数量级，不必再压总量）。
   build ~37G 判死，实测 INT8 build 内存对长度几乎不敏感（29.7→29.45G），尝试性构建成功；
   而运行时内存的精度差异（引擎+KV+激活）又是另一回事。**build 内存与运行时内存、INT4 与
   INT8 的长度敏感性，四条曲线各不相同，谁都不能替谁背书。**
+
+### J3. Alpamayo config 类的网络副作用 × transformers to_diff_dict：离线加载必炸（2026-10-12，已解决）
+
+- **现象**：闸门 4 在 goat（不可达 huggingface.co）上 `Alpamayo1_5.from_pretrained(本地权重)`，
+  config.json 的 `vlm_name_or_path` 已 patch 为本地 processor 目录，却仍向
+  `Qwen/Qwen3-VL-8B-Instruct` 发请求（5 轮重试 ×10s 超时 ×5 个文件 ≈ 14 分钟后 OSError）。
+- **根因（完整 traceback 定位）**：不是真 config 加载错——是 transformers 的
+  `configuration_utils.py: from_dict → __repr__ → to_json_string → to_diff_dict` 会
+  **用无参默认值重构一个 config 实例**来算 diff；而 `ReasoningVLAConfig.__init__` 带网络副作用
+  （`_initialize_vlm_config → _build_processor → AutoProcessor.from_pretrained(默认值
+  "Qwen/Qwen3-VL-8B-Instruct")`）⇒ 默认值走了网络。**上游设计地雷**：config `__init__`
+  里做网络 I/O，与 transformers 的日志/repr 机制天然冲突。
+- **排查方法（可复用）**：monkeypatch `_build_processor` 打印 `self.vlm_name_or_path` +
+  `HF_HUB_OFFLINE=1` 快速失败——两次离线实验证明真 config 路径正确，从而把嫌疑收敛到
+  "第二次 config 构造"，再用 `grep 'File "' 日志` 拿到 to_diff_dict 那一帧。
+- **解决**：sed 把 `base_model.py:211` 的默认值改为本地 processor 路径 + 离线环境变量
+  （记录于 `scripts/orin/gate4_driver.sh` 头注释）。同批还有两个离线坑：
+  ① processor 目录需补 Qwen3-VL-8B 的 config.json（`_initialize_qwenvl3_vlm` 要读
+  Qwen3VLConfig）；② TRTEdge 导出的 tokenizer_config.json 把 `extra_special_tokens`
+  存成 list，transformers 4.57 要求 dict ⇒ 移除该字段（token 在 tokenizer.json 里本就有）。
+- **教训**：**离线环境跑 HF 生态代码，"config 默认值"也是网络依赖面**——patch 实例路径不够，
+  类默认值、to_diff_dict 重构、AutoXxx 内部回退都可能触发远程请求。`HF_HUB_OFFLINE=1` 要常开
+  （把 14 分钟的重试泥潭变成秒级失败）。另：hf 下载 22G 权重时 **Xet/CAS 后端 401**，
+  `HF_HUB_DISABLE_XET=1` 走传统 HTTP 即愈（且快一个量级）；`cmd | tail` 再次吞掉真实退出码
+  （下载"成功"实则 3/5 分片缺失——靠逐分片字节数校验抓住）。
