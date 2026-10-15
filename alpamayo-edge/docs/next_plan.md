@@ -144,8 +144,8 @@ clip `01d3588e-….camera_front_wide_120fov.mp4` = **1920×1080 @ 30 fps, HEVC, 
    `ranpin.github.io/alpamayo-edge/`，edge-ai-docs `docs.json` 与站内链接已同步更新。
    （原"拆成独立仓库"的方案被直接改名取代——整个仓库改名后 `main` 分支的旧轨迹项目仍在同仓库，
    如需彻底分离再拆。）
-2. **英文一页版**：英文 README + 摘要 + 四张总览图的英文标注。目标若含 NVIDIA/Qualcomm/外资 AV 团队，
-   全中文是硬障碍。
+2. ~~**英文一页版**：英文 README + 摘要 + 四张总览图的英文标注。目标若含 NVIDIA/Qualcomm/外资 AV 团队，
+   全中文是硬障碍。~~ **❌ 已取消（2026-10-15 用户决定）**。
 
 ---
 
