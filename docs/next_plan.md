@@ -149,6 +149,54 @@ clip `01d3588e-….camera_front_wide_120fov.mp4` = **1920×1080 @ 30 fps, HEVC, 
 
 ---
 
+## Phase V（2026-10-15 新增，当前主线）：VLA 轨迹输出 + demo——从"VLM 部署"到"VLA 全栈"
+
+> **用户决策（2026-10-15）**：训练环节（Phase T 域适配 QLoRA）暂缓，**VLA 优先**，且以
+> **演示视频 / 在线 demo 为一等交付物**。动机：QLoRA 微调不构成简历区分度，
+> "32GB Orin 跑通 AV VLA 全栈（推理+轨迹）"几乎没有公开先例（唯一参照是 Thor fork，128GB 级机器）。
+>
+> 同日评测完备性审计：对"完整 VLA 项目"的声称缺**轨迹侧（ADE/FDE/minADE）、CoT 质量、多相机精度**
+> 三块——正是 V5 的必做项；运动类任务 / 跨 VLM 对比 / 闭环评测 / J1 机理**明确 scope out**
+> （有意边界而非遗漏，审计记录见当日讨论）。
+
+### 设备分工（"为什么主打 32G 而不是 64G"）
+
+闸门 4 判"32GB 不可行"**只针对 FP16-only 的 PyTorch 路线**（22.16G 权重 + 官方 ~24GB VRAM）。
+Phase V 走 TRTEdge 量化路线，内存账完全不同：VLM INT4 ~4.6G + 视觉 1.1G + action expert
+FP16 4.6G + KV@16k ~4.8G + 词嵌入 1.25G ≈ **16G ⇒ 32G 装得下**。
+
+| 机器 | 角色 | 理由 |
+|---|---|---|
+| **dog（32G）** | 边缘部署目标机（INT4/INT8 量化 VLA 全栈） | "edge" 是项目立身之本；"32G 跑通"是更强结论；引擎矩阵/TRTEdge 安装/506G 磁盘现成 |
+| **goat（64G）** | 参考与构建机：CPU golden reference（D0 demo）、FP16 参考、构建后备 | Alpamayo 权重 22G + alpamayo1.5 repo + venv 已在；引擎与 dog 互通（同 sm_87 + TRT 10.7.0.23） |
+
+### Demo 层级（交付物，与风险解耦）
+
+| 层级 | 依赖 | 内容 |
+|---|---|---|
+| **D0（保底）** | goat CPU + 真实 ego/GT 数据（HF token） | 过夜跑 10–20 clips，渲染 mp4：前视视频 + CoT 字幕 + 预测轨迹 vs 真值 BEV 叠加 |
+| D1 | V1–V2 过 | Orin 实时 CoT 推理演示（轨迹仍离线） |
+| **D2（完全体）** | V3–V4 过 | Orin 端实时 VLA（视频进 → CoT+轨迹出）+ **站点静态交互 demo**（预计算结果 + clip 选择器 + BEV canvas，gh-pages 托管） |
+
+D0 把 demo 从最高风险路径（V4 C++ 移植）解耦：即使 Orin 移植失败，仍有 VLA demo + 诚实受阻点分析。
+
+### 闸门（预注册，任一不过即按处置收官）
+
+| # | 闸门 | 通过判据 | 不通过的处置 |
+|---|---|---|---|
+| V0 | 侦察：fork 许可证可移植？v0.6.0→0.9.0 API 差异面？HF 可达 + ego/GT 数据可得？ | 可行性备忘入库 | 差异过大 ⇒ D0 收官 + 受阻点报告 |
+| V1 | Alpamayo VLM（traj token 扩展词表）过 Kaggle ONNX 导出 | 导出成功、词表完整 | 定位 embedding/lm_head resize |
+| V2 | INT4/INT8 VLM 引擎建成 + CoT 与 gate4 CPU golden reference 对齐 | 同输入同 CoT | 量化对 traj token 影响分析 |
+| V3 | action expert（2.3B）FM one-step ONNX → sm_87 引擎 | 引擎建成（FP16 4.6G） | 回退 FP16-only expert |
+| V4 | FM runtime C++ 移植到 TRTEdge 0.9.0 + 单样本轨迹与 CPU 参考一致 | 容差内一致 | **D0/D1 收官**，V4 写成受阻点 |
+| V5 | 收官评测 + demo：N clips ADE/FDE/minADE vs CVM + CoT 评审（n=30）+ 多相机精度 + D2 视频 + 站点交互 demo | 指标表 + 可播放 | — |
+
+参照物：`kimsunguk0/tensorrt-edge-llm-for-alpamayo`（TRTEdge v0.6.0 + Alpamayo 1.5 轨迹栈，
+C++ FM/action runtime、FM one-step ONNX 导出、live 推理，目标 Jetson Thor）；我们是 v0.9.0（dog commit 1ac0f2b）。
+穿插项：帧采样敏感性（原 P2，纯设备时间）在 V2 等待期跑。
+
+---
+
 ## P2（零成本、加固而非开拓，可穿插）
 
 - **帧采样敏感性**：同 210 题换 3 组不同采样帧重跑，回答"6 帧协议是不是结论的来源"。
