@@ -22,7 +22,7 @@ git submodule update --init --recursive || { echo SUBMODULE_FAILED; exit 1; }
 ls 3rdParty/nlohmannJson/LICENSE.MIT || { echo LICENSE_STILL_MISSING; exit 1; }
 
 echo "=== venv + install [export] extras $(date +%T) ==="
-uv venv export_venv --python 3.12 || { echo VENV_FAILED; exit 1; }
+uv venv export_venv --python 3.12 --clear || { echo VENV_FAILED; exit 1; }
 source export_venv/bin/activate
 uv pip install -e ".[export]" > "$A/logs/w0c_pip_install.log" 2>&1 \
   || { echo INSTALL_FAILED; tail -15 "$A/logs/w0c_pip_install.log"; exit 1; }
