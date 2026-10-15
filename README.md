@@ -1,8 +1,9 @@
 # Alpamayo-Edge
 
-**自动驾驶 VLM（Cosmos-Reason2-8B = NVIDIA Alpamayo 1.5 的 backbone）在 Jetson AGX Orin 上的
-量化部署与全套实测研究**——INT4(AWQ)/INT8(SmoothQuant) 双精度引擎，精度、延迟、能耗、内存、
-可靠性五轴证据，零预算、零训练、全 Orin 实测。
+**NVIDIA Physical AI 模型在 Jetson AGX Orin 上的边缘量化部署与全套实测研究**——一套管线部署
+两代模型：**Alpamayo 1.5**（10B AV VLA，其 VLM backbone = Cosmos-Reason2-8B，已量化落地）+
+**Cosmos3-Edge**（4B 世界动作模型，进行中）；INT4(AWQ)/INT8(SmoothQuant) 量化，精度、延迟、
+能耗、内存、可靠性五轴证据，零预算、零训练、全 Orin 实测。
 
 📊 **呈现站点（论文式，图 1–21 / 表 1–13）**：<https://ranpin.github.io/alpamayo-edge/>
 
@@ -16,13 +17,16 @@
 | 分辨率值不值？ | **值，到 720p 为止**：INT8 +7.1 pts（p=0.047）；1080p 再 +1.1（ns）但成本 3.2× |
 | 能进 AV 感知环路吗？ | **不能，也不该**：真实分辨率 0.1–1 Hz ⇒ 定位事件级场景理解（风险解释/日志挖掘/驾驶员问答） |
 | 还有优化空间吗？ | **量化侧已穷尽**：decode 带宽达硬件可达上限（153.1≈152.3 GB/s）、手写 kernel 负结果、31min 零降频 |
-| VLA（轨迹输出）呢？ | **Alpamayo-1.5-10B 在 32GB 级不可行**（FP16-only 22.16G）；64GB 机 CPU 前向已验证可跑通 |
+| VLA（轨迹输出）呢？ | PyTorch 路线在 32GB 级不可行（FP16-only 22.16G）；**双轨推进中**：Track 1 = Alpamayo 1.5 全栈 TRTEdge 移植（Phase V），Track 2 = Cosmos3-Edge 4B WAM 官方管线（Phase W，先行） |
 
 ## 现状（2026-10-15）
 
-**规划内工作全部收官**：P0 驾驶域数据四道闸门全过、两个正式实验（驾驶域三精度评测、
-分辨率 Pareto）完成、VLA 轨道可行性闸门（Alpamayo-1.5-10B）实测关闭。
-无进行中事项；可选加固项见 [docs/next_plan.md](docs/next_plan.md) 的 P2。
+**第一阶段收官**：P0 驾驶域数据四道闸门全过、两个正式实验（驾驶域三精度评测、分辨率 Pareto）
+完成、VLA 可行性闸门实测关闭（结论见上表）。
+**第二阶段双轨进行中**（规划与闸门见 [docs/next_plan.md](docs/next_plan.md)）：
+- **Phase W（先行）**：Cosmos3-Edge（4B 世界动作模型，TRTEdge 0.10.x 官方支持）——W0 侦察中
+- **Phase V**：Alpamayo 1.5 全栈（VLM + 轨迹专家）TRTEdge 移植——参照 Thor fork，待 W 的
+  TRTEdge 0.10.x 构建完成后开工
 
 ## 核心结论（全部实测，细节与图表在站点）
 
