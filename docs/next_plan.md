@@ -197,6 +197,51 @@ C++ FM/action runtime、FM one-step ONNX 导出、live 推理，目标 Jetson Th
 
 ---
 
+## Phase W（2026-10-15 新增，**执行顺序在 Phase V 之前**）：Cosmos3-Edge——官方支持的第二部署目标
+
+> **用户决策（2026-10-15）**：项目升级为**双模型单方法论**——Track 1 = Alpamayo 1.5（Phase V，
+> AV 专属叙事），Track 2 = Cosmos3-Edge（本节，官方支持叙事）。简历叙事从"部署了一个模型"升级为
+> "同一套边缘方法论部署两代 NVIDIA Physical AI 模型（10B AV VLA + 4B 世界动作模型）"。
+>
+> **事实纠偏（调研结论，勿再混淆）**：Cosmos3-Edge **不是** Alpamayo 2 的 backbone（那是 32B
+> Cosmos 3 Super Reasoner，且 2B 轨迹专家与 32B 联合训练、不可换底座拼接）；Cosmos3-Edge 是
+> Cosmos 3 家族的**边缘款完整模型**（4B = 2B VL reasoner + rectified-flow 扩散专家，MoT 单塔），
+> 与 Alpamayo 2 同代际。Alpamayo 2 Super（34B，gated）本身维持"展望 + 三重估触发条件"不变
+> （见 2026-10-15 调研：量化算力墙/TRTEdge 架构支持未知/gated/68G 超 goat）。
+
+**为什么 W 先行**：① turnkey——TRTEdge **v0.10.0 官方支持**（supported-models 在列：
+Cosmos3-Edge + Cosmos3-Edge-Policy-DROID），`tensorrt-edgellm-export --task policy`（CPU 导出）→
+`cosmos3_policy_build` → `cosmos3_policy_inference`（图+prompt→action.json）全链官方命令；
+② demo 天级 vs Phase V 月级且 ~40% 风险；③ dog 需自建 TRTEdge 0.10.x（共享安装不可动），
+该 build 同时是 Phase V fork 移植的目标版本；④ 4B 内存宽裕（bf16 ~8G/INT4 ~3G vs 32G dog）。
+
+**关键约束（0.10.0 支持矩阵实测核对）**：Orin JetPack 6.2/CUDA 12.6 = **Compatible 档**
+（Official 是 JetPack 7.2）；精度仅 **FP16/INT8/INT4**（NVIDIA 官方 mxfp8/nvfp4 是 Blackwell
+专属，sm_87 不可用）；**0.11.0 矩阵已删 JetPack 6.2 行 ⇒ 版本锁 0.10.x，不追新**。
+社区先例：A10G int8wo <10GB（linjiw，含质量评测）、TRTEdge INT4-AWQ（ubrobotics）、
+TRTEdge webcam 实时 demo <10GB（Derman；注明 NVIDIA 原始 demo 跑在 Jetson Orin）。
+
+**权重**：非 gated，`HF_ENDPOINT=https://hf-mirror.com` 直下（HF 主站自 2026-10-15 晨不可达）；
+Cosmos3-Edge 9.18G / Policy-DROID 9.17G（transformer 6.75G + vae 1.41G + vision_encoder 0.98G）。
+
+### 闸门
+
+| # | 闸门 | 通过判据 | 不通过的处置 |
+|---|---|---|---|
+| W0a | 权重落地 + 架构核实 | 镜像下载字节完整；config 与模型卡一致（4B/MoT） | 换 Kaggle 拉取 |
+| W0b | dog 自有目录建 TRTEdge **0.10.x**（JetPack 6.2 Compatible 档）+ `-DBUILD_EXPERIMENTAL_MODELS=ON` | 编译通过、现有 CR2 引擎回归不受影响（共享安装不动） | 定位 CUDA/TRT 版本约束；不行则 goat 建 |
+| W0c | `tensorrt-edgellm-export --task policy` 走通（CPU 导出，地点 Mac/goat/Kaggle 三选一实测） | ONNX 产物齐全 | 定位 python 依赖/平台问题 |
+| W0d | AV embodiment 路径核实：base 模型 AV(9D) 动作输出有无现成 checkpoint/示例 | 明确"AV 动作可跑"或"仅 DROID 机器人动作" | 若仅 DROID：demo 用机器人动作 + AV 侧做世界预测/推理，如实标注 |
+| W1 | 引擎构建：FP16 → INT4/INT8（复用 Kaggle 量化管线或 TRTEdge 内建路径） | dog 上引擎建成 + 单样本推理 | 分析 sm_87 量化选项空间（同 CR2 方法论） |
+| W2 | 评测：reasoner 侧复用 **n=184 驾驶域基准**（2B reasoner vs 8B CR2 跨代对比）；policy 侧 DROID 样例动作合理性 | 指标表入库 | — |
+| W3 | demo：动作推理视频（真实推理输出）+ 站点交互页 | 可播放 + 可访问 | — |
+
+**与 homebot-wm 的边界**：Policy-DROID 是机器人操作 WAM，与 homebot-wm 主线（压缩+部署视觉
+扩散模型到 Orin）同构——**方法共享、叙事分开**：本项目讲"AV/边缘方法论双模型实证"，
+homebot-wm 讲"机器人世界模型"，不重复计功。
+
+---
+
 ## P2（零成本、加固而非开拓，可穿插）
 
 - **帧采样敏感性**：同 210 题换 3 组不同采样帧重跑，回答"6 帧协议是不是结论的来源"。

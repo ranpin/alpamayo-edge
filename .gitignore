@@ -88,3 +88,6 @@ temp/
 # Environment variables
 .env
 .env.local
+
+# Phase W 模型权重暂存（gitignore 整目录）
+models/
