@@ -64,6 +64,7 @@
 ├── eval/            评测资产：n=210 基准、n=184 驾驶域基准、分辨率 Pareto、VLA 闸门、roofline、kernel
 ├── cloud/           Kaggle 免费云量化/导出管线
 ├── scripts/orin/    设备端脚本归档
+├── configs/         设备环境配置（orin.env）
 ├── data/            驾驶域评测集（manifest 入 git；帧为可重建大件，gitignore）
 ├── outputs/         量化产物归档（tgz 大件 gitignore，SHA256 与日志入 git）
 ├── .claude/         可复用工作流 skill（edge-quantize-deploy）
