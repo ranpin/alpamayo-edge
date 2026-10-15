@@ -62,7 +62,7 @@
 | [eval/vla_gate4/](eval/vla_gate4/) | Alpamayo-1.5-10B 可行性闸门：README + 实测结果 |
 | [scripts/orin/](scripts/orin/) | 设备端脚本归档（构建/评测/功耗/闸门 4） |
 | [cloud/](cloud/README.md) | Kaggle 免费云量化/导出管线 |
-| [site/](site/) | 站点源码（gh-pages 分支部署） |
+| [docs/site/](docs/site/) | 站点源码（gh-pages 分支部署；figures 符号链接至 docs/figures/） |
 
 ## 评测资产（三套，全部带标答、可复现）
 

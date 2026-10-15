@@ -55,7 +55,7 @@
 ```
 alpamayo-edge/
 ├── cloud/        Kaggle / Colab 量化导出脚本（入 git）
-├── docs/         METHODOLOGY / PROBLEMS / 本文 / figures/（入 git）
+├── docs/         METHODOLOGY / PROBLEMS / 本文 / figures/（图片唯一真源）/ site/（发布站点源 → gh-pages，其 figures 为符号链接）
 ├── eval/         全部评测脚本 + 整理后的结果与原始 I/O（入 git）
 │   ├── accuracy/ 精度：探针集 + n=210 基准 + 校准集消融
 │   ├── vision/   视觉编码器扫描（含 io/ 逐字请求响应）
@@ -63,7 +63,6 @@ alpamayo-edge/
 │   ├── perf/     跨设备加速比
 │   └── profile/  Nsight 汇总 CSV
 ├── scripts/orin/ 设备端脚本归档（入 git）
-├── site/         发布站点源（入 git → gh-pages）
 └── outputs/      **gitignore**，仅本地：
     ├── *.tgz             自产量化权重 4 件 26.7 G + bench_frames.tgz 30 M
     └── archive/          原始日志（orin_logs/ goat_logs/ orin_prof/）+ MANIFEST.md（SHA256）
