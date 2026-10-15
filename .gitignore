@@ -37,8 +37,13 @@ env/
 # Jupyter
 .ipynb_checkpoints/
 
-# Model outputs
-outputs/
+# 模型产物（大件可重建；已跟踪的小结果文件用负模式豁免）
+/outputs/*
+!/outputs/baseline_results.md
+!/outputs/eval_cvm_synthetic.json
+!/outputs/figures/
+/legacy/outputs/*
+!/legacy/outputs/*.json
 checkpoints/
 *.bin
 *.pt
@@ -46,16 +51,27 @@ checkpoints/
 *.safetensors
 *.gguf
 *.onnx
+*.engine
+engines/
 
-# Data (raw)
-data/raw/*
-!data/raw/.gitkeep
+# 数据：前身项目（legacy）的原始数据与大型派生文件
+/legacy/data/raw/*
+!/legacy/data/raw/.gitkeep
+/legacy/data/processed/trajectory_test.jsonl
+/legacy/data/processed/trajectory_train.jsonl
+/legacy/data/processed/trajectory_val.jsonl
+/legacy/data/processed/trajectory_sft.json
 
-# Large regeneratable derived data (rebuild via preprocess.py)
-data/processed/trajectory_test.jsonl
-data/processed/trajectory_train.jsonl
-data/processed/trajectory_val.jsonl
-data/processed/trajectory_sft.json
+# 数据：现役项目的可确定性重建大件
+# （ood_eval 帧由 data/harvest_ood_eval.py 按固定种子重建，manifest 钉住 clip_id 与答案；
+#   frames_448/720/1080 由 eval/accuracy/driving/build_ood_input.py 重建）
+/data/av_subset/
+/data/ood_eval/frames/
+/data/ood_eval/frames_448/
+/data/ood_eval/frames_720/
+/data/ood_eval/frames_1080/
+/eval/accuracy/driving/ood_input_*.json
+/eval/accuracy/driving/pareto/ood_input_*.json
 
 # Logs
 logs/
@@ -72,14 +88,3 @@ temp/
 # Environment variables
 .env
 .env.local
-
-# 驾驶域 OOD 评测集的帧（190 MB）：由 alpamayo-edge/data/harvest_ood_eval.py 按固定
-# 种子确定性重建，manifest.json 已钉住 clip_id 与答案 ⇒ 属"可重建大件"，不入 git。
-alpamayo-edge/data/ood_eval/frames/
-
-# 缩放到 448 长边的评测帧（可确定性重建，见 eval/accuracy/driving/build_ood_input.py）
-alpamayo-edge/data/ood_eval/frames_448/
-alpamayo-edge/eval/accuracy/driving/ood_input_*.json
-alpamayo-edge/data/ood_eval/frames_720/
-alpamayo-edge/data/ood_eval/frames_1080/
-alpamayo-edge/eval/accuracy/driving/pareto/ood_input_*.json

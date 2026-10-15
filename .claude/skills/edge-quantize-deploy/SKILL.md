@@ -27,7 +27,7 @@ description: 把 HuggingFace LLM/VLM 用 NVIDIA TensorRT-Edge-LLM 量化(INT4 AW
 
 ## 阶段 1 — 云端量化（Kaggle 2×T4=32GB，一次性）
 
-脚本参考 `alpamayo-edge/cloud/kaggle_cosmos_only.py`。关键坑与解法：
+脚本参考 `cloud/kaggle_cosmos_only.py`。关键坑与解法：
 
 | 坑 | 解法 |
 |---|---|
@@ -105,7 +105,7 @@ cd /home/vision/TensorRT-Edge-LLM
 - 长命令（build/download）后台跑 + Monitor 盯**成功和失败两类信号**（`Built target`/`error:`/`OOM`），别只盯成功。
 - 一次性预判所有可能失败点（完整性、size、内存、路径），别逐个错误反应式处理。
 - 推代码前扫明文凭据（`hf_...`/AKIA/BEGIN/password），token 只走环境变量。
-- 详细结果与指标见 `alpamayo-edge/docs/edge_deploy_status.md`。
+- 详细结果与指标见 `docs/edge_deploy_status.md`。
 
 
 ## sm_87（Jetson Orin）上的量化选项空间 —— 先看这张表，别浪费 run
