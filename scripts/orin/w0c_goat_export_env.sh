@@ -14,6 +14,13 @@ if [ -d trtedge-0.10.1/.git ]; then echo "clone exists, reuse"; else
 fi
 cd trtedge-0.10.1 || exit 1
 
+# 3rdParty/nlohmannJson 等是 git 子模块，--depth 1 克隆不带 ⇒ pyproject 的
+# license-files 匹配不到文件、scikit-build-core 直接拒装（dog 的 C++ 构建缺
+# nlohmann/json.hpp 也是同一根源）。必须补拉子模块。
+echo "=== submodules $(date +%T) ==="
+git submodule update --init --recursive || { echo SUBMODULE_FAILED; exit 1; }
+ls 3rdParty/nlohmannJson/LICENSE.MIT || { echo LICENSE_STILL_MISSING; exit 1; }
+
 echo "=== venv + install [export] extras $(date +%T) ==="
 uv venv export_venv --python 3.12 || { echo VENV_FAILED; exit 1; }
 source export_venv/bin/activate
