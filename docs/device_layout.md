@@ -8,12 +8,12 @@
 
 | 位置 | 路径 | 大小 | 角色 | 索引 |
 |---|---|---|---|---|
-| **本地 Mac** | `~/projects/qwen-trajectory-prediction/`（git 仓库，分支 `alpamayo-edge`） | 27 G | 代码 / 文档 / 站点 / 归档 | 本仓库 `README.md` |
+| **本地 Mac** | `~/projects/alpamayo-edge/`（git 仓库，分支 `main`；2026-10-15 由 `qwen-trajectory-prediction` 改名） | ~2 G（tgz 归档后） | 代码 / 文档 / 站点 | 本仓库 `README.md` |
 | **orin-dog** `vision@30.245.40.99` | `/home/vision/chenrunbin/alpamayo-edge/` | 98 G | **主部署机**（32GB 模组）：INT4/INT8/2B 建引擎 + 全部实测 | 机上 `INDEX.md` |
 | **orin-goat** `nvidia@30.245.40.73` | `/home/nvidia/chenrunbin/alpamayo-edge/` | 102 G | **FP16 基线机**（64GB）：dog 上 build 不下的 FP16 在此建成 | 机上 `INDEX.md` |
 | orin-elk `vision@30.245.40.123` | `/home/vision/chenrunbin/` | 12 K（空） | **无本项目文件** | — |
 | pc-3070 `vision@30.245.40.164` | `/home/vision/chenrunbin/` | 104 K（`agentguide`，他项目） | **无本项目文件** | — |
-| **scm** `chenrunbin.crb@100.82.100.41` | 待建 | **18 TB 空闲** | **归档盘**（2026-07-29 定位）：**不能下载** —— `huggingface.co` TCP 443 不可达（`pypi.org` 通 ⇒ 白名单受限出网）、且无 ffmpeg/ffprobe。用途 = 存本地"即下即删"产出的帧与标注长期副本 | — |
+| **scm** `chenrunbin.crb@100.82.100.41` | `/workspace/projects/alpamayo-edge-archive/`（2026-10-15 建成：**7 个 ONNX tgz 共 39 G + SHA256SUMS，全量 `sha256sum -c` 通过**） | 12 TB 空闲 | **归档盘**：**不能下载** —— `huggingface.co` TCP 443 不可达（`pypi.org` 通 ⇒ 白名单受限出网）、且无 ffmpeg/ffprobe。Mac/dog 的大件冗余已在归档验证后删除 | `SHA256SUMS` |
 | **Kaggle 云** | 私有 kernel `alpamayo-edge-export` / `-2b` / `-lmhead` | — | 量化 + ONNX 导出 + FP16 参考；**输出即时下载，云端不留** | `cloud/README.md` |
 | **GitHub** | `ranpin/alpamayo-edge`（2026-10-09 由 `qwen-trajectory-prediction` 改名） | — | `main`（唯一开发分支，2026-10-15 由 `alpamayo-edge` 分支收敛而来）· `gh-pages`（[已发布站点](https://ranpin.github.io/alpamayo-edge/)） | — |
 
@@ -25,7 +25,7 @@
 |---|---|---|---|---|
 | `engines/` | TensorRT 引擎（**sm_87 专用**，不可跨架构） | 28 G + len16384 三件（int4 5.7G / int8_kv32768 8.9G【OOM 实物证据】/ int8_kv16448 8.9G）+ int4_len16384/visual | 30 G（**fp16 16 G** + int4【含 visual，2026-10-09 从 dog 拷入】+ int8） | ✅ 由 `onnx/` 经 `llm_build` |
 | `onnx/` | 云端量化导出的 ONNX（建引擎的输入） | 44 G | 32 G | ✅ 原由 `tarballs/` 解包 |
-| `tarballs/` | 传输/迁移打包 | 26 G | **已删（2026-10-12，回收 40 G）**——解包对应物逐一核实后执行，本节预授权 | ✅ **纯冗余，可删** |
+| `tarballs/` | 传输/迁移打包 | **已清空（2026-10-15，归档至 scm 并验证后删除，回收 32 G）** | 已删（2026-10-12，回收 40 G）——解包对应物逐一核实后执行，本节预授权 | ✅ **纯冗余，可删** |
 | `bench/` | n=210 基准 + `ood_eval/`（驾驶域 n=184：448/720/1080 三档帧 3.4G + 输入/输出/日志） | ~3.5 G | `ood_eval/` 仅曾用于 FP16 n=184（190 M 帧） | ⚠️ 输出是实测记录 |
 | `alpamayo1.5/` + `alpamayo_gate4/` | 闸门 4：NVlabs 仓库 clone + a1_5_venv（py3.12/torch2.8 CPU）+ **Alpamayo-1.5-10B 权重 22 G** + staging + 结果 | — | ~26 G | ✅ 权重可重下（公开、须 `HF_HUB_DISABLE_XET=1`）；见 `eval/vla_gate4/README.md` |
 | `io/` | 各次推理的请求/响应 JSON | 152 K | — | ❌ 实测记录 |
@@ -70,8 +70,9 @@
 ├── legacy/       前身项目（Qwen3-4B 文本轨迹预测，冻结）
 ├── .claude/      skill edge-quantize-deploy（入 git）
 └── outputs/      **大件 gitignore**，仅本地：
-    ├── *.tgz             自产量化权重 6 件 39 G —— 2026-10-15 起归档至
-    │                     scm:/workspace/projects/alpamayo-edge-archive/（sha256 验证后本地删除）
+    ├── *.tgz             自产量化权重 7 件 39 G —— **已归档至
+    │                     scm:/workspace/projects/alpamayo-edge-archive/ 并全量 sha256 验证，
+    │                     本地副本已删（2026-10-15）**
     ├── *.sha256          校验和（小溯源件）
     └── archive/          原始日志（orin_logs/ goat_logs/ orin_prof/）+ MANIFEST.md（SHA256）
 ```
@@ -83,12 +84,12 @@
 
 | 东西 | 只存在于 | 丢了怎么办 |
 |---|---|---|
-| **FP16 引擎** 16 G | **仅 orin-goat** `engines/fp16` | ✅ 可重建：ONNX 已在本地归档（`edge_fp16_llm.tgz`，SHA256 已校验），但**必须在 ≥64 GB 内存的机器上** build（32GB 机峰值 54.8 G 会 OOM） |
-| INT4/INT8/2B 引擎 | 两台 Orin | ✅ 由本地 ONNX 重建（sm_87 机器即可） |
+| **FP16 引擎** 16 G | **仅 orin-goat** `engines/fp16` | ✅ 可重建：ONNX 已归档 **scm**（`edge_fp16_llm.tgz`，SHA256SUMS 校验通过），但**必须在 ≥64 GB 内存的机器上** build（32GB 机峰值 54.8 G 会 OOM） |
+| INT4/INT8/2B 引擎 | 两台 Orin | ✅ 由 ONNX 重建（sm_87 机器即可；ONNX 在设备 `onnx/` + scm 归档双份） |
 | 全部原始日志 / 请求响应 / 剖析 | 已于 2026-07-27 **全部拉回本地** | ✅ 本地 + MANIFEST |
-| 自产量化 ONNX | 本地 + 设备 | ✅ 本地有 4 个 tgz 且 SHA256 已校验；最坏情况重跑 Kaggle 量化 |
+| 自产量化 ONNX | **scm 归档（唯一 tgz 副本，7 件 39 G，sha256 全验）** + 设备解包目录 | ✅ 最坏情况重跑 Kaggle 量化（Mac/dog 的 tgz 冗余副本已于 2026-10-15 验证后删除） |
 
-**磁盘**：
-- orin-goat `/home` 已用 **91%**（剩 40 G）⇒ 要腾空间先删 `tarballs/`（40 G，与已解包内容完全重复）。
-- orin-dog `/home` 用 41%（NVMe 916 G，剩 521 G），宽松；`tarballs/` 亦可删回收 26 G。
-- 两台的 `tarballs/` 都是**纯冗余**（内容 = `onnx/` + goat 的 `engines/fp16`），删前对照本地 MANIFEST 的 SHA256 即可。
+**磁盘（2026-10-15 归档清理后）**：
+- orin-goat `/home`：tarballs 40 G 已删（2026-10-12）；现存大头 = Alpamayo 权重 22 G + onnx 32 G + engines 30 G。
+- orin-dog `/home` 用 42%（NVMe 916 G，剩 510 G），宽松；tarballs 32 G 已删（2026-10-15，归档 scm 验证后）。
+- Mac 仓库 ~2 G（tgz 已归档删除，只留 sha256/日志/archive）。
