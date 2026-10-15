@@ -26,6 +26,10 @@ uv venv export_venv --python 3.12 --clear || { echo VENV_FAILED; exit 1; }
 source export_venv/bin/activate
 uv pip install -e ".[export]" > "$A/logs/w0c_pip_install.log" 2>&1 \
   || { echo INSTALL_FAILED; tail -15 "$A/logs/w0c_pip_install.log"; exit 1; }
+# export CLI 的 visual 导出会 import 量化配置链 → 需要 modelopt（在 tools extra
+# 里、export extra 不含）——2026-10-15 实测：缺它时 LLM 导出成功、visual 导出崩。
+uv pip install "nvidia-modelopt==0.45.0" >> "$A/logs/w0c_pip_install.log" 2>&1 \
+  || { echo MODELOPT_FAILED; exit 1; }
 
 python -c "import torch, transformers, onnx; print('torch', torch.__version__, '| transformers', transformers.__version__, '| onnx', onnx.__version__)" \
   || { echo IMPORT_FAILED; exit 1; }
