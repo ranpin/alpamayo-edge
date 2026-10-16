@@ -32,7 +32,13 @@
    "int4_vs_fp16": 0.424,
    "int8_vs_fp16": 0.845
   },
-  "conclusion": "No statistically significant accuracy loss (n=210; all McNemar p>0.4; CIs overlap). robovqa 88.2%, robofail 63% (harder)."
+  "tost_equivalence_2026_10_16": {
+   "method": "TOST, delta=7pts (study MDE), paired-difference 90% CI from discordant b/c",
+   "int4_vs_fp16": {"diff_pts": -2.4, "ci90_pts": [-6.3, 1.5], "equivalent_within_7pts": true},
+   "int8_vs_fp16": {"diff_pts": -1.0, "ci90_pts": [-4.9, 3.0], "equivalent_within_7pts": true},
+   "note": "Robot-domain equivalence IS established within 7pts for both INT4 and INT8 (unlike driving-domain INT8, whose 90%CI lower bound -7.5 exceeds -7). Reproduce: eval/accuracy/stats_correction.py"
+  },
+  "conclusion": "No statistically significant accuracy loss (n=210; all McNemar p>0.4; CIs overlap); TOST (2026-10-16) establishes equivalence within 7pts for both INT4 and INT8. robovqa 88.2%, robofail 63% (harder)."
  },
  "error_analysis": {
   "items_flipped_vs_fp16": {
