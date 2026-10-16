@@ -492,3 +492,40 @@ batch=1 后临时张量小一个数量级，不必再压总量）。
   （把 14 分钟的重试泥潭变成秒级失败）。另：hf 下载 22G 权重时 **Xet/CAS 后端 401**，
   `HF_HUB_DISABLE_XET=1` 走传统 HTTP 即愈（且快一个量级）；`cmd | tail` 再次吞掉真实退出码
   （下载"成功"实则 3/5 分片缺失——靠逐分片字节数校验抓住）。
+
+## K. Cosmos3-Edge on JetPack 6.2：五道墙与打通路径（2026-10-16，W0–W1 实测）
+
+背景：TRTEdge 0.10.x 官方支持 Cosmos3-Edge，但 Orin JetPack 6.2（cuda 12.6 / TRT 10.7 / sm_87）
+在支持矩阵里只是 **Compatible 档**（Official 是 JetPack 7.2 / cuda13 / TRT 11）。实测代价 = 五道墙：
+
+### K1. CuTe DSL 预编译件缺 sm_87+cuda12 ⇒ configure FATAL
+上游 `kernelSrcs/build_cutedsl_tarballs.sh` 的 cuda13 targets 含 `aarch64:sm_87`，
+cuda12 targets 只有 sm_110/121（**刻意排除，非遗漏**）。初解 `-DENABLE_CUTE_DSL=OFF`（见 K5 反噬）。
+
+### K2. nlohmann 子模块缺失（depth-1 clone）
+C++ 侧 `nlohmann/json.hpp` 编译失败；python 侧 pyproject `license-files` 匹配不到文件被
+scikit-build-core 拒装。修：`git submodule update --init --recursive`；C++ 侧曾以单头文件 `-I` 绕过（等价）。
+
+### K3. XQA JIT NVRTC 缺头 ⇒ llm_build 插件创建失败
+0.10.x 的 decode XQA kernel 改为构建期嵌入头 + 运行期 NVRTC JIT；嵌入清单按 CUDA 13 写，
+cuda12.6 的 `cuda_fp16.h → vector_types.h → crt/host_defines.h` 链缺失。补清单后又暴露
+`vector_functions.h → cuda_runtime_api.h` 巨链 ⇒ **根治：`pluginJitCompiler.cpp` 注入
+`-I$CUDA_HOME/include`**（NVRTC 从磁盘解析系统头，一处补丁覆盖全部 JIT kernel）。
+
+### K4. ViTAttentionPlugin 无 legacy 后端 ⇒ visual_build 失败（head_dim 72）
+`ViTFMHABackend` 枚举只剩 CuTe DSL 两项（legacy 被移除）；`USE_TRT_NATIVE_ATTN=1` 导出的
+`TRT_Attention` 算子 parser 支持 **TRT 11.0 起**（TensorRT CHANGELOG 实证，ragged 11.1）。
+解：分解注意力导出补丁（基础算子块对角 ragged attention，`scripts/orin/apply_decomposed_attn_patch.py`）。
+
+### K5. prefill FMHA 无 legacy 后端 ⇒ 引擎能建、推理必挂
+`ContextFMHABackend` 枚举同样只剩 CuTe DSL；`ENABLE_CUTE_DSL=OFF` 下 LLM 引擎构建成功
+（XQA JIT 属 decode 路径）但运行期 prefill 报 "selected prefill kernel is unavailable (D=128, SM=87)"。
+**根治（W1 突破）：用上游脚本自生成 `cutedsl_aarch64_sm_87_cuda12.tar.gz`**——
+`CUDA_CTK_VERSION=12.6 CUTE_DSL_TARGETS=aarch64:sm_87 CUTE_DSL_KERNELS=fmha bash kernelSrcs/build_cutedsl_tarballs.sh`
+（需 GPU 在场做 AOT 导出；nvidia-cutlass-dsl[cu12]==4.7.0 + cupy-cuda12x 均有 aarch64 wheel）
+→ `-DENABLE_CUTE_DSL=fmha` 重配置重建 → **冒烟全绿**（单帧驾驶场景描述连贯、EOS）。
+
+**教训**：① Compatible 档的代价是具体、有限、可逐个击破的——五道墙各有工程解；
+② **"上游不给预编译件"≠"不能生成"**：构建脚本支持显式 target 覆盖，sm_87+cuda12 生成一次通过；
+③ K4 的分解注意力补丁在 K5 解决后成为冗余保险（插件路径恢复可用），保留作为无 CuTe DSL 环境的 fallback；
+④ 值得向 TRTEdge 上游提 issue：cuda12 targets 补 aarch64:sm_87 + 嵌入头清单补 vector_* 链。
