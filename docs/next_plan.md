@@ -228,13 +228,13 @@ Cosmos3-Edge 9.18G / Policy-DROID 9.17G（transformer 6.75G + vae 1.41G + vision
 
 | # | 闸门 | 通过判据 | 不通过的处置 |
 |---|---|---|---|
-| W0a | 权重落地 + 架构核实 | 镜像下载字节完整；config 与模型卡一致（4B/MoT） | 换 Kaggle 拉取 |
-| W0b | dog 自有目录建 TRTEdge **0.10.x**（JetPack 6.2 Compatible 档）+ `-DBUILD_EXPERIMENTAL_MODELS=ON` | 编译通过、现有 CR2 引擎回归不受影响（共享安装不动） | 定位 CUDA/TRT 版本约束；不行则 goat 建 |
-| W0c | `tensorrt-edgellm-export --task policy` 走通（CPU 导出，地点 Mac/goat/Kaggle 三选一实测） | ONNX 产物齐全 | 定位 python 依赖/平台问题 |
-| W0d | AV embodiment 路径核实：base 模型 AV(9D) 动作输出有无现成 checkpoint/示例 | 明确"AV 动作可跑"或"仅 DROID 机器人动作" | 若仅 DROID：demo 用机器人动作 + AV 侧做世界预测/推理，如实标注 |
-| W1 | 引擎构建：FP16 → INT4/INT8（复用 Kaggle 量化管线或 TRTEdge 内建路径） | dog 上引擎建成 + 单样本推理 | 分析 sm_87 量化选项空间（同 CR2 方法论） |
-| W2 | 评测：reasoner 侧复用 **n=184 驾驶域基准**（2B reasoner vs 8B CR2 跨代对比）；policy 侧 DROID 样例动作合理性 | 指标表入库 | — |
-| W3 | demo：动作推理视频（真实推理输出）+ 站点交互页 | 可播放 + 可访问 | — |
+| W0a | 权重落地 + 架构核实 | ✅ 2026-10-16：hf-mirror 下载 Cosmos3-Edge 8.6G + Policy-DROID 8.6G，字节校验，Mac+goat 双落地 | — |
+| W0b | dog 自有目录建 TRTEdge **0.10.x**（JetPack 6.2 Compatible 档）+ `-DBUILD_EXPERIMENTAL_MODELS=ON` | ✅ v0.10.1 在 dog+goat 均建成（五道墙见 PROBLEMS K）；共享安装未动 | — |
+| W0c | `tensorrt-edgellm-export --task policy` 走通（CPU 导出，地点 Mac/goat/Kaggle 三选一实测） | ✅ reasoning 导出成功（goat CPU，llm+visual ONNX 全套）；policy 导出待 W2 后 | — |
+| W0d | AV embodiment 路径核实 | ✅ 动作三模式 fd/id/policy；AV 轨迹走 id 模式（PyTorch 路径）；TRTEdge turnkey = reasoning + DROID policy；Guardrail gated 为风险项 | — |
+| W1 | 引擎构建：FP16 → INT4/INT8 | 🔄 **FP16 已成（goat）：llm 3.7G + visual 940M（分解注意力版），单样本冒烟通过（驾驶场景描述连贯/EOS）**；INT4/INT8 量化未开始；dog 侧被 system_agent 占 26.5G GPU 内存阻塞（待协调） | 量化走 TRTEdge quantize.py 或 Kaggle 管线 |
+| W2 | 评测：reasoner 侧复用 **n=184 驾驶域基准**（2B reasoner vs 8B CR2 跨代对比）；policy 侧 DROID 样例动作合理性 | 🔄 n=184 FP16 运行中（goat，输入/标答/打分脚本全复用） | — |
+| W3 | demo：动作推理视频（真实推理输出）+ 站点交互页 | ⏳ 未开始 | — |
 
 **与 homebot-wm 的边界**：Policy-DROID 是机器人操作 WAM，与 homebot-wm 主线（压缩+部署视觉
 扩散模型到 Orin）同构——**方法共享、叙事分开**：本项目讲"AV/边缘方法论双模型实证"，
