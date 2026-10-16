@@ -229,11 +229,11 @@ Cosmos3-Edge 9.18G / Policy-DROID 9.17G（transformer 6.75G + vae 1.41G + vision
 | # | 闸门 | 通过判据 | 不通过的处置 |
 |---|---|---|---|
 | W0a | 权重落地 + 架构核实 | ✅ 2026-10-16：hf-mirror 下载 Cosmos3-Edge 8.6G + Policy-DROID 8.6G，字节校验，Mac+goat 双落地 | — |
-| W0b | dog 自有目录建 TRTEdge **0.10.x**（JetPack 6.2 Compatible 档）+ `-DBUILD_EXPERIMENTAL_MODELS=ON` | ✅ v0.10.1 在 dog+goat 均建成（五道墙见 PROBLEMS K）；共享安装未动 | — |
-| W0c | `tensorrt-edgellm-export --task policy` 走通（CPU 导出，地点 Mac/goat/Kaggle 三选一实测） | ✅ reasoning 导出成功（goat CPU，llm+visual ONNX 全套）；policy 导出待 W2 后 | — |
+| W0b | dog 自有目录建 TRTEdge **0.10.x**（JetPack 6.2 Compatible 档）+ `-DBUILD_EXPERIMENTAL_MODELS=ON` | ✅ v0.10.1 在 dog+goat 均建成（六道墙见 PROBLEMS K）；共享安装未动 | — |
+| W0c | `tensorrt-edgellm-export --task policy` 走通（CPU 导出，地点 Mac/goat/Kaggle 三选一实测） | ✅ reasoning + policy 导出均成功（goat CPU）；policy 的 und_prefill/gen 走 K6 分解补丁（`USE_DECOMPOSED_POLICY=1`） | — |
 | W0d | AV embodiment 路径核实 | ✅ 动作三模式 fd/id/policy；AV 轨迹走 id 模式（PyTorch 路径）；TRTEdge turnkey = reasoning + DROID policy；Guardrail gated 为风险项 | — |
 | W1 | 引擎构建：FP16 → INT4/INT8 | 🔄 **FP16 已成（goat）：llm 3.7G + visual 940M（分解注意力版），单样本冒烟通过（驾驶场景描述连贯/EOS）**；INT4/INT8 量化未开始；dog 侧被 system_agent 占 26.5G GPU 内存阻塞（待协调） | 量化走 TRTEdge quantize.py 或 Kaggle 管线 |
-| W2 | 评测：reasoner 侧复用 **n=184 驾驶域基准**（2B reasoner vs 8B CR2 跨代对比）；policy 侧 DROID 样例动作合理性 | 🔄 n=184 FP16 运行中（goat，输入/标答/打分脚本全复用） | — |
+| W2 | 评测：reasoner 侧复用 **n=184 驾驶域基准**（2B reasoner vs 8B CR2 跨代对比）；policy 侧 DROID 动作链打通 | ✅ reasoner n=184 = **42.4%**（−9.2 vs CR2 FP16，p=0.0115 显著）；**policy 四组件引擎全建成（K6 分解补丁绕过 TRT10.7），冒烟 exit=0、action[1,16,10] 全 finite、5154ms/round**；动作语义定量评测留 W3 | — |
 | W3 | demo：动作推理视频（真实推理输出）+ 站点交互页 | ⏳ 未开始 | — |
 
 **与 homebot-wm 的边界**：Policy-DROID 是机器人操作 WAM，与 homebot-wm 主线（压缩+部署视觉

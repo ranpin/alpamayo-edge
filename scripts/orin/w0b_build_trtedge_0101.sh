@@ -21,6 +21,19 @@ fi
 cd trtedge-0.10.1 || exit 1
 grep -m1 "cmake_minimum_required" CMakeLists.txt
 
+# 0.10.x 新增 nlohmann/json 依赖（actionBuilder 等），dog 系统无此头文件且
+# sudo 有密码锁不能 apt ⇒ 单头文件版落自有 deps 目录，-I 注入（GitHub dog 可达）。
+DEPS=$A/deps
+if [ ! -f "$DEPS/include/nlohmann/json.hpp" ]; then
+  echo "=== fetch nlohmann/json single header ==="
+  mkdir -p "$DEPS/include/nlohmann"
+  curl -sL --max-time 120 -o "$DEPS/include/nlohmann/json.hpp" \
+    https://github.com/nlohmann/json/releases/download/v3.11.3/json.hpp \
+    || { echo JSON_FETCH_FAILED; exit 1; }
+  head -c 200 "$DEPS/include/nlohmann/json.hpp" | grep -q nlohmann \
+    || { echo JSON_FETCH_BAD_CONTENT; head -c 200 "$DEPS/include/nlohmann/json.hpp"; exit 1; }
+fi
+
 echo "=== configure $(date +%T) ==="
 # ENABLE_CUTE_DSL=OFF：0.10.x 默认 "fmha"，但 CuTe DSL 预编译件只有 sm_87+cuda13
 # （JetPack 7.2），dog 是 cuda12.6 ⇒ 必须关掉走传统 FMHA 路径（0.9.0 同款，
@@ -31,6 +44,7 @@ cmake -B build_orin -S . \
   -DEMBEDDED_TARGET=jetson-orin \
   -DCUDA_CTK_VERSION=12.6 \
   -DENABLE_CUTE_DSL=OFF \
+  -DCMAKE_CXX_FLAGS="-I$DEPS/include" \
   -DBUILD_EXPERIMENTAL_MODELS=ON > "$A/logs/w0b_configure.log" 2>&1
 rc=$?
 echo "configure exit=$rc"
