@@ -493,10 +493,10 @@ batch=1 后临时张量小一个数量级，不必再压总量）。
   `HF_HUB_DISABLE_XET=1` 走传统 HTTP 即愈（且快一个量级）；`cmd | tail` 再次吞掉真实退出码
   （下载"成功"实则 3/5 分片缺失——靠逐分片字节数校验抓住）。
 
-## K. Cosmos3-Edge on JetPack 6.2：五道墙与打通路径（2026-10-16，W0–W1 实测）
+## K. Cosmos3-Edge on JetPack 6.2：六道墙与打通路径（2026-10-16，W0–W2 实测）
 
 背景：TRTEdge 0.10.x 官方支持 Cosmos3-Edge，但 Orin JetPack 6.2（cuda 12.6 / TRT 10.7 / sm_87）
-在支持矩阵里只是 **Compatible 档**（Official 是 JetPack 7.2 / cuda13 / TRT 11）。实测代价 = 五道墙：
+在支持矩阵里只是 **Compatible 档**（Official 是 JetPack 7.2 / cuda13 / TRT 11）。实测代价 = 六道墙：
 
 ### K1. CuTe DSL 预编译件缺 sm_87+cuda12 ⇒ configure FATAL
 上游 `kernelSrcs/build_cutedsl_tarballs.sh` 的 cuda13 targets 含 `aarch64:sm_87`，
@@ -525,7 +525,29 @@ cuda12.6 的 `cuda_fp16.h → vector_types.h → crt/host_defines.h` 链缺失�
 （需 GPU 在场做 AOT 导出；nvidia-cutlass-dsl[cu12]==4.7.0 + cupy-cuda12x 均有 aarch64 wheel）
 → `-DENABLE_CUTE_DSL=fmha` 重配置重建 → **冒烟全绿**（单帧驾驶场景描述连贯、EOS）。
 
-**教训**：① Compatible 档的代价是具体、有限、可逐个击破的——五道墙各有工程解；
+### K6. policy und_prefill/gen 导出 ONNX 标准 Attention/RotaryEmbedding ⇒ TRT 10.7 parser 不认（W2）
+`--task policy` 的 und_prefill（理解 prefill）与 gen（扩散动作专家）把注意力/RoPE 经
+`trt::attention_onnx`/`trt::rope_onnx` custom op lower 成 **ONNX 标准 `Attention`（opset 23+）
+/`RotaryEmbedding` 算子**（und：28 Attention+84 RotaryEmbedding；gen：一批），这两个算子只有
+**TRT≥11 parser** 认识；Orin TRT 10.7 建引擎报 "Cannot find plugin: Attention/RotaryEmbedding,
+version: 1, namespace:."。与 K4 同源（都是 TRT-11 算子墙），但 K4 是 visual 的 `TRT_Attention`、
+这里是 policy 的 ONNX 标准算子；且 K5 的 CuTe DSL 自生成对 policy 图无解（gen 走 custom-op
+lowering，不是 FMHA backend 选择）。
+**解（W2 突破）**：把 K4 的分解思路推广到 policy + RoPE——`scripts/orin/apply_policy_decomposed_patch.py`
+在 `ops.py` 加 `decomposed_attention`（GQA 折批 grouped matmul + arange 下三角 causal 掩码，
+覆盖 und 的 is_causal=True 自注意力与 gen 的 is_causal=False 对 cat([und,gen]) 的交叉注意力）
++ `decomposed_rope`（rotate_half；`attention_pos_id` 是恒等 gather（cosmos3PolicyRunner.cpp:257
+"identity gather indices"）⇒ 逐 token 直接对齐，但仍用 torch.gather 保留 position_ids 防被 DCE
+导致 runtime 找不到 binding），env `USE_DECOMPOSED_POLICY=1` 门控、两个 modeling 文件 import
+换包装器（additive，不动已工作的 reasoning 路径）。分解实现先经 `test_policy_decomposed.py`
+数值对拍（attention vs `F.scaled_dot_product_attention` err~1e-7、rope vs LLaMA 全维公式 err=0）
+再导出 ⇒ und_prefill/gen 引擎建成、`cosmos3_policy_inference` 冒烟 exit=0
+（action [1,16,10] 全 finite、5154ms/round）。
+
+**教训**：① Compatible 档的代价是具体、有限、可逐个击破的——六道墙各有工程解；
 ② **"上游不给预编译件"≠"不能生成"**：构建脚本支持显式 target 覆盖，sm_87+cuda12 生成一次通过；
-③ K4 的分解注意力补丁在 K5 解决后成为冗余保险（插件路径恢复可用），保留作为无 CuTe DSL 环境的 fallback；
-④ 值得向 TRTEdge 上游提 issue：cuda12 targets 补 aarch64:sm_87 + 嵌入头清单补 vector_* 链。
+③ **分解导出补丁是对「TRT-11-only 算子墙」的通用武器**：K4（visual 的 TRT_Attention）与
+K6（policy 的 ONNX Attention/RotaryEmbedding）同源同解——用基础算子分解，任何 TRT 版本可解析；
+K4 在 K5（自生成 CuTe DSL）解决后成冗余保险，K6 则是 policy 链唯一通路（gen 无 FMHA backend 可选）；
+④ 值得向 TRTEdge 上游提 issue：cuda12 targets 补 aarch64:sm_87 + 嵌入头清单补 vector_* 链 +
+policy 导出对 TRT<11 提供分解 fallback。
