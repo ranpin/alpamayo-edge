@@ -2,7 +2,7 @@
 
 **NVIDIA Physical AI 模型在 Jetson AGX Orin 上的边缘量化部署与全套实测研究**——一套管线部署
 两代模型：**Alpamayo 1.5**（10B AV VLA，其 VLM backbone = Cosmos-Reason2-8B，已量化落地）+
-**Cosmos3-Edge**（4B 世界动作模型，进行中）；INT4(AWQ)/INT8(SmoothQuant) 量化，精度、延迟、
+**Cosmos3-Edge**（4B 世界动作模型，Phase W 已收官）；INT4(AWQ)/INT8(SmoothQuant) 量化，精度、延迟、
 能耗、内存、可靠性五轴证据，零预算、零训练、全 Orin 实测。
 
 🎬 **在线 Demo（Cosmos3-Edge 2B 驾驶场景理解 · 真实 Orin 推理输出）**：<https://ranpin.github.io/alpamayo-edge/cosmos3-demo/>
@@ -19,16 +19,18 @@
 | 分辨率值不值？ | **值，性价比拐点 720p**：INT8 448→1080p +8.2pts（族内校正后显著）；720p 已拿到其中 +7.1、成本仅 1/3（720p 单独未过校正 ⇒ 性价比论点，非显著性结论） |
 | 能进 AV 感知环路吗？ | **不能，也不该**：真实分辨率 0.1–1 Hz ⇒ 定位事件级场景理解（风险解释/日志挖掘/驾驶员问答） |
 | 还有优化空间吗？ | **量化侧已穷尽**：decode 带宽达硬件可达上限（153.1≈152.3 GB/s）、手写 kernel 负结果、31min 零降频 |
-| VLA（轨迹输出）呢？ | PyTorch 路线在 32GB 级不可行（FP16-only 22.16G）；**双轨推进中**：Track 1 = Alpamayo 1.5 全栈 TRTEdge 移植（Phase V），Track 2 = Cosmos3-Edge 4B WAM 官方管线（Phase W，先行） |
+| VLA（轨迹输出）呢？ | PyTorch 路线在 32GB 级不可行（FP16-only 22.16G）；**双轨**：Track 2 = Cosmos3-Edge 4B WAM 官方管线（Phase W，**已收官**：reasoner 落地 + policy 动作链部署打通、单帧帧无关边界实测），Track 1 = Alpamayo 1.5 全栈 TRTEdge 移植（Phase V，待启动） |
 
-## 现状（2026-10-15）
+## 现状（2026-10-19）
 
 **第一阶段收官**：P0 驾驶域数据四道闸门全过、两个正式实验（驾驶域三精度评测、分辨率 Pareto）
 完成、VLA 可行性闸门实测关闭（结论见上表）。
-**第二阶段双轨进行中**（规划与闸门见 [docs/next_plan.md](docs/next_plan.md)）：
-- **Phase W（先行）**：Cosmos3-Edge（4B 世界动作模型，TRTEdge 0.10.x 官方支持）——W0 侦察中
-- **Phase V**：Alpamayo 1.5 全栈（VLM + 轨迹专家）TRTEdge 移植——参照 Thor fork，待 W 的
-  TRTEdge 0.10.x 构建完成后开工
+**第二阶段 Phase W 收官**（规划与闸门见 [docs/next_plan.md](docs/next_plan.md)）：
+- **Phase W（Cosmos3-Edge，已完成）**：六道 JetPack 6.2 兼容墙逐个打通（PROBLEMS §K）；
+  reasoner n=184 驾驶域 42.4%（跨代对比显著，见结论 8）；policy 动作链四组件引擎建成、
+  冒烟通过，但单帧 turnkey 路径实测「帧无关」（能力边界，非引擎 bug，PROBLEMS §L）；
+  reasoning demo 已上线（见顶部链接）
+- **Phase V**：Alpamayo 1.5 全栈（VLM + 轨迹专家）TRTEdge 移植——参照 Thor fork，待启动
 
 ## 核心结论（全部实测，细节与图表在站点）
 
@@ -58,6 +60,14 @@
 7. **VLA 轨道（Alpamayo-1.5-10B）在 32GB 级 Orin 不可行**：FP16-only 权重 22.16G、官方单样本
    推理 ~24GB VRAM、无量化路径；64GB 机上加载 + CPU 单次前向已验证可行（58 min/次，
    轨迹输出物理自洽）⇒ 受阻点明确而非判死（[eval/vla_gate4/](eval/vla_gate4/)）。
+8. **Cosmos3-Edge（第二代 4B WAM）跨代验证「缩小不免费、量化几乎免费」**：其 2B VL reasoner
+   在 n=184 驾驶域 42.4%（3.4× chance），显著低于上一代 CR2-8B 的量化版（INT4 50.5% / INT8
+   47.8%，McNemar b/c=29/12、p=0.0115）——新一代 2B 显著输给上一代 8B 量化版。policy 动作链
+   （DROID）四组件引擎建成、冒烟通过（action [1,16,10] 全 finite、5154ms/round），但单帧
+   turnkey 路径实测「帧无关」（换帧 f20/60/100/140 输出近乎相同，mean diff≈0.009）——
+   vision-only 单帧 conditioning 的能力边界，非引擎 bug（PROBLEMS §L）；AV 行车轨迹需
+   inverse-dynamics 模式（仅 PyTorch、非 turnkey）。⇒ demo 锚定已验证 works 且帧敏感的
+   reasoning 侧（[eval/cosmos3/](eval/cosmos3/)）。
 
 ## 与 Alpamayo 家族的关系
 
@@ -72,10 +82,10 @@
 ## 仓库布局
 
 ```
-├── docs/            结果报告 / 方法论 / 问题记录(A–J) / 构建日志 / 规划
+├── docs/            结果报告 / 方法论 / 问题记录(A–L) / 构建日志 / 规划
 │   ├── figures/       图片唯一真源（21 张）
-│   └── site/          呈现站点源码（index.html；部署于 gh-pages 分支，figures 为符号链接）
-├── eval/            评测资产：n=210 基准、n=184 驾驶域基准、分辨率 Pareto、VLA 闸门、roofline、kernel
+│   └── site/          呈现站点源码（index.html + cosmos3-demo/；部署于 gh-pages 分支）
+├── eval/            评测资产：n=210 基准、n=184 驾驶域基准、分辨率 Pareto、VLA 闸门、roofline、kernel、cosmos3
 ├── cloud/           Kaggle 免费云量化/导出管线
 ├── scripts/orin/    设备端脚本归档
 ├── configs/         设备环境配置（orin.env）
@@ -94,7 +104,7 @@
 | **[站点](https://ranpin.github.io/alpamayo-edge/)** | **论文式呈现（首选入口）**：摘要 → 核心结果（§1.1–1.12）→ 方法细节 → 思考讨论 |
 | [docs/edge_deploy_status.md](docs/edge_deploy_status.md) | 结果报告：链路、体积、性能/功耗/精度/Pareto/VLA 闸门全套指标 |
 | [docs/METHODOLOGY.md](docs/METHODOLOGY.md) | 方法与可复现性：模型/数据/校准集来源、指标定义与测法 |
-| [docs/PROBLEMS.md](docs/PROBLEMS.md) | 统一问题记录（A–J）：现象 → 根因 → 解决 → 教训 |
+| [docs/PROBLEMS.md](docs/PROBLEMS.md) | 统一问题记录（A–L）：现象 → 根因 → 解决 → 教训 |
 | [docs/orin_build_notes.md](docs/orin_build_notes.md) | 工程日志：Orin 构建配方、FMHA 崩溃根因、复现命令 |
 | [docs/next_plan.md](docs/next_plan.md) | 规划与决策记录：P0 四道闸门（全过）、P2 可选加固、明确不做清单 |
 | [docs/device_layout.md](docs/device_layout.md) | 1 台 Mac + 2 台 Orin + Kaggle 的文件布局、单点与可重建性 |
@@ -102,16 +112,18 @@
 | [docs/FINDINGS.md](docs/FINDINGS.md) | 选型背景（已定案） |
 | [eval/accuracy/benchmark/](eval/accuracy/benchmark/) | n=210 机器人域基准：manifest + 三方输出 + 打分脚本 |
 | [eval/accuracy/driving/](eval/accuracy/driving/) | **n=184 驾驶域基准**（§1.11）+ [pareto/](eval/accuracy/driving/pareto/) 分辨率 Pareto（§1.12） |
+| [eval/cosmos3/](eval/cosmos3/) | **Cosmos3-Edge（Phase W）**：reasoner n=184 跨代对比 + policy 动作链（W2 打通 / W3 帧无关边界，含 repro 脚本） |
 | [eval/vla_gate4/](eval/vla_gate4/) | Alpamayo-1.5-10B 可行性闸门：README + 实测结果 |
 | [scripts/orin/](scripts/orin/) | 设备端脚本归档（构建/评测/功耗/闸门 4） |
 | [cloud/](cloud/README.md) | Kaggle 免费云量化/导出管线 |
 
-## 评测资产（三套，全部带标答、可复现）
+## 评测资产（四套，全部带标答、可复现）
 
 | 资产 | 规模 | 来源 | 用途 |
 |---|---|---|---|
 | 机器人域 MC 基准 | n=210（robovqa 110 + robofail 100） | 官方 Cosmos-Reason1-Benchmark（repo 自带视频的全部） | 精度主基准（§1.2） |
 | **驾驶域 MC 基准** | n=184（8 类 × 23，答案字母配平） | NVIDIA PhysicalAI-AV `ood_reasoning`（人工核验标注） | 驾驶域精度（§1.11）+ 分辨率 Pareto（§1.12） |
+| Cosmos3-Edge 评测 | n=184（同驾驶域题）+ policy 动作链 | 同上（唯一变量=模型）+ DROID 真实帧 | 跨代对比 + policy 帧无关边界（结论 8） |
 | CVM 轨迹基线 | 合成占位 | legacy 项目迁移 | VLA 轨道对照（暂缓） |
 
 ## 快速复现（Orin，量化产物已在设备）
@@ -145,6 +157,8 @@ bash $A/scripts/run_pareto.sh int4_1080 $A/engines/int4_len16384/llm \
 - 驾驶域标注是 clip 级事件聚类（非逐帧感知标签）；train split 无法排除 CR2 训练见过
   ⇒ 不声称"未见数据上的绝对能力"，跨精度对照不受影响。
 - 无轨迹预测输出（ADE/FDE 属 VLA 轨道，受阻点见结论 7）；无多相机实测（token 账见站点 §1.10）。
+- Cosmos3-Edge policy 动作链是**部署打通 + 单帧帧无关边界**（非动作语义正确性验证，PROBLEMS §L）；
+  demo 因此锚定 reasoning 侧，不展示 policy 动作。
 - INT4@原生 1080p 有 16% 空输出的运行时缺陷（INT8 全干净，PROBLEMS J1，机理未明）。
 
 ## 许可与致谢

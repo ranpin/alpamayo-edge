@@ -4,6 +4,9 @@
 扩散专家，MoT 单塔）。部署链路与六道 JetPack 6.2 兼容墙见 `docs/PROBLEMS.md` §K，policy
 动作链的能力边界见 §L。
 
+🎬 **在线 Demo（reasoning 侧自由场景描述，真实 Orin 推理输出）**：
+<https://ranpin.github.io/alpamayo-edge/cosmos3-demo/>（源在 `docs/site/cosmos3-demo/`）
+
 ## Reasoner 侧：n=184 驾驶域基准（2026-10-16，W2）
 
 **协议与 §1.11/§1.12 完全一致**（同帧、同题、同标答、贪心、cap 12、6 帧 @448），
