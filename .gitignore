@@ -70,6 +70,8 @@ engines/
 /data/ood_eval/frames_448/
 /data/ood_eval/frames_720/
 /data/ood_eval/frames_1080/
+# W3 DROID 侦察数据（lerobot/droid_100 经 hf-mirror 下载，含 174MB 聚合视频，可再生）
+/data/droid_demo/
 /eval/accuracy/driving/ood_input_*.json
 /eval/accuracy/driving/pareto/ood_input_*.json
 

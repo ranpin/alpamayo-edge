@@ -1,7 +1,8 @@
 # Cosmos3-Edge 评测（Phase W · W2）
 
 第二部署目标：`nvidia/Cosmos3-Edge`（4B 全模态世界模型 = 2B VL reasoner + rectified-flow
-扩散专家，MoT 单塔）。部署链路与五道 JetPack 6.2 兼容墙见 `docs/PROBLEMS.md` §K。
+扩散专家，MoT 单塔）。部署链路与六道 JetPack 6.2 兼容墙见 `docs/PROBLEMS.md` §K，policy
+动作链的能力边界见 §L。
 
 ## Reasoner 侧：n=184 驾驶域基准（2026-10-16，W2）
 
@@ -22,7 +23,7 @@ runtime 用引擎目录内自己的 chat template）。
   的量化版（CR2 INT8/INT4）——"缩小模型不免费、量化几乎免费"在第二个模型家族上成立。
 - 引擎：FP16，llm 3.7G + visual 940M（分解注意力版；插件版 visual 亦已建成，性能对比待做）。
 
-## Policy 侧：DROID 动作链端到端打通（2026-10-16，W2）
+## Policy 侧：DROID 动作链端到端打通（2026-10-16 W2 打通 / 2026-10-19 W3 实测边界）
 
 Policy-DROID（`nvidia/Cosmos3-Edge-Policy-DROID`，机器人操作 WAM）四组件引擎全部建成，
 `cosmos3_policy_inference` 图+prompt→action.json 冒烟通过（goat）。
@@ -48,9 +49,13 @@ position_ids 防 DCE），env `USE_DECOMPOSED_POLICY=1` 门控。分解实现先
 exit=0，action shape **[1,16,10]**，160 值全 finite、范围 [−2.13, 2.77]，逐维分布有结构
 （d3≈−1.93±0.15、d5≈+2.15±0.14 紧聚类，非噪声）；**延迟 5154 ms/policy round**（goat）。
 
-> **诚实边界**：这是**部署管线验证**——分解引擎端到端跑通、产出结构合法的动作；**不是动作
-> 语义正确性验证**（用 UMI 图配 DROID policy 域不匹配、通用 prompt、无匹配 ground-truth
-> 可对照）。动作合理性定量评测（真实 DROID episode + 参考动作）属后续，见 next_plan W3。
+> **诚实边界（W3 已实测，2026-10-19）**：W2 冒烟是**部署管线验证**——分解引擎端到端跑通、
+> 产出结构合法的动作；**不是动作语义正确性验证**。W3 用真实 DROID 帧（`lerobot/droid_100`）实测：
+> 单帧 turnkey 路径**帧无关**（f20/60/100/140 输出近乎相同，mean diff≈0.009）——帧内能出连贯
+> 位移但不随输入帧变化，是 vision-only 单帧 conditioning 的能力边界，**非引擎 bug**。且 Edge 输出
+> （10 维 midtrain rot6d + quantile 归一化）与社区 lerobot GT（7 维笛卡尔）表示/归一化不同、无法
+> 直接对照。⇒ demo 锚定已验证 works 的 reasoning 侧，policy 动作链定位为「部署打通 + 帧无关边界」。
+> 详见 PROBLEMS §L。
 
 ## 文件
 

@@ -237,7 +237,7 @@ Cosmos3-Edge 9.18G / Policy-DROID 9.17G（transformer 6.75G + vae 1.41G + vision
 | W0d | AV embodiment 路径核实 | ✅ 动作三模式 fd/id/policy；AV 轨迹走 id 模式（PyTorch 路径）；TRTEdge turnkey = reasoning + DROID policy；Guardrail gated 为风险项 | — |
 | W1 | 引擎构建：FP16 → INT4/INT8 | 🔄 **FP16 已成（goat）：llm 3.7G + visual 940M（分解注意力版），单样本冒烟通过（驾驶场景描述连贯/EOS）**；INT4/INT8 量化未开始；dog 侧被 system_agent 占 26.5G GPU 内存阻塞（待协调） | 量化走 TRTEdge quantize.py 或 Kaggle 管线 |
 | W2 | 评测：reasoner 侧复用 **n=184 驾驶域基准**（2B reasoner vs 8B CR2 跨代对比）；policy 侧 DROID 动作链打通 | ✅ reasoner n=184 = **42.4%**（−9.2 vs CR2 FP16，p=0.0115 显著）；**policy 四组件引擎全建成（K6 分解补丁绕过 TRT10.7），冒烟 exit=0、action[1,16,10] 全 finite、5154ms/round**；动作语义定量评测留 W3 | — |
-| W3 | demo：动作推理视频（真实推理输出）+ 站点交互页 | ⏳ 未开始 | — |
+| W3 | demo：动作推理视频（真实推理输出）+ 站点交互页 | 🔄 **侦察完成（2026-10-19）**：policy 动作链部署打通，但单帧 turnkey 路径**帧无关**（跨帧复测 f20/60/100/140 输出 mean diff≈0.009，vision-only 单帧 conditioning 能力边界、非引擎 bug，见 PROBLEMS §L）⇒ **demo 改锚定 reasoning 侧**（已验证 works：真实驾驶帧→Orin→场景理解描述），policy 动作链定位为「部署打通 + 帧无关边界」 | reasoning demo 待做 |
 
 **与 homebot-wm 的边界**：Policy-DROID 是机器人操作 WAM，与 homebot-wm 主线（压缩+部署视觉
 扩散模型到 Orin）同构——**方法共享、叙事分开**：本项目讲"AV/边缘方法论双模型实证"，

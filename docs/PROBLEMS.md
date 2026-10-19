@@ -551,3 +551,44 @@ K6（policy 的 ONNX Attention/RotaryEmbedding）同源同解——用基础算�
 K4 在 K5（自生成 CuTe DSL）解决后成冗余保险，K6 则是 policy 链唯一通路（gen 无 FMHA backend 可选）；
 ④ 值得向 TRTEdge 上游提 issue：cuda12 targets 补 aarch64:sm_87 + 嵌入头清单补 vector_* 链 +
 policy 导出对 TRT<11 提供分解 fallback。
+
+## L. Cosmos3-Edge policy 动作链：部署打通，但单帧 turnkey 路径「帧无关」（2026-10-19，W3 实测）
+
+W2 把 policy 四组件引擎建通、冒烟 exit=0（K6）。W3 要把它做成「真实 DROID 数据 → 动作」demo，
+先只读侦察 NVIDIA 参考实现（`github.com/NVIDIA/cosmos` + `cosmos-framework`）搞清动作的后处理与
+归一化，再用真实数据实测。**结论：引擎部署无误，但 turnkey 单帧 policy 路径对输入帧不敏感
+（帧无关），出不了帧敏感动作——这是 vision-only 单帧 conditioning 的能力边界，非引擎 bug。**
+
+### L1. 动作表示 / 归一化 / 后处理（cosmos-framework 权威定义，已查清）
+- **表示**：Edge 用 `midtrain` 10 维 = [eef_pos(3) + rot6d(6) + gripper(1)]、**相对位姿**
+  （`action_policy_server_robolab.py:607-612`；action_space 默认 joint_pos=8 维，Edge=midtrain=10 维）。
+- **归一化**：quantile(q01/q99)→[−1,1]，stats 在 `cosmos_framework/data/generator/action/normalizer_stats/droid_lerobot_stats.json`
+  （10 维物理量：dim0-2 位置 delta≈±0.015 米、dim3-8 rot6d、dim9 gripper[0,1]）；反归一化
+  `0.5(a+1)(q99−q01)+q01`（`action_normalization.py`）。
+- **后处理链**：`denormalize_action` → `pose_rel_to_abs`（需当前 state 做参照）。
+- **state 注入定论**：Edge 是 **vision+language-only**（`use_state_rows = 1 if use_state else 0`，
+  Edge gen 图=16 行、无 +1 state 行 ⇒ use_state=False）。TRTEdge PolicyRunner 把 action_latent 全填
+  高斯噪声、action_noisy_mask 全 1、只注入 frame-0 图像 latent + und K/V，无本体状态——**设计如此，非 bug**。
+
+### L2. 实测：单帧反归一化 + 跨帧复测（reverify 确认）
+- 真实 DROID 帧（`lerobot/droid_100` ep0 "Put the marker in the pot"）+ 指令喂 goat 引擎，输出反归一化后：
+  位置 delta 小（~mm）、有净位移但沿途抖动、rot6d 合法（|v|=1）近恒等、gripper 反归一化超 [0,1]
+  （invert+denorm 约定存疑）；4/16/40 步扩散输出范围不变（**非欠去噪**，`DEFAULT_NUM_INFERENCE_STEPS=4`）。
+- **跨帧复测（换独立变量=帧，f20/60/100/140）**：输出跨帧近乎相同（mean|fA−fB|≈0.0076–0.0116、max≈0.06）
+  ⇒ **单帧 turnkey 路径「帧无关」**：帧内能出连贯位移，但完全不随输入帧变化。vision-only 单帧
+  conditioning 不足以产生帧敏感动作。
+
+### L3. 为何「预测 vs GT」对照不成立（表示动物园）
+社区 `lerobot/droid_100` GT 是 **7 维笛卡尔 euler** [x,y,z,roll,pitch,yaw,gripper]、lerobot 自归一化 [−1,1]；
+Edge 输出是 **10 维 midtrain rot6d**、NVIDIA quantile 归一化；cosmos cookbook 的 droid 样例又是
+**8 维关节空间** [joint_pos(7)+gripper(1)]。三套表示 + 三套归一化 + 时间分辨率不同（policy 5fps vs GT 15fps）
+⇒ 直接对照是四重错配，「对不上」是必然，非引擎错。
+
+**教训**：① turnkey 工具（`cosmos3_policy_inference`）是**简化路径**——vision+language-only、单帧、无 state
+锚点，与 cosmos-framework 参考 server（state-conditioned、多帧历史）输入契约不同；拿 turnkey 输出直接比
+参考 GT 前，必须先核对**表示 / 归一化 / state / 时间**四者是否对齐。② **反直觉的单次实测要换独立变量复测
+再定性**：初判「原地抖动出不了动作」经跨帧复测修正为「帧内有连贯位移、但帧无关」——结论从"模型坏"变成
+"单帧 conditioning 的能力边界"，方向完全不同（见 [[reverify-surprising-measurements]] 纪律）。③ 测出 turnkey
+policy 的能力边界本身是有价值发现（同 §延迟定位：测出边界并据实定位 > 假装能用）；demo 应锚定已验证 works
+的 reasoning 侧，policy 动作链写成「部署打通 + 帧无关边界」。复现：`data/droid_demo/`（取数脚本见
+[[alpamayo-edge-w3-droid-action-alignment]] 记忆）。
