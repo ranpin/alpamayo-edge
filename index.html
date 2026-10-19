@@ -75,6 +75,8 @@ footer a{color:var(--accent)}
     <span class="badge">端到端跑通</span>
   </div>
 
+  <p style="margin:14px 0"><a href="cosmos3-demo/" style="display:inline-block;background:var(--accent);color:#fff;padding:9px 18px;border-radius:7px;text-decoration:none;font-weight:600;font-size:14.5px">🎬 在线 Demo · Cosmos3-Edge 2B 驾驶场景理解（真实 Orin 推理输出）</a></p>
+
   <h2>摘要</h2>
   <p>把 NVIDIA <strong>Cosmos-Reason2-8B</strong>（物理场景推理 VLM，非轨迹预测器，属"感知 + 推理 / 可解释"层）用 <strong>TensorRT-Edge-LLM</strong> 量化为 <strong>INT4 (AWQ)</strong> 与 <strong>INT8 (SmoothQuant)</strong>，部署到 <strong>Jetson Orin (sm_87)</strong> 端到端跑通推理；按标准服务指标（TTFT / TPOT / TPS / E2E）测性能功耗，并在<strong>官方 Cosmos-Reason1-Benchmark（带标准答案）</strong>实测量化对<strong>任务正确率</strong>的影响。<span style="color:var(--muted)">零预算 · 零训练 · 全 Orin。</span></p>
   <p style="margin-bottom:4px"><strong>输入 / 输出（一句话）：</strong>输入 = <strong>若干张图像 / 视频帧 + 一个自然语言问题</strong>；输出 = <strong>一段自然语言回答</strong>（场景描述、风险判断、行动建议）。<strong>不输出轨迹或控制量</strong>。真实逐字实例与三个层次的 I/O 界定见 <a href="#io" style="color:var(--accent)">§2.1</a>；<strong>模型结构 · 优化落在哪个模块 · 实验之间的逻辑</strong>见下方 <a href="#overview" style="color:var(--accent)">总览</a>（图 3、图 4）。</p>
