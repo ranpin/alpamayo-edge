@@ -129,9 +129,12 @@ Alpamayo 1.5 VLA（本项目部署的正是它的 VLM backbone）。
 |---|---|---|---|
 | **模型** | `nvidia/Cosmos-Reason2-8B` | https://huggingface.co/nvidia/Cosmos-Reason2-8B （**门控**） | NVIDIA 预训练；**我们只推理量化、不训练**。**revision 未 pin**（导出时下载 main 最新，未记 commit）→ 建议 `from_pretrained(revision=…)` 固定 |
 | 模型架构（实测） | 文本 `qwen3_vl_text`：36 层 · hidden 4096 · 32 Q 头 · **8 KV 头(GQA)** · headDim 128 · FFN 12288 · mRoPE `[24,20,20]` interleaved · θ=5e6 · RoPE 262144 · vocab 151936 · eos `[151645,151643]`；视觉 `qwen3_vl_vision`：27 层 · d=1152 · 16 头 · FFN 4304 · patch 16 · merge 2 · deepstack `[8,16,24]` | `edge_int4/…/llm/config.json` + Orin `LLMEngineConfig` 日志 | **Qwen3-VL-8B-Instruct** 系 backbone（非 Qwen2.5-VL；CR1 才是 Qwen2.5-VL-7B）；`AutoModelForImageTextToText` 可加载 |
+| **模型（Phase W）** | `nvidia/Cosmos3-Edge`（4B 世界动作模型 = 2B VL reasoner + rectified-flow 扩散动作专家，MoT 单塔）+ `nvidia/Cosmos3-Edge-Policy-DROID`（机器人操作 policy 权重） | https://huggingface.co/nvidia/Cosmos3-Edge 、…/Cosmos3-Edge-Policy-DROID（经 hf-mirror 下载 ~9.2G） | NVIDIA 预训练，只推理部署、不训练。第二部署目标，见 §6 |
 | **量化校准集** | `cnn_dailymail` config **3.0.0**，split `train` 前 **512** 篇 `article` | https://huggingface.co/datasets/cnn_dailymail | 实测 `quantize.py`；纯文本路径，非驾驶域（见 §4） |
 | **精度探针集** | 12 条手写 prompt（无标注） | `eval/accuracy/prompts_greedy.json`（本仓库） | 非标准 benchmark |
+| **policy 实测数据（Phase W）** | `lerobot/droid_100` ep0（"Put the marker in the pot"）帧 f20/60/100/140 | https://huggingface.co/datasets/lerobot/droid_100（聚合视频 `file-000.mp4`，帧可再生，取数命令见 `eval/cosmos3/w3_frame_sensitivity.py` 头注） | 仅用于 policy 帧敏感性复测，非精度基准 |
 | **量化/部署框架** | NVIDIA **TensorRT-Edge-LLM v0.9.0** @ `1ac0f2b9…`（2026-07-02） | https://github.com/NVIDIA/TensorRT-Edge-LLM | Orin 建引擎/运行即此 commit（实测 `git rev-parse`）。**Kaggle 量化/导出用 `git clone --depth 1`（main@运行日，未 pin）** → 建议同 pin v0.9.0 |
+| 部署框架（Phase W） | NVIDIA **TensorRT-Edge-LLM v0.10.1**（Cosmos3-Edge 官方支持的最低版本系） | 同上，`git clone --branch v0.10.1` | 自建在 `trtedge-0.10.1/`（共享 0.9.0 安装不动）；`-DBUILD_EXPERIMENTAL_MODELS=ON`、`-DENABLE_CUTE_DSL=fmha`，见 §6 |
 | 量化后端 | NVIDIA TensorRT-Model-Optimizer (ModelOpt)，随 TRTEdge `.[tools]` 装 | 同上（依赖） | 具体版本随 TRTEdge 依赖，未单独 pin |
 | **边缘设备** | **NVIDIA Jetson AGX Orin Developer Kit**（sm_87 Ampere，统一内存 29 GB，**MAXN**） | 实测 `/proc/device-tree/model`、`nvpmodel -q` | — |
 | Orin 系统栈 | L4T **R36.4.4**（GCID 41062509，2025-06-16）= JetPack 6.2｜CUDA **12.6.11**｜TensorRT **10.7.0.23**（+cuda12.6）｜Python 3.10.12 | `/etc/nv_tegra_release`、`/usr/local/cuda/version.json`、`dpkg -l` | — |
@@ -148,12 +151,19 @@ Alpamayo 1.5 VLA（本项目部署的正是它的 VLM backbone）。
 
 我们的工作是**推理侧的量化与边缘部署**,不涉及模型训练。因此"训练集"不适用——预训练数据是 NVIDIA 的,不在本项目范围。
 
+**Phase W 第二部署目标**：`nvidia/Cosmos3-Edge`（4B 世界动作模型 = 2B VL reasoner + rectified-flow
+扩散动作专家）+ `nvidia/Cosmos3-Edge-Policy-DROID`（机器人操作 policy 权重），均 NVIDIA 预训练、
+只推理部署不训练，经 hf-mirror 下载（~9.2G）。方法与可复现见 §6。
+
 ## 2. 数据集(三处,用途不同,都不是我们训练的)
 
 1. **量化校准集(PTQ calibration)** —— 见 §4,`cnn_dailymail` 512 篇。
 2. **精度评测基准(主)** —— **官方 [`nvidia/Cosmos-Reason1-Benchmark`](https://huggingface.co/datasets/nvidia/Cosmos-Reason1-Benchmark) 的 `robovqa+robofail` 子集**:n=210 道**多选题带标准答案**(具身机器人推理,视频+问题)。视频按 **6 帧(≤448px)** 采样作多图,FP16/INT8/INT4 用**同一批帧**→算 **MC 任务正确率**及精度损失。产物 `eval/accuracy/benchmark/`。**注**:robovqa+robofail 是 repo 内自带视频的全部子集(其余 3 子集仅标注,需外部视频);6帧@448 非官方原生视频协议,故绝对分不追求复现论文,但三方同帧→精度损失严格可比。
    - **精度探针集(辅)** —— 12 条手写驾驶/推理 prompt(`eval/accuracy/prompts_greedy.json`,无标注),仅用于更敏感的 perplexity 相对指标。
 3. **性能基准的输入** —— `llm_bench` 用**合成 token 序列**(指定 `inputLen`/`pastKVLen`),测的是纯 prefill/decode 算力,与内容无关,是延迟基准的标准做法。
+4. **policy 帧敏感性实测数据（Phase W）** —— `lerobot/droid_100` ep0（"Put the marker in the pot"）的
+   4 帧 f20/60/100/140，仅用于 policy 单帧 turnkey 路径的跨帧复测（非精度基准、无标答对照）。帧/视频
+   gitignore、可再生，取数命令见 `eval/cosmos3/w3_frame_sensitivity.py` 头注。
 
 > 说明:主指标已是**带标注的 MC 任务正确率**(Cosmos-Reason1-Benchmark);perplexity/一致率为细粒度辅助。局限:非驾驶域(具身机器人)、仅 210 题(二选一 MC,CI 仍 ±5.7)。
 
@@ -314,5 +324,101 @@ llm_bench --engineDir engines/int4/llm --mode decode  --pastKVLen 512 --iteratio
 - Orin 建引擎:`llm_build --onnxDir <onnx/llm> --engineDir <out>`(精度由 ONNX 决定)。
 - 性能:§3.1 的 `llm_bench` 命令;功耗:并行 `tegrastats`。
 - 精度损失:`eval/accuracy/`(prompts + Orin 输出 + FP16 参考 + `compute_dropoff.py` + README)。
+- **Phase W（Cosmos3-Edge）**：构建 `scripts/orin/w0b_build_trtedge_0101.sh` → 导出环境
+  `w0c_goat_export_env.sh` → reasoning 引擎 `w1_goat_engine_build.sh` → policy 分解补丁
+  `apply_policy_decomposed_patch.py` + 导出前数值对拍 `test_policy_decomposed.py` → policy 引擎
+  `w2_policy_rebuild_decomposed.sh` → 冒烟 `w2_policy_smoke.sh`。reasoner n=184 打分复用
+  `eval/accuracy/driving/score_ood.py`；跨代图 `eval/cosmos3/cosmos3_viz.py`；帧无关复测
+  `eval/cosmos3/w3_frame_sensitivity.py`。方法细节见 §6。
 
 > 一句话:**模型是 NVIDIA 预训练的 Cosmos-Reason2-8B(我们只做推理量化);校准集是默认的 512 篇 CNN/DailyMail 新闻文本(非驾驶域,这是重要 caveat);精度是小规模手写探针上的相对退化(非标注任务正确率);性能/功耗经 llm_bench+tegrastats 实测且已复现。**
+
+## 6. Phase W（Cosmos3-Edge）方法与可复现
+
+第二部署目标 Cosmos3-Edge 的方法细节。**结果**见 [edge_deploy_status.md](edge_deploy_status.md) 的
+Phase W 专节，**工程踩坑**见 [PROBLEMS.md](PROBLEMS.md) §K/§L，**呈现**见
+[站点 Phase W 专篇](https://ranpin.github.io/alpamayo-edge/cosmos3.html)。
+
+### 6.1 分解注意力 / RoPE 导出补丁（对「TRT-11-only 算子墙」的通用武器）
+
+**问题**：TRTEdge 把注意力/RoPE 经 `trt::attention_onnx` / `trt::rope_onnx` custom op lower 成
+**只有 TRT≥11 parser 认识**的算子——visual 侧是 `TRT_Attention`（K4），policy 侧是 ONNX 标准
+`Attention` / `RotaryEmbedding`（K6；und_prefill 图里 28 个 Attention + 84 个 RotaryEmbedding）。
+Orin 是 TRT 10.7，且两条内建路径都走不通（ViTAttentionPlugin 的 legacy 后端已被移除、
+`USE_TRT_NATIVE_ATTN=1` 导出的正是那个 TRT-11-only 算子）。
+
+**解法**：导出前把它们用**基础 ONNX 算子分解**掉（MatMul / Softmax / Where / GatherElements），
+任何 TRT 版本可解析，TRT 用 Myelin 自行融合。
+
+- **`decomposed_attention`**：GQA 折批 grouped matmul + arange 下三角 causal 掩码。覆盖两种情形——
+  und_prefill 的 `is_causal=True` 自注意力、gen 的 `is_causal=False` 对 `cat([und, gen])` 的交叉注意力
+  （两者都是 GQA，H=16 / Hkv=8，2:1）。
+- **`decomposed_rope`**：rotate_half 约定（`rope_rotary_cos_sin` 形状 [B,S,128]，cos = [...,:64]、
+  sin = [...,64:]，head_dim=128、half=64）。`attention_pos_id` 是**恒等 gather**
+  （cosmos3PolicyRunner.cpp:257 "identity gather indices"）⇒ 可逐 token 直接对齐；但实现仍保留
+  `torch.gather`，否则 position_ids 会被 DCE 消除、runtime 找不到 binding。
+- **门控**：env `USE_DECOMPOSED_POLICY=1`；两个 modeling 文件的 import 换成包装器
+  （**additive 改动，不动已验证工作的 reasoning 路径**）。
+- **导出前数值对拍**（`scripts/orin/test_policy_decomposed.py`，CPU 小张量，6 项全过）：
+  attention vs `F.scaled_dot_product_attention` max abs err ~1e-7；rope vs LLaMA 全维公式
+  `q*cos_full + rotate_half(q)*sin_full`（独立代码路径、同数学）err = 0；阈值 1e-3（fp32）。
+  **为什么必须先对拍**：导出 und_prefill + gen 约 1 小时，语义 bug（GQA 头序 / causal 方向 /
+  rope 公式）若等到建引擎才暴露代价太高。
+- **脚本**：`scripts/orin/apply_decomposed_attn_patch.py`（visual，K4）、
+  `scripts/orin/apply_policy_decomposed_patch.py`（policy，K6）。
+
+### 6.2 构建配方（TRTEdge 0.10.1 @ JetPack 6.2）
+
+- 自建在 `<proj>/trtedge-0.10.1/`，**共享的 0.9.0 安装一律不动**（其他用户依赖它，且它是全部
+  已发布数字的可复现锚点）。
+- 关键 flag：`-DBUILD_EXPERIMENTAL_MODELS=ON`（cosmos3 policy 管线所需，上游 docs 明示）、
+  `-DENABLE_CUTE_DSL=fmha`、`-DEMBEDDED_TARGET=jetson-orin`。
+- **K5 根治（自生成 CuTe DSL 预编译件）**：上游 cuda12 targets 刻意不含 `aarch64:sm_87`，但构建脚本
+  支持显式覆盖——
+  `CUDA_CTK_VERSION=12.6 CUTE_DSL_TARGETS=aarch64:sm_87 CUTE_DSL_KERNELS=fmha bash kernelSrcs/build_cutedsl_tarballs.sh`
+  （需 GPU 在场做 AOT 导出；`nvidia-cutlass-dsl[cu12]==4.7.0` + `cupy-cuda12x` 均有 aarch64 wheel）。
+- **K3 根治**：`pluginJitCompiler.cpp` 注入 `-I$CUDA_HOME/include`，让 NVRTC 从磁盘解析系统头
+  （一处补丁覆盖全部 JIT kernel；补嵌入头清单会暴露 `vector_functions.h → cuda_runtime_api.h` 巨链，故不采用）。
+- **导出环境依赖硬 pin**：`torch==2.13.0` / `transformers==5.14.1` / `onnx==1.19.0`（export 是 CPU
+  任务；与 gate4 的 `a1_5_venv` 隔离避免依赖冲突）。
+- **reasoning 引擎参数**：maxInputLen 2048 / KV 4096 / batch 1（照上游 cosmos3 reasoning 示例口径）。
+- **设备选择**：dog 的 GPU 统一内存被 `system_agent` 常驻占 26.5G ⇒ 构建与推理都改在 goat（64GB）；
+  引擎 sm_87 + TRT 10.7.0.23 与 dog 同版互通（2026-07 已验证）。
+- **脚本**：`scripts/orin/w0b_build_trtedge_0101.sh`、`w0c_goat_export_env.sh`、
+  `w1_goat_engine_build.sh`、`w2_policy_rebuild_decomposed.sh`（分段执行保磁盘余量）、`w2_policy_smoke.sh`。
+
+### 6.3 动作表示 / 归一化 / state（cosmos-framework 权威定义）
+
+- **表示**：Edge 用 `midtrain` **10 维 = [eef_pos(3) + rot6d(6) + gripper(1)]、相对位姿**
+  （`action_policy_server_robolab.py:607-612`）。注意 action_space 默认是 joint_pos 8 维，Edge=midtrain=10 维。
+- **归一化**：quantile(q01/q99) → [−1,1]，stats 在
+  `cosmos_framework/data/generator/action/normalizer_stats/droid_lerobot_stats.json`
+  （dim0-2 位置 delta ≈ ±0.015 米、dim3-8 rot6d、dim9 gripper[0,1]）；反归一化
+  `0.5(a+1)(q99−q01)+q01`。本仓库副本 `eval/cosmos3/droid_action_stats.json`。
+- **后处理链**：`denormalize_action` → `pose_rel_to_abs`（需当前 state 做参照）。
+- **state 注入定论**：Edge 是 **vision+language-only**（`use_state_rows = 1 if use_state else 0`，
+  Edge gen 图 = 16 行、无 +1 state 行 ⇒ `use_state=False`）。TRTEdge PolicyRunner 把 action_latent
+  全填高斯噪声、action_noisy_mask 全 1、只注入 frame-0 图像 latent + und K/V，**无本体状态——设计如此，
+  非 bug**。这正是单帧 turnkey 路径「帧无关」的机理。
+- **⚠️ 表示动物园（为何不能直接比 GT）**：社区 `lerobot/droid_100` GT 是 7 维笛卡尔 euler + lerobot
+  自归一化；Edge 输出是 10 维 midtrain rot6d + NVIDIA quantile；cosmos cookbook 的 droid 样例又是
+  8 维关节空间。三套表示 + 三套归一化 + 时间分辨率不同（policy 5fps vs GT 15fps）⇒ **四重错配**。
+  拿 turnkey 输出比参考 GT 前，必须先核对**表示 / 归一化 / state / 时间**四者是否对齐。
+- **扩散步数**：`DEFAULT_NUM_INFERENCE_STEPS=4`；已验 4/16/40 步输出范围不变（**排除"欠去噪"解释**）。
+
+### 6.4 输入口径与解析（两个必踩的坑）
+
+- **帧必须缩到长边 448**：原生 1920×1088 = **2040 token/帧**，6 帧 = 12240 > reasoning 引擎
+  `maxInputLen` 2048 ⇒ 必然失败。缩后 448×256，与 n=184 驾驶域基准同口径。
+- **解析输出对齐用 `request_idx`，不是 `batch_idx`**：后者全 0，按它映射会把多段输出都标成第一个请求。
+- **生成长度**：n=184 单字母评测用 `max_generate_length: 12`；自由场景描述用 200。
+- **输入 JSON schema**：顶层 `{batch_size, temperature, top_p, top_k, max_generate_length, requests[]}`；
+  每 request = messages 单条 user，content = 6 个 `{type:image, image:绝对路径}` + 1 个 `{type:text}`。
+
+### 6.5 reasoner 跨代评测口径
+
+与 §1.11/§1.12 的驾驶域评测**逐位一致**（同帧、同题、同标答、贪心、cap 12、6 帧 @448），
+**唯一变量是模型**。输入直接复用 `bench/ood_eval/ood_input_goat.json`（messages 格式模型无关，
+runtime 用引擎目录内自己的 chat template）；打分复用 `eval/accuracy/driving/score_ood.py` 的
+解析 / Wilson CI / McNemar 实现 ⇒ 与 CR2-8B 各档方法学严格可比。跨代图由
+`eval/cosmos3/cosmos3_viz.py` **从原始输出重算**（不写死数字）。

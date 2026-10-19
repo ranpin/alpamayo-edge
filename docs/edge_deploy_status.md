@@ -1,9 +1,10 @@
 # 边缘量化部署 — 结果报告（Orin 推理跑通）
 
-> Cosmos-Reason2-8B 从云端量化到 Jetson Orin 端到端推理跑通的**结果与指标**。
+> Cosmos-Reason2-8B 从云端量化到 Jetson Orin 端到端推理跑通的**结果与指标**；第二部署目标
+> **Cosmos3-Edge（Phase W）** 的结果见文末专节。
 > 构建配方、踩坑、FMHA 根因等工程细节见 [orin_build_notes.md](orin_build_notes.md)；计划/里程碑见 [plan.md](plan.md)。
 > **模型来源 / 数据集 / 指标定义与测法 / 校准集及影响** 见 [METHODOLOGY.md](METHODOLOGY.md)（可复现口径）。
-> 更新日期：2026-07-22。
+> 更新日期：2026-10-19。
 
 ## 一句话结论
 
@@ -285,6 +286,62 @@ decode 真正的杠杆只剩**减少字节数**（优化 A：量化 lm_head，�
 现已提交 `score_mc.py` + `cosmos_bench210_manifest.json`，脚本**逐一复现历史发布的全部数字**
 （FP16 76.2/CI[70.0,81.4]、INT4 73.8/[67.5,79.3]/p=0.424、INT8 75.2/[69.0,80.6]/p=0.845），据此确认实现正确。
 
+## Phase W：Cosmos3-Edge（第二部署目标，2026-10-15~19）
+
+第二部署目标 `nvidia/Cosmos3-Edge`（4B 全模态**世界动作模型** = 2B VL reasoner + rectified-flow
+扩散动作专家，MoT 单塔）。它在 TRTEdge 0.10.1 官方支持矩阵里仅 **Compatible 档**（Orin 是
+JetPack 6.2 / CUDA 12.6 / TRT 10.7；Official 是 JetPack 7.2 / CUDA 13 / TRT 11）。工程记录见
+[PROBLEMS.md](PROBLEMS.md) §K/§L，方法见 [METHODOLOGY.md](METHODOLOGY.md) §6，呈现见
+[站点 Phase W 专篇](https://ranpin.github.io/alpamayo-edge/cosmos3.html)。
+
+### 部署：六道 JetPack 6.2 兼容墙（K1–K6）逐个打通
+
+| 墙 | 现象 / 根因 | 解法 |
+|---|---|---|
+| K1 | CuTe DSL 预编译件缺 sm_87+cuda12 ⇒ configure FATAL（cuda12 targets 刻意不含 aarch64:sm_87） | 先 `-DENABLE_CUTE_DSL=OFF`；根治见 K5 自生成 |
+| K2 | nlohmann 子模块缺失（depth-1 clone） | `git submodule update --init --recursive` |
+| K3 | XQA JIT NVRTC 缺头 ⇒ llm_build 插件创建失败（cuda12.6 头链被 CUDA 13 重组掉） | `pluginJitCompiler.cpp` 注入 `-I$CUDA_HOME/include` |
+| K4 | ViTAttentionPlugin 无 legacy 后端 ⇒ visual_build 失败（`TRT_Attention` 要 TRT≥11） | 分解注意力导出补丁 |
+| K5 | prefill FMHA 无 legacy 后端 ⇒ 引擎能建、推理必挂 | **自生成** `cutedsl_aarch64_sm_87_cuda12.tar.gz` → `-DENABLE_CUTE_DSL=fmha` 重建 |
+| K6 | policy und_prefill/gen 导出 ONNX 标准 `Attention`/`RotaryEmbedding` ⇒ TRT 10.7 parser 不认（und：28+84 个） | 分解注意力 + RoPE 补丁（`USE_DECOMPOSED_POLICY=1`） |
+
+K4/K6 **同源同解**（都是 TRT≥11 才认识的算子），用基础 ONNX 算子分解绕过——是对「TRT-11-only
+算子墙」的通用武器（方法见 METHODOLOGY §6.1）。
+
+### Reasoner 跨代对比：n=184 驾驶域（同帧同题，唯一变量 = 模型）
+
+协议与上文驾驶域评测**逐位一致**（同帧、同题、同标答、贪心、cap 12、6 帧 @448），打分复用同一套
+解析 / Wilson CI / McNemar，故与 CR2-8B 各档方法学可比。
+
+| 模型 | 正确率 | Wilson 95%CI | vs CR2-8B FP16 | E2E/请求 |
+|---|---|---|---|---|
+| CR2-8B FP16（goat） | 51.6% | [44.5,58.7] | — | ~1.2 s |
+| CR2-8B INT8（dog） | 47.8% | [40.7,55.0] | −3.8 pts（p=0.143 ns） | 0.50 s |
+| CR2-8B INT4（dog） | 50.5% | [43.4,57.7] | −1.1 pts（p=0.815 ns） | 0.68 s |
+| **Cosmos3-Edge 2B FP16（goat）** | **42.4%** | [35.5,49.6] | **−9.2 pts（b/c=29/12，p=0.0115 显著）** | 0.91 s |
+
+- 184/184 全 EOS、零解析失败、字母分布均衡（A17 B22 C20 D23 E29 F26 G19 H28，无坍缩）；
+  随机基线 12.5% ⇒ **3.4× chance**。引擎 FP16，llm 3.7G + visual 940M（分解注意力版）。
+- **结论（跨代验证）**：新一代 2B（Cosmos3，2026-07）在驾驶域**显著输给**上一代 8B 的量化版
+  （INT4 50.5% / INT8 47.8%）——"缩小模型不免费、量化几乎免费"在**第二个模型家族**上成立
+  （与上文「模型规模 Pareto」同向，但此处是跨家族、且对照的是量化后的大模型）。
+- 图 `docs/figures/cosmos3_crossgen.png`（`eval/cosmos3/cosmos3_viz.py` 从原始输出重算 k=78/184，非手填）。
+
+### Policy 动作链：部署打通 + 单帧「帧无关」边界
+
+Policy-DROID（`nvidia/Cosmos3-Edge-Policy-DROID`，机器人操作 WAM）四组件引擎全部建成
+（und_prefill 2.7G / gen 2.7G / vae_encoder 292M / text_tokenizer 17M + embed_tokens 513M，均分解注意力版）。
+
+- **冒烟 ✅（部署管线验证）**：`cosmos3_policy_inference` exit=0，action shape **[1,16,10]**，
+  160 值全 finite、范围 [−2.13, 2.77]，逐维分布有结构（非噪声）；延迟 **5154 ms/policy round**。
+- **W3 实测边界 ⚠️（非动作语义正确性验证）**：真实 DROID 帧（`lerobot/droid_100` ep0）跨帧复测
+  f20/60/100/140，输出近乎相同（mean|Δ|≈0.0076–0.0116，比帧内自身位移范数 ~1.6 **小约 170×**）⇒
+  **单帧 turnkey 路径「帧无关」**——vision-only 单帧 conditioning（`use_state=False`，无本体状态锚点）
+  的能力边界，**非引擎 bug**。且 Edge 输出（10 维 midtrain rot6d + quantile 归一化）与社区 lerobot GT
+  （7 维笛卡尔）表示/归一化不同、无法直接对照。⇒ demo 锚定 reasoning 侧。
+- 图 `docs/figures/cosmos3_policy_frame_insensitive.png`；复现 `eval/cosmos3/w3_frame_sensitivity.py`
+  （证据 `eval/cosmos3/w3_actions/` 已入库）。
+
 ## lm_head 量化：预测 +23%，但在 T4 上无法完成（2026-07-26）
 
 K1 发现 lm_head 未量化、占 decode 字节 25.6%，预测量化它可得 **+23% decode**（33.1→26.8 ms）。
@@ -310,5 +367,6 @@ TRTEdge 有现成开关 `--lm_head_quantization int4_awq`，但**在 2×T4 上�
 | 3 | 量化精度损失定量评测（vs FP16 基线） | ✅ 完成——PPL 增幅 INT4 +9.8% / INT8 +18.1% + token 一致率 |
 | 7 | VLA 轨道 M2b（Alpamayo-R1-10B FP16 轨迹 + CVM） | ⏸ 暂缓——大工程，见 [plan.md](plan.md) |
 | 6 | 运维收尾（build_orin 设默认 / 清旧 build） | ✅ 完成——删旧坏 build、`build→build_orin` 软链、`~/.bashrc` 持久化 EDGELLM_PLUGIN_PATH，默认即正确插件（上游报 issue 仍暂缓） |
+| 8 | Phase W（Cosmos3-Edge 部署 + reasoner 跨代 + policy 边界） | ✅ 完成（见上专节；reasoner n=184 跨代对比、policy 帧无关边界、reasoning demo 已上线） |
 
 > 精度轴已补齐（#2/#3 完成）：精度-延迟-功耗三轴齐全。仅剩 VLA 轨道（#7）为择期再启的大工程，非遗漏。
