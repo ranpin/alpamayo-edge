@@ -590,5 +590,6 @@ Edge 输出是 **10 维 midtrain rot6d**、NVIDIA quantile 归一化；cosmos co
 再定性**：初判「原地抖动出不了动作」经跨帧复测修正为「帧内有连贯位移、但帧无关」——结论从"模型坏"变成
 "单帧 conditioning 的能力边界"，方向完全不同（见 [[reverify-surprising-measurements]] 纪律）。③ 测出 turnkey
 policy 的能力边界本身是有价值发现（同 §延迟定位：测出边界并据实定位 > 假装能用）；demo 应锚定已验证 works
-的 reasoning 侧，policy 动作链写成「部署打通 + 帧无关边界」。复现：`data/droid_demo/`（取数脚本见
-[[alpamayo-edge-w3-droid-action-alignment]] 记忆）。
+的 reasoning 侧，policy 动作链写成「部署打通 + 帧无关边界」。复现：`eval/cosmos3/w3_frame_sensitivity.py`
+（证据 `eval/cosmos3/w3_actions/` 4 个 action.json + `droid_action_stats.json` quantile stats 已入库，
+一键重算跨帧 diff 与帧内轨迹；帧/视频可再生，取数命令见脚本头注）。
