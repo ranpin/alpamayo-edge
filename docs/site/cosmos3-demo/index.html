@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cosmos3-Edge 2B Reasoner · Jetson Orin 驾驶场景理解 Demo</title>
+<meta name="description" content="Cosmos3-Edge 2B reasoner 部署在 Jetson Orin（TRTEdge，分解注意力），对真实驾驶视频帧做自由场景描述。真实 Orin 推理输出。">
+<style>
+:root{--bg:#fff;--bg2:#f8f9fa;--bg3:#e9ecef;--text:#1a1a2e;--text2:#495057;--muted:#868e96;--accent:#4361ee;--accentL:#eef2ff;--accentD:#3a0ca3;--border:#dee2e6;--ok:#2ecc71;--warn:#f39c12;--err:#e74c3c;--info:#3498db;--nav-h:52px}
+[data-theme=dark]{--bg:#0f0f1a;--bg2:#1a1a2e;--bg3:#2a2a3e;--text:#e0e0e0;--text2:#adb5bd;--muted:#6c757d;--accent:#7b8cff;--accentL:#1a1a3e;--accentD:#a5b4fc;--border:#2a2a3e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:16px}
+.top-nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;z-index:1000}
+.top-nav .logo{font-weight:700;font-size:15px;color:var(--accent);text-decoration:none}
+.top-nav .right{margin-left:auto;display:flex;gap:8px}
+.top-nav a.btn,.theme-btn{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text);text-decoration:none}
+.wrap{max-width:920px;margin:0 auto;padding:calc(var(--nav-h) + 32px) 24px 64px}
+h1{font-size:28px;font-weight:800;margin-bottom:8px;line-height:1.3}
+.lede{font-size:15px;color:var(--muted);margin-bottom:20px}
+h2{font-size:22px;font-weight:700;margin:36px 0 14px;padding-bottom:6px;border-bottom:2px solid var(--accentL)}
+p{margin-bottom:10px;color:var(--text2)}
+strong{color:var(--text)}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 8px}
+.badge{background:var(--accentL);color:var(--accentD);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600}
+.callout{padding:15px 17px;border-radius:8px;margin:16px 0;border-left:4px solid var(--info);background:var(--bg2);font-size:14.5px}
+.callout.warn{border-left-color:var(--warn)}
+.callout .t{font-weight:700;font-size:13px;margin-bottom:4px;color:var(--text)}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px}
+th,td{padding:8px 12px;border:1px solid var(--border);text-align:left;vertical-align:top}
+th{background:var(--accentL);color:var(--accentD);font-weight:600}
+tr:nth-child(even){background:var(--bg2)}
+.clip-sel{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 18px}
+.clip-btn{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 14px;cursor:pointer;font-size:13.5px;color:var(--text2);transition:all .15s}
+.clip-btn:hover{border-color:var(--accent)}
+.clip-btn.active{background:var(--accentL);border-color:var(--accent);color:var(--accentD);font-weight:600}
+.filmstrip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.filmstrip figure{margin:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden;cursor:zoom-in}
+.filmstrip img{width:100%;height:auto;display:block}
+.filmstrip figcaption{font-size:11px;color:var(--muted);text-align:center;padding:3px 0}
+.desc-panel{background:var(--bg2);border:1px solid var(--border);border-left:4px solid var(--ok);border-radius:8px;padding:16px 18px;margin:16px 0}
+.desc-panel .lbl{font-size:12px;font-weight:700;color:var(--ok);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.desc-panel .txt{font-size:15px;color:var(--text);line-height:1.7}
+.desc-panel .note{font-size:12px;color:var(--muted);margin-top:8px}
+#lb{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:2000;cursor:zoom-out;padding:24px}
+#lb img{max-width:96vw;max-height:90vh;width:auto;height:auto;border-radius:6px;box-shadow:0 10px 48px rgba(0,0,0,.6);background:#fff}
+#lb .hint{position:fixed;top:14px;right:18px;color:#fff;font-size:13px;opacity:.85}
+footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--border);font-size:13px;color:var(--muted)}
+footer a{color:var(--accent)}
+footer .attr{margin-bottom:8px}
+@media(max-width:720px){.filmstrip{grid-template-columns:repeat(2,1fr)}.wrap{padding:calc(var(--nav-h) + 20px) 16px 48px}h1{font-size:22px}}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="https://ranpin.github.io/" class="logo">← Ranpin</a>
+  <div class="right">
+    <a class="btn" href="../index.html">← 项目主页</a>
+    <a class="btn" href="https://github.com/ranpin/alpamayo-edge" target="_blank">GitHub</a>
+    <button class="theme-btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark'">◐ 主题</button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1>Cosmos3-Edge 2B Reasoner · Jetson Orin 驾驶场景理解 Demo</h1>
+  <div class="lede">第二部署目标 Cosmos3-Edge（4B 全模态世界模型）的 2B VL reasoner，部署在 Jetson Orin，对真实驾驶视频帧做自由场景描述。</div>
+  <div class="badges">
+    <span class="badge">Cosmos3-Edge 2B</span><span class="badge">FP16</span>
+    <span class="badge">Jetson Orin sm_87</span><span class="badge">TensorRT-Edge-LLM</span>
+    <span class="badge">分解注意力（K4/K6）</span><span class="badge">真实 Orin 推理输出</span>
+  </div>
+
+  <div class="callout warn">
+    <div class="t">⚠ 诚实边界（定性演示，非精度评测）</div>
+    本页展示 Cosmos3-Edge 2B reasoner 在 Jetson Orin 上对真实驾驶视频帧的<strong>自由场景描述</strong>——全部为真实 Orin 推理输出，用于展示部署管线可用。行车 footage 来自公开 sample（见页脚署名）。<strong>无 ground-truth 标注</strong>，描述质量未做定量评测；reasoner 的定量精度评测（n=184 驾驶域基准，42.4%）见<a href="../index.html">项目主页 §1.11/§1.12</a>。policy 动作链的能力边界见仓库 <code>docs/PROBLEMS.md §L</code>。
+  </div>
+
+  <h2>选择驾驶场景</h2>
+  <p>4 个真实驾驶 clip（各均匀采样 6 帧，前视广角相机）。点击场景切换，点击帧放大。</p>
+  <div class="clip-sel" id="clipSel"></div>
+  <div class="filmstrip" id="filmstrip"></div>
+  <div class="desc-panel">
+    <div class="lbl">Cosmos3-Edge 场景描述（模型原始输出 · 英文）</div>
+    <div class="txt" id="descText"></div>
+    <div class="note">greedy 解码，max 200 tokens，6 帧 @448×256 输入，单次推理 ~0.9s（Jetson Orin）。</div>
+  </div>
+
+  <h2>部署配置</h2>
+  <table>
+    <tr><th>项</th><th>值</th></tr>
+    <tr><td>模型</td><td>Cosmos3-Edge（4B 全模态 = 2B VL reasoner + rectified-flow 扩散专家），本页用 reasoner</td></tr>
+    <tr><td>引擎</td><td>FP16，llm 3.7G + visual 940M（<strong>分解注意力版</strong>，K4/K6 绕过 TRT-11-only 算子墙）</td></tr>
+    <tr><td>硬件 / 运行时</td><td>Jetson Orin sm_87 · JetPack 6.2 · TensorRT 10.7 · TRTEdge v0.10.1</td></tr>
+    <tr><td>输入</td><td>6 帧 @448×256 + 自由描述 prompt（maxInputLen 2048）</td></tr>
+    <tr><td>输出</td><td>自由场景描述（greedy，max 200 tokens）</td></tr>
+    <tr><td>延迟</td><td>~0.9 s / 请求（n=184 基准口径）</td></tr>
+  </table>
+
+  <footer>
+    <div class="attr"><strong>行车视频帧署名</strong>：NVIDIA <a href="https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles" target="_blank">PhysicalAI-Autonomous-Vehicles</a> 数据集的公开 sample slice（Voxel51 抽样，<a href="https://huggingface.co/datasets/dgural/PhysicalAI-Autonomous-Vehicles-Sample" target="_blank">dgural/PhysicalAI-Autonomous-Vehicles-Sample</a>），仅用于本演示；其许可继承原 NVIDIA 数据集（见该 sample 的 License 说明）。</div>
+    <div class="attr"><strong>模型</strong>：Cosmos3-Edge（NVIDIA，OpenMDW1.1）。<strong>部署工具</strong>：TensorRT-Edge-LLM v0.10.1（NVIDIA）。</div>
+    <div class="attr">场景描述为 Cosmos3-Edge 在 Jetson Orin 上的真实推理输出；帧为公开 sample 原始帧（缩放到 448）。</div>
+    <div class="attr" style="margin-top:10px"><a href="../index.html">← 返回项目主页</a> · <a href="https://github.com/ranpin/alpamayo-edge" target="_blank">GitHub 源码</a></div>
+  </footer>
+</div>
+
+<div id="lb" onclick="this.style.display='none'"><img id="lbImg" alt=""><div class="hint">点击任意处关闭</div></div>
+
+<script>
+const CLIPS=[
+ {id:'01d3588e',label:'商业区 · 白天',desc:'The scene depicted in these six frames shows a driving sequence through a commercial area. The road is a single-lane, bidirectional street with vehicles parked on both sides. The environment is well lit, suggesting it is daytime, and the weather is clear. There are no vehicles or pedestrians in the roadway, and no traffic signs or signals are visible.'},
+ {id:'26f8dc7e',label:'施工区 · 锥桶',desc:'This frame shows a wide shot of a road with multiple lanes and traffic moving in both directions. The road is lined with orange traffic cones, indicating a construction zone or lane closure. There are several vehicles, including a black SUV in the foreground, and a white car ahead. The sky is overcast, and the lighting is dim. The traffic lights are green, and there are trees and buildings visible in the background.'},
+ {id:'69cf2443',label:'夜间 · 左转路口',desc:'The scene depicts a nighttime driving sequence captured from a front-facing camera mounted on a moving vehicle. The road is a two-lane, one-way street with a dedicated left-turn lane, and the layout includes a visible crosswalk. The environment is illuminated by streetlights, and the sky is dark, indicating nighttime conditions. There are no pedestrians or cyclists visible in the scene. The road surface appears clear, and there are no visible weather-related hazards. The driver is following a vehicle ahead, and the presence of a traffic light ahead suggests the need for attention to signal changes.'},
+ {id:'c3ca785e',label:'夜间 · Stop Sign + 行人',desc:'The scene depicts a nighttime driving environment on a collector road with a single lane in each direction. The road is well lit by street lights, and there are no traffic lights present. A stop sign is positioned on the right side of the road, requiring vehicles to come to a complete stop and wait before proceeding. The road surface is dry and clean, with no visible obstacles or curbs. There are no traffic lights present. There are cars parked on the right side of the road. Pedestrians are visible on the right side of the road. The driver should be aware of the pedestrians and maintain a safe distance from them to avoid a collision.'}
+];
+let cur=0;
+function render(){
+  const c=CLIPS[cur];
+  const sel=document.getElementById('clipSel');
+  sel.innerHTML=CLIPS.map((x,i)=>`<button class="clip-btn${i===cur?' active':''}" onclick="selectClip(${i})">${x.label}</button>`).join('');
+  const fs=document.getElementById('filmstrip');
+  fs.innerHTML=[1,2,3,4,5,6].map(n=>`<figure onclick="zoom('frames/${c.id}/frame_${n}.jpg')"><img src="frames/${c.id}/frame_${n}.jpg" alt="frame ${n}" loading="lazy"><figcaption>frame ${n}</figcaption></figure>`).join('');
+  document.getElementById('descText').textContent=c.desc;
+}
+function selectClip(i){cur=i;render();}
+function zoom(src){const lb=document.getElementById('lb');document.getElementById('lbImg').src=src;lb.style.display='flex';}
+render();
+</script>
+</body>
+</html>
