@@ -12,6 +12,10 @@
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:16px}
 .top-nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;z-index:1000}
 .top-nav .logo{font-weight:700;font-size:15px;color:var(--accent);text-decoration:none}
+.top-nav .tabs{display:flex;gap:2px;margin-left:22px;overflow-x:auto}
+.top-nav .tab{padding:5px 12px;border-radius:5px;font-size:13px;color:var(--text2);text-decoration:none;border:1px solid transparent;white-space:nowrap}
+.top-nav .tab:hover{background:var(--bg3)}
+.top-nav .tab.active{background:var(--accentL);color:var(--accentD);font-weight:600;border-color:var(--border)}
 .top-nav .right{margin-left:auto;display:flex;gap:8px}
 .top-nav a.btn,.theme-btn{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text);text-decoration:none}
 .wrap{max-width:920px;margin:0 auto;padding:calc(var(--nav-h) + 32px) 24px 64px}
@@ -61,8 +65,13 @@ footer a{color:var(--accent)}
 <body>
 <nav class="top-nav">
   <a href="https://ranpin.github.io/" class="logo">← Ranpin</a>
+  <div class="tabs">
+    <a class="tab active" href="index.html">CR2-8B 量化部署</a>
+    <a class="tab" href="cosmos3.html">Cosmos3-Edge · Phase W</a>
+    <a class="tab" href="cosmos3-demo/">🎬 Demo</a>
+  </div>
   <div class="right">
-    <a class="btn" href="https://github.com/ranpin/alpamayo-edge/tree/alpamayo-edge/alpamayo-edge" target="_blank">GitHub 源码</a>
+    <a class="btn" href="https://github.com/ranpin/alpamayo-edge" target="_blank">GitHub 源码</a>
     <button class="theme-btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark'">◐ 主题</button>
   </div>
 </nav>
@@ -93,7 +102,7 @@ footer a{color:var(--accent)}
     <tr><td><strong>Cosmos-Reason2（本项目部署）</strong></td><td>图像 / 视频帧 + 文字问题</td><td><strong>文字推理</strong>：场景描述、风险判断、行动建议</td></tr>
     <tr><td>Alpamayo 1.5 VLA（下游，<strong>正是建在本项目部署的 Cosmos-Reason2-8B 上</strong>；轨迹轨道暂缓）</td><td>多相机图像 + 轨迹历史</td><td>轨迹（扩散式轨迹解码器）</td></tr>
   </table>
-  <p style="font-size:13px;color:var(--muted)">实验过程中的问题、根因与解决（含 FMHA 崩溃根因等）单独归档于 <a href="https://github.com/ranpin/alpamayo-edge/blob/alpamayo-edge/alpamayo-edge/docs/PROBLEMS.md" target="_blank" style="color:var(--accent)">问题记录 PROBLEMS.md</a>，本页不含。</p>
+  <p style="font-size:13px;color:var(--muted)">实验过程中的问题、根因与解决（含 FMHA 崩溃根因等）单独归档于 <a href="https://github.com/ranpin/alpamayo-edge/blob/main/docs/PROBLEMS.md" target="_blank" style="color:var(--accent)">问题记录 PROBLEMS.md</a>，本页不含。</p>
 
   <h2 id="overview">总览：模型结构 · 输入怎么变成 token · 优化落点 · 实验逻辑（先看这四张图）</h2>
   <p>后面每一个实验都在说"某个模块占了 xx%"——没有一张模型结构图，这些数字挂不到任何东西上；而八个小节也不是一张清单，而是一条<strong>"上一轮的结论逼出下一轮的问题"</strong>的链条。所以先给四张地图：<strong>图 1 = 上游原始结构与我们部署形态的对应</strong>（先认清模型本身长什么样）、<strong>图 2 = 一张图片怎么变成 token</strong>（真正进网络的是多大的图、几个 token）、<strong>图 3 = 每个优化落在哪个模块</strong>、<strong>图 4 = 这些实验彼此之间的逻辑</strong>。图中所有数值取自设备上的实测 config、引擎文件与运行日志。</p>
@@ -269,7 +278,7 @@ footer a{color:var(--accent)}
     而 <strong>2B 反而超出上界</strong>（1.809× vs 上界 1.514×）—— 因为带宽效率同时从可达上限的 66% 升到 79%，
     去掉那个 M=1 却跑在 64 行 tile 上的 fp16 lm_head GEMM（占 2B decode 字节 46%）改善了访存形态（机制为推断）。<br>
     <strong>decode 这一条到此饱和</strong>：8B 的有效带宽 153.1 GB/s ≈ 实测可达上限 152.3 ⇒ 在"每 token 字节"不变的前提下已无余量。<br>
-    <strong style="color:#b45309">⚠️ 但这不等于量化侧穷尽 —— 这是本页 2026-07-28 更正的一处过度概括。</strong>已证死的只有 <strong>W4A8</strong>（工具全仓库无实现）与 <strong>手写 kernel</strong>（实测已达可达带宽 97–100%）。另有三条<strong>仍未探明</strong>：<strong>① 视觉编码器 INT8</strong>——此前的判据只是"`--visual_quantization` 只给 fp8 而 sm_87 不支持 fp8"，但实查构建链发现 <code>visualBuilder.cpp</code> 用通用 ONNX parser、<code>createBuilderConfig</code> <strong>只设 kMONITOR_MEMORY、无任何精度 flag</strong> ⇒ 精度由 ONNX 决定，自插 QDQ 走 TRT 显式量化未被测试过（sm_87 的 INT8 张量核是原生的）；<strong>② vocab reduction</strong>——工具有原生模块，lm_head 宽 151936，砍到 32k 即 4.7×；<strong>③ 投机解码</strong>——<code>llm_build</code> 原生支持，且它不减字节而是让一次权重搬运产出多个 token，<strong>直接绕开"decode 已达带宽上限"这个框架</strong>（MTP 明确只支持 Qwen3.5 故出局，EAGLE3/DFlash 对 qwen3_vl 未核实）。而 <strong>ViT 的价值还在放大</strong>：§1.7 测得它占 TTFT 19–25%，§1.10 的预算显示真实分辨率下升到 <strong>29–33%</strong>，且 §1.4 已证权重量化对 prefill 无效 ⇒ 这是唯一一处量化还能打到主要成本的地方。分级见 <a href="https://github.com/ranpin/alpamayo-edge/blob/alpamayo-edge/alpamayo-edge/docs/METHODOLOGY.md" target="_blank" style="color:var(--accent)">METHODOLOGY §3.6</a>。<br>
+    <strong style="color:#b45309">⚠️ 但这不等于量化侧穷尽 —— 这是本页 2026-07-28 更正的一处过度概括。</strong>已证死的只有 <strong>W4A8</strong>（工具全仓库无实现）与 <strong>手写 kernel</strong>（实测已达可达带宽 97–100%）。另有三条<strong>仍未探明</strong>：<strong>① 视觉编码器 INT8</strong>——此前的判据只是"`--visual_quantization` 只给 fp8 而 sm_87 不支持 fp8"，但实查构建链发现 <code>visualBuilder.cpp</code> 用通用 ONNX parser、<code>createBuilderConfig</code> <strong>只设 kMONITOR_MEMORY、无任何精度 flag</strong> ⇒ 精度由 ONNX 决定，自插 QDQ 走 TRT 显式量化未被测试过（sm_87 的 INT8 张量核是原生的）；<strong>② vocab reduction</strong>——工具有原生模块，lm_head 宽 151936，砍到 32k 即 4.7×；<strong>③ 投机解码</strong>——<code>llm_build</code> 原生支持，且它不减字节而是让一次权重搬运产出多个 token，<strong>直接绕开"decode 已达带宽上限"这个框架</strong>（MTP 明确只支持 Qwen3.5 故出局，EAGLE3/DFlash 对 qwen3_vl 未核实）。而 <strong>ViT 的价值还在放大</strong>：§1.7 测得它占 TTFT 19–25%，§1.10 的预算显示真实分辨率下升到 <strong>29–33%</strong>，且 §1.4 已证权重量化对 prefill 无效 ⇒ 这是唯一一处量化还能打到主要成本的地方。分级见 <a href="https://github.com/ranpin/alpamayo-edge/blob/main/docs/METHODOLOGY.md" target="_blank" style="color:var(--accent)">METHODOLOGY §3.6</a>。<br>
     <strong>但不是免费的</strong>：8B 付了 −1.4 pts，且损失集中在更难的 robofail（59.0 → 55.0）；2B 则没付代价。
     <strong>⚠️ 归因有 confound</strong>：本次同时改了两件事（lm_head 量化 + 校准 batch 16→1），
     所以 −1.4 pts <strong>不能单独归因于 lm_head 量化</strong>；要隔离需再做一次"lm_head 保持 fp16 + batch=1"的对照，<strong>未做</strong>。
@@ -299,7 +308,7 @@ footer a{color:var(--accent)}
   <div class="callout warn">
     <div class="t">诚实交代：一个做不成的实验（lm_head 量化）</div>
     1.5 节的优化 A（量化 lm_head，预测 <strong>+23%</strong> decode）<strong>至今没有做成</strong>，因此它仍是<strong>未验证的预测</strong>而非结果。工具本身有现成开关 <code>--lm_head_quantization int4_awq</code>，但在 Kaggle 的 2×T4（每张 14.56 GiB）上连试 5 次都失败，且是<strong>两面夹击</strong>：显存上限够高到把所有模块留在 GPU 时，承载 lm_head 的那张卡剩不下它需要的 1.16 GiB 临时张量 → <strong>CUDA OOM</strong>；把上限压低腾出空间，模块就外溢到 CPU → <strong>ModelOpt 的 AWQ 校准与 accelerate 的 offload hook 不兼容，直接 illegal memory access</strong>。更关键的是 <code>max_memory</code> 只约束<strong>初始权重放置</strong>——两次不同上限的 OOM 剩余显存<strong>完全相同（1006.81 MiB）</strong>，说明量化状态之后照样把显存吃回同一水位，压总量根本不是有效杠杆。<br>
-    <strong>出路</strong>：需要单卡 ≥24 GB（L4 / A6000 / A100），让 8B 权重 + 1.16 GiB 临时张量无需分片即可容纳，从而同时避开两个失败模式。完整的 5 次实验记录见 <a href="https://github.com/ranpin/alpamayo-edge/blob/alpamayo-edge/alpamayo-edge/docs/PROBLEMS.md" target="_blank" style="color:var(--accent)">PROBLEMS.md G3</a>。
+    <strong>出路</strong>：需要单卡 ≥24 GB（L4 / A6000 / A100），让 8B 权重 + 1.16 GiB 临时张量无需分片即可容纳，从而同时避开两个失败模式。完整的 5 次实验记录见 <a href="https://github.com/ranpin/alpamayo-edge/blob/main/docs/PROBLEMS.md" target="_blank" style="color:var(--accent)">PROBLEMS.md G3</a>。
   </div>
 
 
@@ -444,7 +453,7 @@ footer a{color:var(--accent)}
     <li><strong>设备 / 框架（实测版本）</strong>：<strong>Jetson AGX Orin Developer Kit</strong>（sm_87，统一内存 29GB，MAXN）· L4T R36.4.4 (JetPack 6.2) · CUDA 12.6.11 · TensorRT 10.7.0.23 · <strong>TensorRT-Edge-LLM v0.9.0</strong>@<code>1ac0f2b</code>。云端量化/参考：Kaggle 2× Tesla T4 (sm_75)。</li>
     <li><strong>指标</strong>：延迟/吞吐 = llm_bench E2E（mean±std，warmup 3 + iter 10；prefill inputLen=512、decode pastKVLen=512）；功耗 = tegrastats 三轨之和；能效 = TPS ÷ W；精度损失 = FP16 模型对输出的 teacher-forced perplexity + token 一致率（相对退化口径，非纯量化误差）。INT4 已重跑复现（在 run-to-run 噪声内一致）。</li>
   </ul>
-  <p style="font-size:13px;color:var(--muted)">模型来源、数据集、指标定义与测法、校准集及影响的完整可复现细节见 <a href="https://github.com/ranpin/alpamayo-edge/blob/alpamayo-edge/alpamayo-edge/docs/METHODOLOGY.md" target="_blank" style="color:var(--accent)">docs/METHODOLOGY.md</a>。</p>
+  <p style="font-size:13px;color:var(--muted)">模型来源、数据集、指标定义与测法、校准集及影响的完整可复现细节见 <a href="https://github.com/ranpin/alpamayo-edge/blob/main/docs/METHODOLOGY.md" target="_blank" style="color:var(--accent)">docs/METHODOLOGY.md</a>。</p>
 
   <h2>三、思考讨论</h2>
   <div class="callout ok">
@@ -469,7 +478,7 @@ footer a{color:var(--accent)}
   </ul>
   <h3>诚实的边界</h3>
   <ul>
-    <li><strong>"量化侧穷尽"是本页曾犯的过度概括（2026-07-28 已更正）</strong>：lm_head 落地、decode 达可达带宽上限后，我据此写下"量化侧穷尽"。但复核发现<strong>只有 W4A8 与手写 kernel 真正被证死</strong>；视觉编码器 INT8 的原判据仅是"CLI 开关只给 fp8"，而构建器实际不设任何精度 flag（精度由 ONNX 决定）⇒ 自插 QDQ 未测。<strong>2026-07-28 起已就 ViT 这条尝试 5 次，全部卡在云端管道（未触及结构性问题），故它仍是"未探明"而非"可行"或"不可行"</strong>——失败谱系与五条教训见 <a href="https://github.com/ranpin/alpamayo-edge/blob/alpamayo-edge/alpamayo-edge/docs/PROBLEMS.md" target="_blank" style="color:var(--accent)">PROBLEMS.md I1</a>。另外 <strong>vocab reduction 与投机解码两条我此前完全没想到</strong>，且后者不减字节、直接绕开"带宽上限"这个论证框架。<strong>教训</strong>：判一条路是否死，必须查到构建器/运行时层，不能停在 CLI 的 <code>choices=[...]</code>。分级见 METHODOLOGY §3.6。</li>
+    <li><strong>"量化侧穷尽"是本页曾犯的过度概括（2026-07-28 已更正）</strong>：lm_head 落地、decode 达可达带宽上限后，我据此写下"量化侧穷尽"。但复核发现<strong>只有 W4A8 与手写 kernel 真正被证死</strong>；视觉编码器 INT8 的原判据仅是"CLI 开关只给 fp8"，而构建器实际不设任何精度 flag（精度由 ONNX 决定）⇒ 自插 QDQ 未测。<strong>2026-07-28 起已就 ViT 这条尝试 5 次，全部卡在云端管道（未触及结构性问题），故它仍是"未探明"而非"可行"或"不可行"</strong>——失败谱系与五条教训见 <a href="https://github.com/ranpin/alpamayo-edge/blob/main/docs/PROBLEMS.md" target="_blank" style="color:var(--accent)">PROBLEMS.md I1</a>。另外 <strong>vocab reduction 与投机解码两条我此前完全没想到</strong>，且后者不减字节、直接绕开"带宽上限"这个论证框架。<strong>教训</strong>：判一条路是否死，必须查到构建器/运行时层，不能停在 CLI 的 <code>choices=[...]</code>。分级见 METHODOLOGY §3.6。</li>
     <li><strong>辅助 perplexity 指标曾有截断 confound（自查发现，2026-07-27 已解决）</strong>：原先 <strong>INT4 有 8/12、INT8 有 6/12</strong> 条撞生成上限，且 FP16 参考侧用的是另一个上限（Kaggle 160 vs Orin 200）——<strong>被比较的两侧预算不一致</strong>，而 INT4 被截得更多却报出更小的 perplexity 增幅，所以"INT4 退化小于 INT8"有可能是假象。<strong>已两侧统一到 512 重跑</strong>（Orin 侧截断降到 2/12；FP16 侧输出中位长度 719→1248 字符）：结果 <strong>INT4 +9.1% / INT8 +15.6%</strong>，<strong>结论方向不变、原结论成立</strong>，但截断确实把差距夸大过（INT8/INT4 之比 1.85× → 1.71×）。两版数字都保留在表 5，不覆盖历史。主指标 MC 正确率自始不受影响（210×3 条全部 end-of-sequence、全部可解析）。</li>
     <li><strong>输入长度只剩 0.9% 余量（事后才发现）</strong>：引擎 <code>maxInputLen=1024</code> 是构建时钉死的；n=210 里最长的一题实测 <strong>1015 token</strong>（40 段 5:4 视频是 154 token/帧，6 帧就 924），<strong>只剩 9 个 token</strong>。日志无截断告警、210 条全部返回，故已发布正确率不受影响，但当初没算这笔账；要加帧数或加长题干必须以更大 <code>maxInputLen</code> 重建引擎（见图 2）。</li>
     <li><strong>基准范围</strong>：官方基准用 <strong>Cosmos-Reason1-Benchmark 的 robovqa+robofail（n=210，具身机器人推理）</strong>——这是 repo 内<strong>自带视频</strong>的全部；其余 3 子集(agibot/bridgev2/holoassist，共 300)仅有标注、视频需从外部源数据集下载匹配，官方 AV 子集未发布 → 全 510 需外部视频流水线(future work)。<strong>无 Cosmos-Reason2-Benchmark（不存在），故用同族的 R1-Benchmark 评测 R2 模型（标准做法）</strong>。视频按 6 帧@448 采样（非官方原生协议，绝对分不追求复现论文；三精度同帧→精度损失可比）。<strong>"精度证据全来自机器人域"的缺口已由 §1.11 补上</strong>（自建 PhysicalAI-AV 驾驶域评测 n=184），但该评测自身也有边界：标注是 clip 级事件聚类（非逐帧感知标签、单 clip 可含多类事件 ⇒ 绝对分低估感知能力），train split 占 154/184 且 NVIDIA 未公开 CR2 训练清单 ⇒ 不能声称"未见数据上的绝对能力"；两者对三精度同等作用，跨精度掉点结论不受影响。</li>
@@ -480,7 +489,7 @@ footer a{color:var(--accent)}
   </ul>
 
   <footer>
-    源码与完整文档：<a href="https://github.com/ranpin/alpamayo-edge/tree/alpamayo-edge/alpamayo-edge" target="_blank">github.com/ranpin/alpamayo-edge</a><br>
+    源码与完整文档：<a href="https://github.com/ranpin/alpamayo-edge" target="_blank">github.com/ranpin/alpamayo-edge</a><br>
     结果报告 <code>docs/edge_deploy_status.md</code> · 方法与可复现 <code>docs/METHODOLOGY.md</code> · 问题记录 <code>docs/PROBLEMS.md</code> · 工程日志 <code>docs/orin_build_notes.md</code>
   </footer>
 </div>

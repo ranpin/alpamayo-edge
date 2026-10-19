@@ -7,7 +7,8 @@
 
 🎬 **在线 Demo（Cosmos3-Edge 2B 驾驶场景理解 · 真实 Orin 推理输出）**：<https://ranpin.github.io/alpamayo-edge/cosmos3-demo/>
 
-📊 **呈现站点（论文式，图 1–21 / 表 1–13）**：<https://ranpin.github.io/alpamayo-edge/>
+📊 **呈现站点（论文式）**：[第一阶段 · CR2-8B 量化部署（图 1–21 / 表 1–13）](https://ranpin.github.io/alpamayo-edge/)
+｜ [Phase W · Cosmos3-Edge 部署（图 W1–W2 / 表 W1–W3）](https://ranpin.github.io/alpamayo-edge/cosmos3.html)
 
 ## 一分钟版本
 
@@ -102,6 +103,7 @@
 | 文档 | 内容 |
 |---|---|
 | **[站点](https://ranpin.github.io/alpamayo-edge/)** | **论文式呈现（首选入口）**：摘要 → 核心结果（§1.1–1.12）→ 方法细节 → 思考讨论 |
+| **[站点 · Phase W](https://ranpin.github.io/alpamayo-edge/cosmos3.html)** | **Cosmos3-Edge 专篇**：六道兼容墙（§W.1）→ reasoner 跨代对比（§W.2）→ policy 帧无关边界（§W.3）→ 方法/讨论 |
 | [docs/edge_deploy_status.md](docs/edge_deploy_status.md) | 结果报告：链路、体积、性能/功耗/精度/Pareto/VLA 闸门全套指标 |
 | [docs/METHODOLOGY.md](docs/METHODOLOGY.md) | 方法与可复现性：模型/数据/校准集来源、指标定义与测法 |
 | [docs/PROBLEMS.md](docs/PROBLEMS.md) | 统一问题记录（A–L）：现象 → 根因 → 解决 → 教训 |
