@@ -104,8 +104,8 @@
 |---|---|
 | **[站点](https://ranpin.github.io/alpamayo-edge/)** | **论文式呈现（首选入口）**：摘要 → 核心结果（§1.1–1.12）→ 方法细节 → 思考讨论 |
 | **[站点 · Phase W](https://ranpin.github.io/alpamayo-edge/cosmos3.html)** | **Cosmos3-Edge 专篇**：六道兼容墙（§W.1）→ reasoner 跨代对比（§W.2）→ policy 帧无关边界（§W.3）→ 方法/讨论 |
-| [docs/edge_deploy_status.md](docs/edge_deploy_status.md) | 结果报告：链路、体积、性能/功耗/精度/Pareto/VLA 闸门全套指标 |
-| [docs/METHODOLOGY.md](docs/METHODOLOGY.md) | 方法与可复现性：模型/数据/校准集来源、指标定义与测法 |
+| [docs/edge_deploy_status.md](docs/edge_deploy_status.md) | 结果报告：链路、体积、性能/功耗/精度/Pareto/VLA 闸门全套指标 + **Phase W 专节** |
+| [docs/METHODOLOGY.md](docs/METHODOLOGY.md) | 方法与可复现性：模型/数据/校准集来源、指标定义与测法 + **§6 Phase W 方法** |
 | [docs/PROBLEMS.md](docs/PROBLEMS.md) | 统一问题记录（A–L）：现象 → 根因 → 解决 → 教训 |
 | [docs/orin_build_notes.md](docs/orin_build_notes.md) | 工程日志：Orin 构建配方、FMHA 崩溃根因、复现命令 |
 | [docs/next_plan.md](docs/next_plan.md) | 规划与决策记录：P0 四道闸门（全过）、P2 可选加固、明确不做清单 |
