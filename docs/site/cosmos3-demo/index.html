@@ -69,13 +69,8 @@
       <span class="c3-badge">分解注意力（K4/K6）</span><span class="c3-badge">真实 Orin 推理输出</span>
     </div>
 
-    <div class="callout warn">
-      <div class="t">⚠ 诚实边界（定性演示，非精度评测）</div>
-      本页展示 Cosmos3-Edge 2B reasoner 在 Jetson Orin 上对真实驾驶视频帧的<strong>自由场景描述</strong>——全部为真实 Orin 推理输出，用于展示部署管线可用。行车 footage 来自公开 sample（见页脚署名）。<strong>无 ground-truth 标注</strong>，描述质量未做定量评测；reasoner 的定量精度评测（n=184 驾驶域基准，42.4%）见<a href="../index.html">项目主页 §1.11/§1.12</a>。policy 动作链的能力边界见仓库 <code>docs/PROBLEMS.md §L</code>。
-    </div>
-
     <section class="ds-section">
-      <h2 class="ds-h2">选择驾驶场景</h2>
+      <h2 class="ds-h2">演示</h2>
       <p class="ds-muted" style="font-size:14px;margin:0 0 4px">4 个真实驾驶 clip（各均匀采样 6 帧，前视广角相机）。点击场景切换，点击帧放大。</p>
       <div class="clip-sel" id="clipSel"></div>
       <div class="filmstrip" id="filmstrip"></div>
@@ -87,7 +82,20 @@
     </section>
 
     <section class="ds-section">
-      <h2 class="ds-h2">部署配置</h2>
+      <h2 class="ds-h2">评测结果</h2>
+      <p class="ds-muted" style="font-size:14px;margin:0 0 4px">reasoner 的定量精度：自建驾驶域基准 n=184（PhysicalAI-AV 人工校验标注，8 选 1 单选，随机基线 12.5%）。上方演示是自由描述（定性），这里是同一基准下的定量精度。完整口径与诚实边界见 <a href="../cosmos3.html">Phase W 报告 §W.2</a>。</p>
+      <table class="c3-table">
+        <tr><th>模型</th><th>n=184 精度</th><th>说明</th></tr>
+        <tr><td><strong>Cosmos3-Edge 2B FP16（本页演示模型）</strong></td><td><strong>42.4%</strong></td><td>Wilson 95% CI [35.5, 49.6] · 3.4× 随机基线（12.5%）</td></tr>
+        <tr><td>Cosmos-Reason2-8B FP16</td><td>51.6%</td><td>上代 8B 基线</td></tr>
+        <tr><td>Cosmos-Reason2-8B INT8</td><td>47.8%</td><td>−3.8 pts</td></tr>
+        <tr><td>Cosmos-Reason2-8B INT4</td><td>50.5%</td><td>−1.1 pts</td></tr>
+      </table>
+      <p class="ds-muted" style="font-size:13px;margin-top:8px">跨代对比：Cosmos3-Edge 2B 比上代 Cosmos-Reason2-8B FP16 低 9.2 pts（McNemar p=0.0115，显著）——<strong>缩小模型不免费</strong>；而 8B 的量化版（INT8/INT4）相对 FP16 掉点很小——<strong>量化几乎免费</strong>。Cosmos3-Edge 2B 仍达随机基线 3.4×、具备真实场景理解；184/184 全部 EOS、零解析失败。</p>
+    </section>
+
+    <section class="ds-section">
+      <h2 class="ds-h2">核心方法</h2>
       <table class="c3-table">
         <tr><th>项</th><th>值</th></tr>
         <tr><td>模型</td><td>Cosmos3-Edge（4B 全模态 = 2B VL reasoner + rectified-flow 扩散专家），本页用 reasoner</td></tr>
