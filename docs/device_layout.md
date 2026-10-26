@@ -17,7 +17,7 @@
 | **orin-dog** `vision@30.245.40.99` | `/home/vision/chenrunbin/alpamayo-edge/` | **171 G** | **主部署机**（32GB 模组）：INT4/INT8/2B 建引擎 + 全部实测；**ONNX 主存放地**（58 G）+ 闸门 4 权重（21 G，2026-10-21 从 goat 搬入） | 机上 `INDEX.md` |
 | **orin-goat** `nvidia@30.245.40.73` | `/home/nvidia/chenrunbin/alpamayo-edge/` | **68 G** | **FP16 基线机 + Phase W 机**（64GB）：dog 上 build 不下的 FP16 在此建成；Cosmos3-Edge 全部引擎在此构建与推理 | 机上 `INDEX.md` |
 | orin-elk `vision@30.245.40.123` | `/home/vision/chenrunbin/` | 12 K（空） | **无本项目文件** | — |
-| pc-3070 `vision@30.245.40.164` | `/home/vision/chenrunbin/` | 104 K（`agentguide`，他项目） | **无本项目文件** | — |
+| **pc-3070** `vision@30.245.40.164` | `/data/tmp/chenrunbin/projects/qwen-trajectory-prediction/` | **53 G** | **前身项目训练机副本**（非 git、无远端、独份）：3× LoRA + 合并模型 + GGUF + base 权重 + `.conda` 环境；**评测结论不在这里**（8 个 `eval_results_*.json` 只在仓库 `legacy/outputs/`）。53 G 中约 52.6 G 可再生，仅 ~400 M 不可替代 | 机上 `STORAGE_AUDIT.md`（同 [`legacy/STORAGE_AUDIT.md`](../legacy/STORAGE_AUDIT.md)） |
 | **scm** `chenrunbin.crb@100.82.100.41` | `/workspace/projects/alpamayo-edge-archive/`（2026-10-15 建成：**7 个 ONNX tgz 共 39 G + SHA256SUMS，全量 `sha256sum -c` 通过**） | 12 TB 空闲 | **归档盘**：**不能下载** —— `huggingface.co` TCP 443 不可达（`pypi.org` 通 ⇒ 白名单受限出网）、且无 ffmpeg/ffprobe。Mac/dog 的大件冗余已在归档验证后删除 | `SHA256SUMS` |
 | **Kaggle 云** | 私有 kernel `alpamayo-edge-export` / `-2b` / `-lmhead` | — | 量化 + ONNX 导出 + FP16 参考；**输出即时下载，云端不留** | `cloud/README.md` |
 | **GitHub** | `ranpin/alpamayo-edge`（2026-10-09 由 `qwen-trajectory-prediction` 改名） | — | `main`（唯一开发分支）· `gh-pages`（[站点](https://ranpin.github.io/alpamayo-edge/)：`index.html` CR2-8B 篇 + `cosmos3.html` Phase W 篇 + `cosmos3-demo/`） | — |
@@ -118,6 +118,7 @@ rsync -acn --itemize-changes <src>/ vision@30.245.40.99:<dst>/
 | **Cosmos3 引擎** 11.6 G | **仅 orin-goat** `engines/cosmos3_*` | ✅ 可重建：ONNX 在 **dog `onnx/cosmos3_*`**（需先拉回 goat），构建脚本 `scripts/orin/w1_goat_engine_build.sh` / `w2_policy_rebuild_decomposed.sh` |
 | **Cosmos3 ONNX** 5.9 G | **仅 orin-dog** `onnx/cosmos3_*` | ✅ 可重导出：权重在 goat `models/`，导出需先打分解补丁（`apply_decomposed_attn_patch.py` / `apply_policy_decomposed_patch.py`） |
 | **闸门 4 权重** 21 G | **仅 orin-dog** `alpamayo_gate4/Alpamayo-1.5-10B` | ✅ 可重下（公开非 gated）；证据小件在 goat `alpamayo_gate4/`（33 M） |
+| **前身项目 LoRA adapter** 396 M（3×132 M） | **仅 pc-3070** `/data/tmp/chenrunbin/projects/qwen-trajectory-prediction/` | ⚠️ **本表唯一不可再生项**：重训要 GPU 小时，且该目录**非 git、无远端**。同目录另有 ~52.6 G 可再生 bulk（合并模型 22.8 G / `.conda` 14 G / base 7.6 G / GGUF 7.2 G / optimizer 792 M / 数据 104 M）。逐项审计与处置选项见 [`legacy/STORAGE_AUDIT.md`](../legacy/STORAGE_AUDIT.md) |
 | INT4/INT8/2B 引擎 | 两台 Orin | ✅ 由 ONNX 重建（sm_87 机器即可；ONNX 在 dog `onnx/` + scm 归档双份） |
 | 全部原始日志 / 请求响应 / 剖析 | 已于 2026-07-27 **全部拉回本地** | ✅ 本地 + MANIFEST |
 | 自产量化 ONNX | **scm 归档（唯一 tgz 副本，7 件 39 G，sha256 全验）** + dog 解包目录 | ✅ 最坏情况重跑 Kaggle 量化 |
