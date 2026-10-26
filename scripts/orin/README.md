@@ -3,8 +3,8 @@
 从两台 Orin 归档到仓库的原始脚本。设备上的副本在各自的
 `chenrunbin/alpamayo-edge/scripts/`（见 [`../../docs/device_layout.md`](../../docs/device_layout.md)）。
 
-本目录共 30 个脚本，按阶段分三节：**第一阶段（CR2-8B 量化部署）** → **Phase W（Cosmos3-Edge）**
-→ **其余（按用途索引）**。
+本目录共 30 个脚本，按阶段分四节：**第一阶段（CR2-8B 量化部署）** → **Phase W（Cosmos3-Edge）**
+→ **Phase R（Alpamayo-R1，进行中）** → **其余（按用途索引）**。
 
 ## 第一阶段：CR2-8B 量化部署
 
@@ -46,8 +46,34 @@
 | `w2_policy_rebuild_decomposed.sh` | goat | 分解版重导 und_prefill+gen 再建引擎，分段执行保磁盘余量（起始 free 6.3G） | 四组件引擎建成 |
 | `w2_policy_smoke.sh` | goat | `cosmos3_policy_inference` 冒烟（官方 UMI 首帧 + "pick up the object"，4 步扩散） | exit=0、action [1,16,10] 全 finite、5154ms/round；**只验管线不验语义** |
 
-> W3 帧无关复测脚本在 [`../../eval/cosmos3/w3_frame_sensitivity.py`](../../eval/cosmos3/w3_frame_sensitivity.py)
+> W3 帧无关复测脚本在 [`../../eval/cosmos3/w3_frame_sensitivity.py`](../../eval/cosmos3/w3_frame_sensitivity.py)、
+> W4 conditioning/seed 敏感性复测在
+> [`../../eval/cosmos3/w4_conditioning_sensitivity.py`](../../eval/cosmos3/w4_conditioning_sensitivity.py)
 > （归评测资产，不是设备构建脚本）。
+
+## Phase R：Alpamayo-R1 AV 轨迹部署（进行中，2026-10-26~）
+
+AV 轨迹 demo 路线。TRTEdge 0.10.1 **原生支持 `alpamayo_r1`**（推翻闸门 4 基于 0.9.0 的「不支持」旧判），
+官方指南 `docs/source/user_guide/examples/vla/alpamayo.md`，action 输出 = `output_trajectory`
+的 `(accel, kappa)` 序列，官方 minADE 基线 0.82113 m / 644 clips。action 专家撞 **K6 同源墙**
+（`trt::attention_onnx/rope_onnx/kv_cache_update_onnx` → ONNX 标准 Attention/RotaryEmbedding/
+TensorScatter，需 TRT≥11）。最小验证 = **只导 + 只建 action 单引擎**（~2.3B FP16），不先碰 10B llm build。
+
+| 脚本 | 设备 | 作用 | 产出/结论 |
+|---|---|---|---|
+| `apply_alpamayo_action_decomposed_patch.py` | — | **R1 墙解法**：action 专家加三个分解实现，`USE_DECOMPOSED_ALPAMAYO=1` 门控（独立于 cosmos3 的 `USE_DECOMPOSED_POLICY`） | 绕开三个 TRT-11-only 算子 |
+| `test_alpamayo_action_decomposed.py` | CPU | 导出前数值对拍，**16 项全过** | kv_cache err=0 / attention err~1e-7 / rope err=0 |
+
+与 cosmos3 policy 补丁（`apply_policy_decomposed_patch.py`）的**三点不同**，均从源码实测钉死、
+且都只在 **B>1** 才暴露（导出 dummy 恰好 `B=1`，直接复用会在建 `maxBatchSize=6` 引擎时才炸）：
+
+1. **RoPE 的 cos/sin 只有 S 行、跨 batch 共享**（forward 里 `rope_cos[0:1].reshape(-1,half)`）
+   ⇒ 不能复用 cosmos3 的 `cos.reshape(b,s,half)`（B>1 元素不足），改为按 `position_ids` 行索引后广播。
+2. **attn_mask 是 4D `[B,1,S,Sk]`，而 GQA 折叠后 scores 是 5D `[B,Hkv,rep,S,Sk]`**
+   ⇒ 不升维直接相加只在 B==1 碰巧广播正确；对拍里的护栏实证 **B=2 时 naive 写法直接抛 RuntimeError**。
+3. **`kv_cache_update` 的 `cache_indices` 是运行期张量输入**（导出 dummy=3027、dim0 动态）
+   ⇒ trace 期值未知，`torch.cat` 静态切片不可用，改用 `scatter` 动态写入（索引仅 `[B,H,S,D]`，
+   比 gather+mask 的 `[B,H,C,D]` 省 ~C/S 倍）。
 
 ## 其余脚本（按用途索引）
 
