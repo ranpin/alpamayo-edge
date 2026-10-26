@@ -52,13 +52,14 @@ position_ids 防 DCE），env `USE_DECOMPOSED_POLICY=1` 门控。分解实现先
 exit=0，action shape **[1,16,10]**，160 值全 finite、范围 [−2.13, 2.77]，逐维分布有结构
 （d3≈−1.93±0.15、d5≈+2.15±0.14 紧聚类，非噪声）；**延迟 5154 ms/policy round**（goat）。
 
-> **诚实边界（W3 已实测，2026-10-19）**：W2 冒烟是**部署管线验证**——分解引擎端到端跑通、
-> 产出结构合法的动作；**不是动作语义正确性验证**。W3 用真实 DROID 帧（`lerobot/droid_100`）实测：
-> 单帧 turnkey 路径**帧无关**（f20/60/100/140 输出近乎相同，mean diff≈0.009）——帧内能出连贯
-> 位移但不随输入帧变化，是 vision-only 单帧 conditioning 的能力边界，**非引擎 bug**。且 Edge 输出
-> （10 维 midtrain rot6d + quantile 归一化）与社区 lerobot GT（7 维笛卡尔）表示/归一化不同、无法
-> 直接对照。⇒ demo 锚定已验证 works 的 reasoning 侧，policy 动作链定位为「部署打通 + 帧无关边界」。
-> 详见 PROBLEMS §L。
+> **诚实边界（W3 实测 2026-10-19 / W4 复测修正 2026-10-26）**：W2 冒烟是**部署管线验证**——分解引擎
+> 端到端跑通、产出结构合法的动作；**不是动作语义正确性验证**。W3 用真实 DROID 帧实测单帧路径「帧无关」；
+> **W4 复测修正**：不止帧——**帧/文本 prompt/CFG 三个 conditioning 轴一致地只有 1–2%，而 diffusion seed
+> 主导输出（52%，是 prompt 效应的 ~30×）**，40 步也不收敛出来。即 turnkey 路径输出基本是「seed 去噪出的
+> 通用轨迹」，conditioning 弱耦合，**根因未定**（我们的 gen cross-attention 分解补丁接线 vs 模型属性）。
+> 且 Edge 输出（10 维 midtrain rot6d + quantile 归一化）与社区 lerobot GT（7 维笛卡尔）表示/归一化不同、
+> 无法直接对照。⇒ demo 锚定已验证 works 的 reasoning 侧，policy 动作链定位为「部署打通 + conditioning
+> 弱耦合边界（根因未定）」。详见 PROBLEMS §L（含 L4）。
 
 ## 文件
 

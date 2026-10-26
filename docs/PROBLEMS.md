@@ -552,12 +552,13 @@ K4 在 K5（自生成 CuTe DSL）解决后成冗余保险，K6 则是 policy 链
 ④ 值得向 TRTEdge 上游提 issue：cuda12 targets 补 aarch64:sm_87 + 嵌入头清单补 vector_* 链 +
 policy 导出对 TRT<11 提供分解 fallback。
 
-## L. Cosmos3-Edge policy 动作链：部署打通，但单帧 turnkey 路径「帧无关」（2026-10-19，W3 实测）
+## L. Cosmos3-Edge policy 动作链：部署打通，但 turnkey 路径输出由 seed 主导、conditioning 弱耦合（2026-10-19 W3 / 2026-10-26 W4 实测）
 
 W2 把 policy 四组件引擎建通、冒烟 exit=0（K6）。W3 要把它做成「真实 DROID 数据 → 动作」demo，
 先只读侦察 NVIDIA 参考实现（`github.com/NVIDIA/cosmos` + `cosmos-framework`）搞清动作的后处理与
-归一化，再用真实数据实测。**结论：引擎部署无误，但 turnkey 单帧 policy 路径对输入帧不敏感
-（帧无关），出不了帧敏感动作——这是 vision-only 单帧 conditioning 的能力边界，非引擎 bug。**
+归一化，再用真实数据实测。**W3 初判：turnkey 单帧路径「帧无关」。W4 复测修正：不是「帧无关」，
+而是帧/文本/CFG 三个 conditioning 轴一致地只有 1–2%、输出由 diffusion seed 主导（52%）——整条
+conditioning 通路弱耦合，根因未定（我们的分解补丁接线 vs 模型属性），见 L4。**
 
 ### L1. 动作表示 / 归一化 / 后处理（cosmos-framework 权威定义，已查清）
 - **表示**：Edge 用 `midtrain` 10 维 = [eef_pos(3) + rot6d(6) + gripper(1)]、**相对位姿**
@@ -584,12 +585,49 @@ Edge 输出是 **10 维 midtrain rot6d**、NVIDIA quantile 归一化；cosmos co
 **8 维关节空间** [joint_pos(7)+gripper(1)]。三套表示 + 三套归一化 + 时间分辨率不同（policy 5fps vs GT 15fps）
 ⇒ 直接对照是四重错配，「对不上」是必然，非引擎错。
 
+### L4. W4 复测：不是「帧无关」，是「全 conditioning 弱耦合、输出由 seed 主导」（2026-10-26）
+
+W3 只换了「帧」一个变量，且用的是二进制默认 `--guidance 1.0`。读 `cosmos3_policy_inference.cpp`
+发现 **1.0 = CFG 关闭**，源码注明「**3.0 matches the reference**」——W3 是在偏离参考配置下测的。
+W4 补测三个 W3 没碰的轴（官方 UMI 帧，`engines/cosmos3_policy_droid`，steps 4）：
+
+| 变化的轴 | mean\|diff\| | 占 mean\|action\|=0.7387 |
+|---|---|---|
+| 确定性底（同参数三次重跑，**逐位相同**） | 0.000000 | 0% |
+| guidance 1.0→5.0 | 0.0070 | 0.94% |
+| 跨帧（W3） | 0.0094 | 1.27% |
+| 跨 prompt（4 条语义不同指令） | 0.0129 | 1.74% |
+| **SEED（对照组）** | **0.383** | **51.9%** |
+| *参照：chunk 内相邻两步* | *0.389* | *52.7%* |
+
+**SEED / conditioning = 39×**。「去噪不够」已排除：cross-prompt 敏感性 steps 4→16→40 =
+0.0129→0.0322→0.0287（**平台化**），steps16≈steps40（扩散已收敛），seed 效应仍 0.45。
+
+⇒ **修正 W3 定性**：不是「vision-only 单帧 conditioning 弱」，而是**帧/文本/CFG 三个轴一致地只有
+1–2%**——整条 conditioning 通路没有有效耦合，输出基本是「seed 去噪出的通用轨迹」。三轴**均匀**衰减
+更像系统性 attenuation（scale/mask/接线），**「我们的 gen cross-attention 分解补丁 attenuate 了
+conditioning」从猜想升级为领先嫌疑**（reasoner 侧同塔同技术却明确输入敏感：n=184 得 42.4%、3.4× chance）。
+**根因未定**：补丁接线 vs 模型属性，决定性判据（PyTorch 参考对照）需 Orin 装 cosmos-framework +
+GPU torch（实测 `export_venv` 是 CPU-only torch 且无 cosmos 模块），非快速对照。
+
+**附带发现（action space 配置）**：跑 TRTEdge 自带 `robolab/selftest.py` 失败于
+`cannot reshape array of size 160 into shape (32,8)`——参考客户端 `Cosmos3JointposClient` 硬编码
+**joint_pos 8 维 / chunk 32**，我们引擎是 **midtrain 10 维 / chunk 16**（与 cosmos-framework 的
+DROID 定义一致）。`config.json` 无 action_space/dim/chunk 键（只有 `max_action_dim=64`、
+`num_embodiment_domains=32`）⇒ action space 由导出侧选、非 checkpoint 决定。selftest 不适用我们的
+配置，**既未证明引擎坏、也未解释 seed 主导**，但留下一个未验证变量（换 joint_pos/chunk32 重导出）。
+
+复现：`eval/cosmos3/w4_conditioning_sensitivity.py`（证据 `eval/cosmos3/w4_cfg/` 16 个 action.json
+已入库，一键重算 T0 确定性/T1 guidance/T2 prompt/T3 seed/T4-T5 steps 全部差异；帧用官方 UMI 样例，
+无需 droid 数据；取数命令见脚本头注）。
+
 **教训**：① turnkey 工具（`cosmos3_policy_inference`）是**简化路径**——vision+language-only、单帧、无 state
 锚点，与 cosmos-framework 参考 server（state-conditioned、多帧历史）输入契约不同；拿 turnkey 输出直接比
 参考 GT 前，必须先核对**表示 / 归一化 / state / 时间**四者是否对齐。② **反直觉的单次实测要换独立变量复测
-再定性**：初判「原地抖动出不了动作」经跨帧复测修正为「帧内有连贯位移、但帧无关」——结论从"模型坏"变成
-"单帧 conditioning 的能力边界"，方向完全不同（见 [[reverify-surprising-measurements]] 纪律）。③ 测出 turnkey
-policy 的能力边界本身是有价值发现（同 §延迟定位：测出边界并据实定位 > 假装能用）；demo 应锚定已验证 works
-的 reasoning 侧，policy 动作链写成「部署打通 + 帧无关边界」。复现：`eval/cosmos3/w3_frame_sensitivity.py`
-（证据 `eval/cosmos3/w3_actions/` 4 个 action.json + `droid_action_stats.json` quantile stats 已入库，
-一键重算跨帧 diff 与帧内轨迹；帧/视频可再生，取数命令见脚本头注）。
+再定性，且要换「结论所依赖的那个」变量**：W3 换帧得「帧无关」，W4 换 conditioning 强度（guidance）与
+文本才发现真相是「全 conditioning 弱耦合、seed 主导」——只换帧会漏掉它（见
+[[reverify-surprising-measurements]] 纪律）。③ **先查工具默认值是否等于参考配置**：W3/W2 都用了
+`--guidance` 默认 1.0（CFG 关），而参考是 3.0——偏离参考配置的「能力边界」结论要先排除配置伪影。
+④ 测出边界本身有价值，但**「非引擎 bug」这类排除性断言要有对照证据**：W4 之前说「非引擎 bug」只凭
+算子数值对拍，没验导出图接线，W4 后降级为「根因未定」。复现：`eval/cosmos3/w3_frame_sensitivity.py`
+（证据 `eval/cosmos3/w3_actions/`）与 `w4_conditioning_sensitivity.py`（证据 `eval/cosmos3/w4_cfg/`）。
