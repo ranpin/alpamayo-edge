@@ -631,3 +631,89 @@ DROID 定义一致）。`config.json` 无 action_space/dim/chunk 键（只有 `m
 ④ 测出边界本身有价值，但**「非引擎 bug」这类排除性断言要有对照证据**：W4 之前说「非引擎 bug」只凭
 算子数值对拍，没验导出图接线，W4 后降级为「根因未定」。复现：`eval/cosmos3/w3_frame_sensitivity.py`
 （证据 `eval/cosmos3/w3_actions/`）与 `w4_conditioning_sensitivity.py`（证据 `eval/cosmos3/w4_cfg/`）。
+
+## M. Alpamayo-R1 action 专家：K6 同源墙，分解补丁第三次打通（2026-10-26，Phase R 最小验证 ✅）
+
+**背景**：闸门 4 曾基于 TRTEdge **0.9.0** 判定「TRTEdge 不支持 Alpamayo」而关闭 AV 轨迹路线。
+2026-10-19 静态侦察**推翻该旧判**——`export.py:162 _ACTION_MODEL_TYPES = frozenset(["alpamayo_r1"])`，
+0.10.1 **原生支持** `alpamayo_r1`，且官方指南 `docs/source/user_guide/examples/vla/alpamayo.md` 齐备、
+`action_build`/`action_inference` 二进制已编好、`compute_minade.py` 带公开基线 **0.82113 m / 644 clips**。
+⇒ 路线重开，用户拍板「按最小验证走」：**只导 + 只建 action 单引擎**，不先碰 10B llm build。
+
+### M1. 墙：action 专家撞 K6 同源墙
+
+`models/alpamayo/modeling_alpamayo_action.py` 的 `ActionAttention` 用三个 `trt::` custom op，
+lower 成 **ONNX 标准算子**，只有 TRT≥11 parser 认识（Orin JetPack 6.2 = TRT 10.7）：
+
+| custom op | lower 成 | 与既有墙的关系 |
+|---|---|---|
+| `trt::attention_onnx` | `Attention` | **= K6 同一个** |
+| `trt::rope_onnx` | `RotaryEmbedding` | **= K6 同一个** |
+| `trt::kv_cache_update_onnx` | `TensorScatter` | **新**（cosmos3 policy 没有这个） |
+
+三个 op 在 `models/ops.py` 里都是 **stub（`return x.clone()`）**——真实计算由 TRT 侧承担，
+所以 PyTorch 端数值对拍无法覆盖它们，必须自己写分解实现。
+
+### M2. 解法：分解补丁（`scripts/orin/apply_alpamayo_action_decomposed_patch.py`）
+
+同 K4/K6 思路，用基础 ONNX 算子实现，任何 TRT 版本可解析。门控 **`USE_DECOMPOSED_ALPAMAYO=1`**
+（独立于 cosmos3 的 `USE_DECOMPOSED_POLICY`，两套补丁互不干扰）。改两处：`models/ops.py` 追加三个
+分解实现，`modeling_alpamayo_action.py:187` 的局部 import 换成走包装器（别名回原名，调用点不动）。
+
+**🔴 不能直接复用 cosmos3 policy 补丁——三个陷阱都只在 B>1 暴露，而导出 dummy 恰好是 `B=1`**
+（`get_onnx_export_args` 里 `B = 1`），照抄会在建 `--maxBatchSize 6` 引擎时才炸：
+
+| # | 陷阱（源码实测） | 处理 |
+|---|---|---|
+| 1 | RoPE 的 cos/sin **只有 S 行、跨 batch 共享**（forward 里 `rope_cos = rope_rotary_cos_sin[0:1].reshape(-1,half)`） | cosmos3 版 `cos.reshape(b,s,half)` 在 B>1 **元素不足**；改为按 `position_ids` 行索引后广播。position_ids 须保留作图输入防 DCE |
+| 2 | `attn_mask` 是 **4D `[B,1,S,Sk]`**，而 GQA 折叠后 scores 是 **5D `[B,Hkv,rep,S,Sk]`** | 不升维直接相加只在 B==1 碰巧广播正确 ⇒ `unsqueeze(2)` 升到 `[B,1,1,S,Sk]` |
+| 3 | `kv_cache_update` 的 `cache_indices` 是**运行期张量输入**（dummy=`torch.full((B,),3027)`、dynamic_shapes 标 `{0:batch}`） | trace 期值未知 ⇒ `torch.cat` 静态切片不可用；改 `scatter`（索引仅 `[B,H,S,D]`，比 gather+mask 的 `[B,H,C,D]` 省 ~C/S 倍） |
+
+**导出前数值对拍**（`test_alpamayo_action_decomposed.py`，**16/16 全过**）：`kv_cache_update` vs 直接切片赋值
+**err=0.000e+00**（逐位精确，含「写入区外逐位不变」护栏，覆盖 start=3027/0/C−S × B=1/2）；
+`attention` vs `F.scaled_dot_product_attention` **err~1e-7**；`rope` vs LLaMA 全维公式 **err=0**；dispatch 3 项。
+其中陷阱 2 的护栏**实证了陷阱为真**：B=2 时 naive 写法直接抛 `RuntimeError`（不是算错，是根本广播不了）。
+
+### M3. 实测结果：通了
+
+| 阶段 | 实测 |
+|---|---|
+| 权重下载 | 21 G / 5 shard，hf-mirror + `HF_HUB_DISABLE_XET=1`，~50 MB/s 约 7 分钟 |
+| **export**（`--skip-llm --skip-visual`） | 峰值 RSS **10.5 G**、最低 MemAvailable **37 G**、约 5 分钟；`model.onnx` 6,314,629 B（图）+ `model.onnx.data` **4,561,240,064 B**（外置权重） |
+| **算子普查** | `Attention=0 RotaryEmbedding=0 TensorScatter=0 KVCacheUpdate=0`；`ScatterElements=72`、`Softmax=36`、`MatMul=325`（共 3218 节点） |
+| **action_build**（`--maxBatchSize 6`） | Engine generation **89.9 s**、峰值 **CPU 12088 MiB / GPU 4349 MiB**、**0 error** ⇒ `action.engine` **4,565,059,244 B** |
+
+**自洽性交叉验证**：`action/config.json` 给出 `num_hidden_layers: 36` ⇒ `Softmax=36`（每层 1 个注意力）、
+`ScatterElements=72 = 36×2`（每层 k/v 各一次 scatter）。**数字精确对上**，证明分解逐层落进了图里，
+不是「碰巧没有墙算子」。
+
+⇒ **结论：Orin sm_87 / JetPack 6.2 / TRT 10.7 上，Alpamayo-R1 的 turnkey action 路径跑得起来。**
+资源开销远低于预期（对比闸门 4 当年「8B 级加载峰值 54.8 G」，action 专家构建峰值仅 12.1 G）。
+**分解注意力补丁的普适性第三次得到验证**（K4 cosmos3 visual → K6 cosmos3 policy → M2 alpamayo action）。
+
+### M4. 尚未验证 / 诚实边界
+
+- ⚠️ **mRoPE 黄旗（未解决）**：`action/config.json` 写 `rope_type: mrope`、`mrope_section: [24,20,20]`、
+  **`mrope_interleaved: true`**，而本补丁实现的是 **rotate_half** 约定。判断大概率无碍的两点依据：
+  ① action 专家的 `rope_onnx` 接收的是**已算好的 cos/sin 张量**，mRoPE 分段逻辑在上游；
+  ② 导出 dummy 的 `attention_pos_id = arange(n_diff)` 是 **1D** 位置，而 mRoPE 需 (t,h,w) 三维
+  ⇒ 该字段很可能是从 VLM 继承的残留。**但没有独立验证**：对拍是「我的分解 vs rotate_half 公式」的
+  自洽检查，不是「rotate_half vs TRT `RotaryEmbedding` 真实语义」的检查（cosmos3 那次是同一个假设，
+  间接证据是其引擎产出了合法 rot6d）。须待推理出轨迹后靠结果合理性反证。
+- ⬜ **全链未通**：`action_inference` 要跑完 **VLM + action 两阶段**，还需 `llm` 与 `visual` 两个引擎。
+  两个真实闸门：**磁盘**（goat 建完 action 后仅剩 16 G，llm ONNX ~20 G + llm 引擎 ~20 G 装不下，
+  需分阶段腾挪）；**内存**（VLM 底座 `qwenvl3` 约 8.8 B，官方指南明写 **Alpamayo 只支持 FP16 导出**、
+  不能靠量化降压，而 goat 总 64 G 且为共享机、当前 MemAvailable ~45 G）。
+- ⬜ **minADE 评测与轨迹 demo 未做**：需全链跑通后按官方 `compute_minade.py`（644 clips）对照
+  公开基线 0.82113 m。
+
+**教训**：① **旧闸门结论要随工具版本复核**——闸门 4 的「不支持」是 0.9.0 时代的事实，0.10.1 已原生支持；
+把版本绑定的否定结论当成永久结论，会白白关掉一条主线（本次差点因此错过 AV 轨迹路线）。
+② **复用补丁前先核对调用形态，别只看算子名相同**——三个陷阱全是「同名算子、不同张量约定」，
+且都被 `B=1` 的导出 dummy 掩盖。③ **对拍要带「反例护栏」**：不只验「我的实现 == 参考」，
+还要验「错误实现 != 参考」，否则测不出自己究竟覆盖了没有。④ 长构建/导出**先挂内存哨兵再发射**
+（只观察不自动 kill，见 [[observe-before-stopping-jobs]]）：本次探针顺带把导出跑完了，
+峰值 10.5 G 远低于预估，避免了在共享机上盲目发射的风险。
+
+复现：`scripts/orin/r1_action_minverify.sh`（下载→补丁→对拍→只导 action→算子普查→只建 action 引擎，
+各步判据即上表实测数字）。

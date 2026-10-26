@@ -1,6 +1,6 @@
-# 文件放在哪：各设备目录布局（2026-07-27 整理 · 2026-10-21 归位 · 2026-10-26 复核）
+# 文件放在哪：各设备目录布局（2026-07-27 整理 · 2026-10-21 归位 · 2026-10-26 复核 + Phase R）
 
-> 本项目横跨 **1 台 Mac + 2 台 Jetson Orin + Kaggle 云**，产物合计约 **240 GB**。
+> 本项目横跨 **1 台 Mac + 2 台 Jetson Orin + Kaggle 云**，产物合计约 **270 GB**。
 > 两台 Orin 都是**共享账号**（多人共用 `vision` / `nvidia` 登录），所以我的文件统一收在
 > **`<home>/chenrunbin/alpamayo-edge/`** 下，各目录内附 `INDEX.md`。此前散落在家目录顶层，容易被误删/误认。
 >
@@ -8,6 +8,9 @@
 > goat 上可重建/可重下的大件（闸门 4 权重 21 G + Cosmos3 policy ONNX 1.3 G）已搬到 dog，
 > 与 dog 重复的 Cosmos3 reasoning ONNX 4.6 G 已在 goat 删除（删前 `rsync -c` 逐字节校验）。
 > goat 可用空间因此从 23 G 回到 45 G。
+>
+> **2026-10-26 Phase R**：goat 新增 Alpamayo-R1 权重 21 G + action ONNX 4.3 G + action 引擎 4.25 G，
+> 可用空间从 45 G 降到 **16 G**——全链（llm/visual 引擎）需先腾挪，见 §四。
 
 ## 一、总览
 
@@ -15,7 +18,7 @@
 |---|---|---|---|---|
 | **本地 Mac** | `~/projects/alpamayo-edge/`（git 仓库，分支 `main`；2026-10-15 由 `qwen-trajectory-prediction` 改名） | ~2 G（tgz 归档后） | 代码 / 文档 / 站点 | 本仓库 `README.md` |
 | **orin-dog** `vision@30.245.40.99` | `/home/vision/chenrunbin/alpamayo-edge/` | **171 G** | **主部署机**（32GB 模组）：INT4/INT8/2B 建引擎 + 全部实测；**ONNX 主存放地**（58 G）+ 闸门 4 权重（21 G，2026-10-21 从 goat 搬入） | 机上 `INDEX.md` |
-| **orin-goat** `nvidia@30.245.40.73` | `/home/nvidia/chenrunbin/alpamayo-edge/` | **68 G** | **FP16 基线机 + Phase W 机**（64GB）：dog 上 build 不下的 FP16 在此建成；Cosmos3-Edge 全部引擎在此构建与推理 | 机上 `INDEX.md` |
+| **orin-goat** `nvidia@30.245.40.73` | `/home/nvidia/chenrunbin/alpamayo-edge/` | **97 G** | **FP16 基线机 + Phase W/R 机**（64GB）：dog 上 build 不下的 FP16 在此建成；Cosmos3-Edge 全部引擎 + **Alpamayo-R1 action 引擎**在此构建与推理 | 机上 `INDEX.md` |
 | orin-elk `vision@30.245.40.123` | `/home/vision/chenrunbin/` | 12 K（空） | **无本项目文件** | — |
 | **pc-3070** `vision@30.245.40.164` | `/data/tmp/chenrunbin/projects/qwen-trajectory-prediction/` | **53 G** | **前身项目训练机副本**（非 git、无远端、独份）：3× LoRA + 合并模型 + GGUF + base 权重 + `.conda` 环境；**评测结论不在这里**（8 个 `eval_results_*.json` 只在仓库 `legacy/outputs/`）。53 G 中约 52.6 G 可再生，仅 ~400 M 不可替代 | 机上 `STORAGE_AUDIT.md`（同 [`legacy/STORAGE_AUDIT.md`](../legacy/STORAGE_AUDIT.md)） |
 | **scm** `chenrunbin.crb@100.82.100.41` | `/workspace/projects/alpamayo-edge-archive/`（2026-10-15 建成：**7 个 ONNX tgz 共 39 G + SHA256SUMS，全量 `sha256sum -c` 通过**） | 12 TB 空闲 | **归档盘**：**不能下载** —— `huggingface.co` TCP 443 不可达（`pypi.org` 通 ⇒ 白名单受限出网）、且无 ffmpeg/ffprobe。Mac/dog 的大件冗余已在归档验证后删除 | `SHA256SUMS` |
@@ -40,9 +43,9 @@ rsync -acn --itemize-changes <src>/ vision@30.245.40.99:<dst>/
 
 | 子目录 | 内容 | dog | goat | 可重建？ |
 |---|---|---|---|---|
-| `engines/` | TensorRT 引擎（**sm_87 专用**，两 Orin 互通，不可跨架构） | **92 G**（7 个 int8 变体各 8.9 G + 3 个 int4 各 6.8 G + 8b_lmhead 4.9 G + 2b 2.7 G + 2b_lmhead 1.5 G） | **43 G**（**fp16 16 G** + int8 8.9 G + int4 6.8 G + **cosmos3_policy_droid 6.1 G + cosmos3_edge 5.5 G**） | ✅ 由 `onnx/` 经 `llm_build` / `cosmos3_*_build` |
-| `onnx/` | 建引擎的输入（云端量化导出 + Phase W 本地导出） | **58 G**（fp16 16 G / int8 9.9 G / int8_domain 8.9 G / lmhead 8.1 G / int4 6.8 G / **cosmos3_edge 4.6 G** / 2b 2.7 G / **cosmos3_policy_droid 1.3 G**） | **空**（2026-10-21 已搬/删至 dog） | ✅ 原由 `tarballs/` 解包；Cosmos3 由 `trtedge-0.10.1` 导出 |
-| `models/` | HuggingFace 原始权重（Phase W） | — | **18 G**（`Cosmos3-Edge` + `Cosmos3-Edge-Policy-DROID`） | ✅ 可重下（hf-mirror） |
+| `engines/` | TensorRT 引擎（**sm_87 专用**，两 Orin 互通，不可跨架构） | **92 G**（7 个 int8 变体各 8.9 G + 3 个 int4 各 6.8 G + 8b_lmhead 4.9 G + 2b 2.7 G + 2b_lmhead 1.5 G） | **47 G**（**fp16 16 G** + int8 8.9 G + int4 6.8 G + **cosmos3_policy_droid 6.1 G + cosmos3_edge 5.5 G** + **alpamayo_r1/action 4.25 G**） | ✅ 由 `onnx/` 经 `llm_build` / `cosmos3_*_build` / `action_build` |
+| `onnx/` | 建引擎的输入（云端量化导出 + Phase W/R 本地导出） | **58 G**（fp16 16 G / int8 9.9 G / int8_domain 8.9 G / lmhead 8.1 G / int4 6.8 G / **cosmos3_edge 4.6 G** / 2b 2.7 G / **cosmos3_policy_droid 1.3 G**） | **4.3 G**（`alpamayo_r1/action`：图 6.3 MB + 外置权重 4.25 G，2026-10-26 Phase R 导出；Cosmos3 ONNX 已于 2026-10-21 搬/删至 dog） | ✅ 原由 `tarballs/` 解包；Cosmos3 / Alpamayo-R1 由 `trtedge-0.10.1` 导出 |
+| `models/` | HuggingFace 原始权重（Phase W/R） | — | **38 G**（`Cosmos3-Edge` + `Cosmos3-Edge-Policy-DROID` + **`Alpamayo-R1-10B` 21 G**） | ✅ 可重下（hf-mirror，须 `HF_HUB_DISABLE_XET=1`） |
 | `trtedge-0.10.1/` | **Phase W 自建 TRTEdge**（Cosmos3-Edge 需 0.10.x；含 `build_orin/` 与自生成的 CuTe DSL sm_87+cuda12 预编译件） | 673 M | **6.4 G**（完整构建） | ✅ 由 `scripts/orin/w0b_build_trtedge_0101.sh` 重建 |
 | `tarballs/` | 传输/迁移打包 | 已清空（2026-10-15 归档 scm 验证后删，回收 32 G） | 已删（2026-10-12，回收 40 G） | ✅ **纯冗余，可删** |
 | `bench/` | n=210 基准 + `ood_eval/`（驾驶域 n=184：448/720/1080 三档帧 + 输入/输出/日志） | 407 M | 33 M（`ood_eval/` 曾用于 FP16 n=184） | ⚠️ 输出是实测记录 |
@@ -117,6 +120,9 @@ rsync -acn --itemize-changes <src>/ vision@30.245.40.99:<dst>/
 | **FP16 引擎** 16 G | **仅 orin-goat** `engines/fp16` | ✅ 可重建：ONNX 在 **dog `onnx/fp16`** + scm 归档（`edge_fp16_llm.tgz`，SHA256SUMS 校验通过），但**必须在 ≥64 GB 内存的机器上** build（32GB 机峰值 54.8 G 会 OOM）⇒ 只能在 goat 建 |
 | **Cosmos3 引擎** 11.6 G | **仅 orin-goat** `engines/cosmos3_*` | ✅ 可重建：ONNX 在 **dog `onnx/cosmos3_*`**（需先拉回 goat），构建脚本 `scripts/orin/w1_goat_engine_build.sh` / `w2_policy_rebuild_decomposed.sh` |
 | **Cosmos3 ONNX** 5.9 G | **仅 orin-dog** `onnx/cosmos3_*` | ✅ 可重导出：权重在 goat `models/`，导出需先打分解补丁（`apply_decomposed_attn_patch.py` / `apply_policy_decomposed_patch.py`） |
+| **Alpamayo-R1 action 引擎** 4.25 G | **仅 orin-goat** `engines/alpamayo_r1/action` | ✅ 可重建：ONNX 在**同机** `onnx/alpamayo_r1/action`（无需跨机互传），脚本 `scripts/orin/r1_action_minverify.sh`；**必须先打 `apply_alpamayo_action_decomposed_patch.py` 且对拍 16/16 全过**，否则图里会留 TRT-11-only 算子 |
+| **Alpamayo-R1 action ONNX** 4.3 G | **仅 orin-goat** `onnx/alpamayo_r1/action` | ✅ 可重导出：权重在同机 `models/Alpamayo-R1-10B`；实测导出峰值仅 **10.5 G RAM**、约 5 分钟（`--skip-llm --skip-visual`） |
+| **Alpamayo-R1 权重** 21 G | **仅 orin-goat** `models/Alpamayo-R1-10B` | ✅ 可重下（公开非 gated，hf-mirror + `HF_HUB_DISABLE_XET=1`，~7 分钟）；⚠️ **`action_inference` 运行期需 `--checkpointDir` 指向它，全链跑通前不能删** |
 | **闸门 4 权重** 21 G | **仅 orin-dog** `alpamayo_gate4/Alpamayo-1.5-10B` | ✅ 可重下（公开非 gated）；证据小件在 goat `alpamayo_gate4/`（33 M） |
 | **前身项目 LoRA adapter** 396 M（3×132 M） | **仅 pc-3070** `/data/tmp/chenrunbin/projects/qwen-trajectory-prediction/` | ⚠️ **本表唯一不可再生项**：重训要 GPU 小时，且该目录**非 git、无远端**。同目录另有 ~52.6 G 可再生 bulk（合并模型 22.8 G / `.conda` 14 G / base 7.6 G / GGUF 7.2 G / optimizer 792 M / 数据 104 M）。逐项审计与处置选项见 [`legacy/STORAGE_AUDIT.md`](../legacy/STORAGE_AUDIT.md) |
 | INT4/INT8/2B 引擎 | 两台 Orin | ✅ 由 ONNX 重建（sm_87 机器即可；ONNX 在 dog `onnx/` + scm 归档双份） |
@@ -127,7 +133,7 @@ rsync -acn --itemize-changes <src>/ vision@30.245.40.99:<dst>/
 
 | 设备 | 分区 | 总量 | 已用 | 可用 | 备注 |
 |---|---|---|---|---|---|
-| orin-goat | `/`（nvme0n1p1） | 446 G | 379 G | **45 G（90%）** | 共享机，他人占用会波动；2026-10-19 曾低至 12 G |
+| orin-goat | `/`（nvme0n1p1） | 446 G | 408 G | **16 G（97%）** | 共享机，他人占用会波动；2026-10-19 曾低至 12 G；**2026-10-26 Phase R 后降至 16 G**（R1 权重 21 G + action ONNX 4.3 G + action 引擎 4.25 G） |
 | orin-dog | `/home`（nvme0n1p1） | 916 G | 366 G | **504 G（43%）** | 宽松，大件优先放这里 |
 | orin-dog | `/`（mmcblk0p1） | 57 G | 24 G | 31 G（45%） | 系统盘，别往这儿放大件 |
 | 本地 Mac | — | — | — | — | 仓库 ~2 G（tgz 已归档删除） |
