@@ -64,6 +64,7 @@ TensorScatter，需 TRT≥11）。最小验证 = **只导 + 只建 action 单引
 | `apply_alpamayo_action_decomposed_patch.py` | — | **R1 墙解法**：action 专家加三个分解实现，`USE_DECOMPOSED_ALPAMAYO=1` 门控（独立于 cosmos3 的 `USE_DECOMPOSED_POLICY`） | 绕开三个 TRT-11-only 算子 |
 | `test_alpamayo_action_decomposed.py` | CPU | 导出前数值对拍，**16 项全过** | kv_cache err=0 / attention err~1e-7 / rope err=0 |
 | `r1_action_minverify.sh` | goat | **最小验证全链**：下载→补丁→对拍→只导 action（`--skip-llm --skip-visual`）→算子普查→只建 action 引擎 | **✅ 已跑通**：export 峰值 10.5G、build 89.9s 峰值 CPU 12.1G、`action.engine` 4.25G、墙算子全 0 |
+| `r1_full_chain_infer.sh` | goat | **全链推理 + seed 对照**：llm/visual 导出与构建（含磁盘/内存账与 `HF_ENDPOINT` 坑）→ 输入构造（16 帧 camera-major + 官方指南真实 ego 历史）→ 七配置对照（确定性底噪 / seed 轴 / ego 历史轴，`temperature=0`） | **✅ 已跑通**：三引擎建成（llm 14.15G / visual 1.08G / action 4.25G）、推理 ~6s、输出文本 + 64 waypoint 轨迹；SEED/EGO-HIST=3.84×（证据 `eval/r1/`） |
 
 与 cosmos3 policy 补丁（`apply_policy_decomposed_patch.py`）的**三点不同**，均从源码实测钉死、
 且都只在 **B>1** 才暴露（导出 dummy 恰好 `B=1`，直接复用会在建 `maxBatchSize=6` 引擎时才炸）：

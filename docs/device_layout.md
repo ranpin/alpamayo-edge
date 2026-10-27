@@ -43,9 +43,9 @@ rsync -acn --itemize-changes <src>/ vision@30.245.40.99:<dst>/
 
 | 子目录 | 内容 | dog | goat | 可重建？ |
 |---|---|---|---|---|
-| `engines/` | TensorRT 引擎（**sm_87 专用**，两 Orin 互通，不可跨架构） | **92 G**（7 个 int8 变体各 8.9 G + 3 个 int4 各 6.8 G + 8b_lmhead 4.9 G + 2b 2.7 G + 2b_lmhead 1.5 G） | **47 G**（**fp16 16 G** + int8 8.9 G + int4 6.8 G + **cosmos3_policy_droid 6.1 G + cosmos3_edge 5.5 G** + **alpamayo_r1/action 4.25 G**） | ✅ 由 `onnx/` 经 `llm_build` / `cosmos3_*_build` / `action_build` |
-| `onnx/` | 建引擎的输入（云端量化导出 + Phase W/R 本地导出） | **58 G**（fp16 16 G / int8 9.9 G / int8_domain 8.9 G / lmhead 8.1 G / int4 6.8 G / **cosmos3_edge 4.6 G** / 2b 2.7 G / **cosmos3_policy_droid 1.3 G**） | **4.3 G**（`alpamayo_r1/action`：图 6.3 MB + 外置权重 4.25 G，2026-10-26 Phase R 导出；Cosmos3 ONNX 已于 2026-10-21 搬/删至 dog） | ✅ 原由 `tarballs/` 解包；Cosmos3 / Alpamayo-R1 由 `trtedge-0.10.1` 导出 |
-| `models/` | HuggingFace 原始权重（Phase W/R） | — | **38 G**（`Cosmos3-Edge` + `Cosmos3-Edge-Policy-DROID` + **`Alpamayo-R1-10B` 21 G**） | ✅ 可重下（hf-mirror，须 `HF_HUB_DISABLE_XET=1`） |
+| `engines/` | TensorRT 引擎（**sm_87 专用**，两 Orin 互通，不可跨架构） | **92 G**（7 个 int8 变体各 8.9 G + 3 个 int4 各 6.8 G + 8b_lmhead 4.9 G + 2b 2.7 G + 2b_lmhead 1.5 G） | **64 G**（**fp16 16 G** + int8 8.9 G + int4 6.8 G + **cosmos3_policy_droid 6.1 G + cosmos3_edge 5.5 G** + **alpamayo_r1：llm 16 G + action 4.25 G + visual 1.1 G**） | ✅ 由 `onnx/` 经 `llm_build` / `cosmos3_*_build` / `action_build` / `visual_build` |
+| `onnx/` | 建引擎的输入（云端量化导出 + Phase W/R 本地导出） | **58 G**（fp16 16 G / int8 9.9 G / int8_domain 8.9 G / lmhead 8.1 G / int4 6.8 G / **cosmos3_edge 4.6 G** / 2b 2.7 G / **cosmos3_policy_droid 1.3 G**） | **空**（Phase R 的 action / llm / visual ONNX 均已在建完引擎后删除，可重导出：action ~5 min、llm+visual ~7 min；Cosmos3 ONNX 已于 2026-10-21 搬/删至 dog） | ✅ 原由 `tarballs/` 解包；Cosmos3 / Alpamayo-R1 由 `trtedge-0.10.1` 导出 |
+| `models/` | HuggingFace 原始权重（Phase W/R） | **38 G**（`Cosmos3-Edge` 8.6 G + `Cosmos3-Edge-Policy-DROID` 8.6 G + `Alpamayo-R1-10B` 21 G；Cosmos3 两个于 2026-10-27 从 goat 搬入） | **21 G**（`Alpamayo-R1-10B`；Cosmos3 两个已于 2026-10-27 搬去 dog 腾盘） | ✅ 可重下（hf-mirror，须 `HF_HUB_DISABLE_XET=1`） |
 | `trtedge-0.10.1/` | **Phase W 自建 TRTEdge**（Cosmos3-Edge 需 0.10.x；含 `build_orin/` 与自生成的 CuTe DSL sm_87+cuda12 预编译件） | 673 M | **6.4 G**（完整构建） | ✅ 由 `scripts/orin/w0b_build_trtedge_0101.sh` 重建 |
 | `tarballs/` | 传输/迁移打包 | 已清空（2026-10-15 归档 scm 验证后删，回收 32 G） | 已删（2026-10-12，回收 40 G） | ✅ **纯冗余，可删** |
 | `bench/` | n=210 基准 + `ood_eval/`（驾驶域 n=184：448/720/1080 三档帧 + 输入/输出/日志） | 407 M | 33 M（`ood_eval/` 曾用于 FP16 n=184） | ⚠️ 输出是实测记录 |
@@ -120,21 +120,20 @@ rsync -acn --itemize-changes <src>/ vision@30.245.40.99:<dst>/
 | **FP16 引擎** 16 G | **仅 orin-goat** `engines/fp16` | ✅ 可重建：ONNX 在 **dog `onnx/fp16`** + scm 归档（`edge_fp16_llm.tgz`，SHA256SUMS 校验通过），但**必须在 ≥64 GB 内存的机器上** build（32GB 机峰值 54.8 G 会 OOM）⇒ 只能在 goat 建 |
 | **Cosmos3 引擎** 11.6 G | **仅 orin-goat** `engines/cosmos3_*` | ✅ 可重建：ONNX 在 **dog `onnx/cosmos3_*`**（需先拉回 goat），构建脚本 `scripts/orin/w1_goat_engine_build.sh` / `w2_policy_rebuild_decomposed.sh` |
 | **Cosmos3 ONNX** 5.9 G | **仅 orin-dog** `onnx/cosmos3_*` | ✅ 可重导出：权重在 goat `models/`，导出需先打分解补丁（`apply_decomposed_attn_patch.py` / `apply_policy_decomposed_patch.py`） |
-| **Alpamayo-R1 action 引擎** 4.25 G | **仅 orin-goat** `engines/alpamayo_r1/action` | ✅ 可重建：ONNX 在**同机** `onnx/alpamayo_r1/action`（无需跨机互传），脚本 `scripts/orin/r1_action_minverify.sh`；**必须先打 `apply_alpamayo_action_decomposed_patch.py` 且对拍 16/16 全过**，否则图里会留 TRT-11-only 算子 |
-| **Alpamayo-R1 action ONNX** 4.3 G | **仅 orin-goat** `onnx/alpamayo_r1/action` | ✅ 可重导出：权重在同机 `models/Alpamayo-R1-10B`；实测导出峰值仅 **10.5 G RAM**、约 5 分钟（`--skip-llm --skip-visual`） |
-| **Alpamayo-R1 权重** 21 G | **仅 orin-goat** `models/Alpamayo-R1-10B` | ✅ 可重下（公开非 gated，hf-mirror + `HF_HUB_DISABLE_XET=1`，~7 分钟）；⚠️ **`action_inference` 运行期需 `--checkpointDir` 指向它，全链跑通前不能删** |
+| **Alpamayo-R1 三引擎** 21.4 G（llm 16 G + action 4.25 G + visual 1.1 G） | **仅 orin-goat** `engines/alpamayo_r1/` | ✅ 可重建，但 **ONNX 已删**（建完即删腾盘）⇒ 需先重导出（action ~5 min、llm+visual ~7 min，权重在同机）再 build。action 侧**必须先打 `apply_alpamayo_action_decomposed_patch.py` 且对拍 16/16 全过**，否则图里会留 TRT-11-only 算子；llm/visual 走 TRTEdge 自带插件无需补丁。脚本 `scripts/orin/r1_action_minverify.sh` + `r1_full_chain_infer.sh` |
+| **Alpamayo-R1 权重** 21 G | **goat + dog 各一份** `models/Alpamayo-R1-10B` | ✅ 可重下（公开非 gated，hf-mirror + `HF_HUB_DISABLE_XET=1`，~7 分钟）；⚠️ **`action_inference` 运行期需 `--checkpointDir` 指向它**，故要跑推理的那台机上不能删 |
 | **闸门 4 权重** 21 G | **仅 orin-dog** `alpamayo_gate4/Alpamayo-1.5-10B` | ✅ 可重下（公开非 gated）；证据小件在 goat `alpamayo_gate4/`（33 M） |
 | **前身项目 LoRA adapter** 396 M（3×132 M） | **仅 pc-3070** `/data/tmp/chenrunbin/projects/qwen-trajectory-prediction/` | ⚠️ **本表唯一不可再生项**：重训要 GPU 小时，且该目录**非 git、无远端**。同目录另有 ~52.6 G 可再生 bulk（合并模型 22.8 G / `.conda` 14 G / base 7.6 G / GGUF 7.2 G / optimizer 792 M / 数据 104 M）。逐项审计与处置选项见 [`legacy/STORAGE_AUDIT.md`](../legacy/STORAGE_AUDIT.md) |
 | INT4/INT8/2B 引擎 | 两台 Orin | ✅ 由 ONNX 重建（sm_87 机器即可；ONNX 在 dog `onnx/` + scm 归档双份） |
 | 全部原始日志 / 请求响应 / 剖析 | 已于 2026-07-27 **全部拉回本地** | ✅ 本地 + MANIFEST |
 | 自产量化 ONNX | **scm 归档（唯一 tgz 副本，7 件 39 G，sha256 全验）** + dog 解包目录 | ✅ 最坏情况重跑 Kaggle 量化 |
 
-**磁盘（2026-10-26 实测）**：
+**磁盘（2026-10-27 实测）**：
 
 | 设备 | 分区 | 总量 | 已用 | 可用 | 备注 |
 |---|---|---|---|---|---|
-| orin-goat | `/`（nvme0n1p1） | 446 G | 408 G | **16 G（97%）** | 共享机，他人占用会波动；2026-10-19 曾低至 12 G；**2026-10-26 Phase R 后降至 16 G**（R1 权重 21 G + action ONNX 4.3 G + action 引擎 4.25 G） |
-| orin-dog | `/home`（nvme0n1p1） | 916 G | 366 G | **504 G（43%）** | 宽松，大件优先放这里 |
+| orin-goat | `/`（nvme0n1p1） | 446 G | 403 G | **21 G（96%）** | 共享机，他人占用会波动；2026-10-19 曾低至 12 G；**2026-10-27 Phase R 全链后 21 G**（R1 权重 21 G + 三引擎 21.4 G，ONNX 建完即删） |
+| orin-dog | `/home`（nvme0n1p1） | 916 G | 404 G | **466 G（47%）** | 宽松，大件优先放这里；2026-10-27 收入 Cosmos3 两权重 17.2 G + R1 权重副本 21 G |
 | orin-dog | `/`（mmcblk0p1） | 57 G | 24 G | 31 G（45%） | 系统盘，别往这儿放大件 |
 | 本地 Mac | — | — | — | — | 仓库 ~2 G（tgz 已归档删除） |
 

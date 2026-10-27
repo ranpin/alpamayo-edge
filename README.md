@@ -20,7 +20,7 @@
 | 分辨率值不值？ | **值，性价比拐点 720p**：INT8 448→1080p +8.2pts（族内校正后显著）；720p 已拿到其中 +7.1、成本仅 1/3（720p 单独未过校正 ⇒ 性价比论点，非显著性结论） |
 | 能进 AV 感知环路吗？ | **不能，也不该**：真实分辨率 0.1–1 Hz ⇒ 定位事件级场景理解（风险解释/日志挖掘/驾驶员问答） |
 | 还有优化空间吗？ | **量化侧已穷尽**：decode 带宽达硬件可达上限（153.1≈152.3 GB/s）、手写 kernel 负结果、31min 零降频 |
-| VLA（轨迹输出）呢？ | PyTorch 路线在 32GB 级不可行（FP16-only 22.16G）；**双轨**：Track 2 = Cosmos3-Edge 4B WAM 官方管线（Phase W，**已收官**：reasoner 落地 + policy 动作链部署打通，但 W4 实测输出**由 seed 主导**、conditioning 三轴均仅 1–2%，根因未定），Track 1 = **Alpamayo-R1**（Phase R，**进行中**：TRTEdge 0.10.1 原生支持，action 引擎已在 Orin 建成，全链待腾磁盘） |
+| VLA（轨迹输出）呢？ | PyTorch 路线在 32GB 级不可行（FP16-only 22.16G）；**双轨**：Track 2 = Cosmos3-Edge 4B WAM 官方管线（Phase W，**已收官**：reasoner 落地 + policy 动作链部署打通，但 W4 实测输出**由 seed 主导**、conditioning 三轴均仅 1–2%，根因未定），Track 1 = **Alpamayo-R1**（Phase R，**全链已跑通**：TRTEdge 0.10.1 原生支持，三引擎在 Orin 建成、推理出 6.4s 轨迹 + 思维链文本，seed 敏感性已对照，minADE 定量评测待做） |
 
 ## 现状（2026-10-26）
 
@@ -32,11 +32,14 @@
   但 **W4 复测修正了 W3 的定性**：turnkey 路径输出由 diffusion **seed 主导（52%）**，
   帧 / 文本 prompt / CFG 三个 conditioning 轴一致地只有 **1–2%**，40 步去噪也不收敛，
   **根因未定**（分解补丁接线 vs 模型属性，PROBLEMS §L 含 L4）；reasoning demo 已上线（见顶部链接）
-- **Phase R（Alpamayo-R1，进行中）**：AV 轨迹路线**重开**——TRTEdge 0.10.1 **原生支持**
-  `alpamayo_r1`，推翻闸门 4 基于 0.9.0 的「不支持」旧判。**最小验证已通过**：action 专家撞 K6
-  同源墙（`Attention` / `RotaryEmbedding` / `TensorScatter` 需 TRT≥11），用分解补丁打穿，
-  **action 引擎在 Orin sm_87 建成**（4.25 G、构建 89.9 s、峰值 CPU 12.1 G、墙算子全 0、对拍 16/16，
-  PROBLEMS §M）。全链（llm + visual 引擎）受 goat 磁盘仅剩 16 G 与共享机内存所限，待腾挪。
+- **Phase R（Alpamayo-R1，全链已跑通）**：AV 轨迹路线**重开**——TRTEdge 0.10.1 **原生支持**
+  `alpamayo_r1`，推翻闸门 4 基于 0.9.0 的「不支持」旧判。action 专家撞 K6 同源墙
+  （`Attention` / `RotaryEmbedding` / `TensorScatter` 需 TRT≥11），用分解补丁打穿（对拍 16/16）；
+  llm / visual 走 TRTEdge 自带插件、算子普查墙算子全 0、无需新补丁。**三引擎在 Orin sm_87 建成**
+  （llm 14.15 G / visual 1.08 G / action 4.25 G），**推理成功**：输出思维链文本 + 6.4 s / 64 waypoint
+  的 `(accel, κ)` 轨迹，反归一化积分后物理合理、与文本方向自洽（PROBLEMS §M）。seed 敏感性已按 W4
+  方法论对照（SEED/EGO-HIST = 3.84×，比 Cosmos3 policy 的 39.3× 强一个数量级）。
+  **minADE 定量评测待做**（需官方 644 clips + GT）。
 
 ## 核心结论（全部实测，细节与图表在站点）
 

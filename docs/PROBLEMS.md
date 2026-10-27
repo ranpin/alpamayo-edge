@@ -691,21 +691,68 @@ lower 成 **ONNX 标准算子**，只有 TRT≥11 parser 认识（Orin JetPack 6
 资源开销远低于预期（对比闸门 4 当年「8B 级加载峰值 54.8 G」，action 专家构建峰值仅 12.1 G）。
 **分解注意力补丁的普适性第三次得到验证**（K4 cosmos3 visual → K6 cosmos3 policy → M2 alpamayo action）。
 
-### M4. 尚未验证 / 诚实边界
+### M4. 全链已通（2026-10-27）：三引擎建成 + 推理成功 + 轨迹积分
 
-- ⚠️ **mRoPE 黄旗（未解决）**：`action/config.json` 写 `rope_type: mrope`、`mrope_section: [24,20,20]`、
-  **`mrope_interleaved: true`**，而本补丁实现的是 **rotate_half** 约定。判断大概率无碍的两点依据：
-  ① action 专家的 `rope_onnx` 接收的是**已算好的 cos/sin 张量**，mRoPE 分段逻辑在上游；
+llm / visual 走 TRTEdge 自己的插件（算子普查实测墙算子全 0，无需新补丁）；只有 action 专家需分解补丁。
+三引擎在 goat 建成（FP16-only）：
+
+| 引擎 | 大小 | 构建耗时 | 峰值内存 | 注意力实现 |
+|---|---|---|---|---|
+| `llm.engine` | 14.15 GiB | 172.3 s | **CPU 31.8 G** / GPU 14.5 G | `AttentionPlugin` ×36 |
+| `visual.engine` | 1.08 GiB | 112.2 s | CPU 5.4 G / GPU 1.4 G | `ViTAttentionPlugin` ×27 |
+| `action.engine` | 4.25 GiB | 89.9 s | CPU 12.1 G / GPU 4.3 G | **分解补丁**（§M2） |
+
+我此前外推「llm build 峰值 ~43 G、可能 OOM」**没有发生**——实测 31.8 G；但 MemAvailable 峰值时确实掉到
+**8.5 G**，离危险不远，`--maxBatchSize 1` 的降压决定是对的。推理期 GPU 统一内存 **19919 MiB**、单次 ~6 s。
+
+**推理成功且输出物理合理**（16 张 gate4 多相机帧 + 官方指南真实 ego 历史 ~9 m/s，`estimate_v0`=8.641 m/s）：
+`output_text` = *"Keep lane to continue driving since no critical agent needs attention."*；
+`output_trajectory [64,2]` 反归一化后 accel mean **−0.712 m/s²**、κ mean −5.7e−5 /m，
+积分得 6.4 s 走 **45.1 m**、速度 8.64→4.08 m/s、横向 **+0.12 m（向左）**、航向变化 <0.3°，
+全部在 action_space 界内、全 finite、无发散。**横向符号与文本「nudge left」自洽**。
+
+### M5. seed 敏感性对照（W4 教训的 R1 版，`eval/r1/r1_seed_sensitivity.py`）
+
+W4 的教训直接适用：**测 conditioning 必须带一个非 conditioning 轴作对照**。R1 的对照轴是 `--noiseSeed`。
+**关键设计：必须 `temperature=0`**——VLM 文本默认 temp=1.0 采样，生成的 CoT token 会进 action 专家
+conditioning，不停掉文本采样就量不出干净的 seed 轴。七次推理实测：
+
+| 轴 | mean\|diff\| | 占 mean\|traj\|=0.5527 |
+|---|---|---|
+| 确定性底（同参两次，**逐位相同**） | 0.00000000 | 0% |
+| **SEED**（0/1/2/3 vs 参考 seed5，4 对） | **0.2711** | **49.05%** |
+| **EGO 历史**（真实 ~9 m/s vs 全零，seed 固定） | 0.0706 | **12.78%** |
+| *参照：轨迹内相邻两步* | *0.0269* | *4.86%* |
+
+**SEED / EGO-HIST = 3.84×**，对比 **W4 Cosmos3 policy 的 39.3×** ⇒ R1 条件耦合比 Cosmos3 policy
+**强约一个数量级**，但 seed 仍主导轨迹头。**文本头则干净确定**：temp=0 下 6 次跑输出完全同一句，
+换 ego 历史整句翻转（"Keep lane…" ↔ "Nudge to the left…"）⇒ **VLM 文本头强条件驱动且可复现；
+扩散轨迹头 seed 主导**。
+
+⚠️ **解读口径（别误判成缺陷）**：`compute_minade.py` 是 `resps[:N]` 采 N 条再 `ade.min()`——
+**minADE 的 "min" 本就跨 seed 取最优**，故 seed 间差异大是扩散式多模态轨迹预测器的设计属性，
+官方指标已吸收，不等于缺陷。但**做 demo 必须固定 `--noiseSeed`** 才可复现。
+
+### M6. 尚未验证 / 诚实边界
+
+- ⚠️ **mRoPE 黄旗（未解决，但多了间接证据）**：`action/config.json` 写 `rope_type: mrope`、
+  `mrope_section: [24,20,20]`、`mrope_interleaved: true`，而分解补丁实现的是 **rotate_half** 约定。
+  判断大概率无碍的依据：① `rope_onnx` 接收的是**已算好的 cos/sin**，mRoPE 分段逻辑在上游；
   ② 导出 dummy 的 `attention_pos_id = arange(n_diff)` 是 **1D** 位置，而 mRoPE 需 (t,h,w) 三维
-  ⇒ 该字段很可能是从 VLM 继承的残留。**但没有独立验证**：对拍是「我的分解 vs rotate_half 公式」的
-  自洽检查，不是「rotate_half vs TRT `RotaryEmbedding` 真实语义」的检查（cosmos3 那次是同一个假设，
-  间接证据是其引擎产出了合法 rot6d）。须待推理出轨迹后靠结果合理性反证。
-- ⬜ **全链未通**：`action_inference` 要跑完 **VLM + action 两阶段**，还需 `llm` 与 `visual` 两个引擎。
-  两个真实闸门：**磁盘**（goat 建完 action 后仅剩 16 G，llm ONNX ~20 G + llm 引擎 ~20 G 装不下，
-  需分阶段腾挪）；**内存**（VLM 底座 `qwenvl3` 约 8.8 B，官方指南明写 **Alpamayo 只支持 FP16 导出**、
-  不能靠量化降压，而 goat 总 64 G 且为共享机、当前 MemAvailable ~45 G）。
-- ⬜ **minADE 评测与轨迹 demo 未做**：需全链跑通后按官方 `compute_minade.py`（644 clips）对照
-  公开基线 0.82113 m。
+  ⇒ 疑为从 VLM 继承的残留字段。**间接证据**（M4 新增）：轨迹连贯、物理合理、无发散、与文本方向自洽
+  ——若 RoPE 约定错，输出大概率是垃圾。但**仍无直接对照**（对拍只是「我的分解 vs rotate_half 公式」
+  的自洽检查，不是「rotate_half vs TRT `RotaryEmbedding` 真实语义」的检查）。
+- ❌ **minADE 定量评测未做**：需官方 644 clips 的多相机帧 + GT（`clip_id -> gt_xy/ego_history_xyz/…`）。
+  当前只跑了 **1 个 clip**（gate4 公开样例 `01d3588e-…`），**没有 GT 就算不了 ADE**，故只能声称
+  「轨迹结构合法、物理合理、与文本方向自洽」，**不能声称精度**。
+- ❌ **图像轴未测**：只测了 ego 历史轴与 seed 轴，**没测「换不同驾驶场景图像」**对轨迹的影响
+  （手上只有 gate4 那 16 帧单一场景）——这是 conditioning 强度结论的一个真实缺口。
+- ⚠️ **两个输入坑**（已入 `eval/r1/README.md` §五）：① `alpamayo_gate4/meta.npz` 的 ego 历史是
+  **退化占位数据**（`ego_history_xyz` 全零、`ego_history_rot` 全单位阵，闸门 4 只验加载不验数据），
+  直接喂会得 v0=0、积分出「静止车刹车到倒车」的荒谬轨迹，须改用官方指南真实轨迹；
+  ② 导出必须设 `HF_ENDPOINT=https://hf-mirror.com`（export 要取 Qwen3-VL config，goat 直连 HF 不通，
+  漏设会卡网络重试且 RSS 停在 767 MB 不动）。另 `hf` CLI 只在 `export_venv/bin/`，不在系统 PATH。
+- ⚠️ 输入图像来自 **gated + license:other** 数据集，**只在机上跑，不入库、不上站**。
 
 **教训**：① **旧闸门结论要随工具版本复核**——闸门 4 的「不支持」是 0.9.0 时代的事实，0.10.1 已原生支持；
 把版本绑定的否定结论当成永久结论，会白白关掉一条主线（本次差点因此错过 AV 轨迹路线）。

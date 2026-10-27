@@ -1,0 +1,439 @@
+{
+    "input_file": "/home/nvidia/chenrunbin/alpamayo-edge/io/r1_seed_real.json",
+    "responses": [
+        {
+            "batch_idx": 0,
+            "formatted_complete_request": "<|im_start|>system\nYou are a driving assistant that generates safe and accurate actions.<|im_end|>\n<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|vision_end|><|traj_history_start|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history|><|traj_history_end|>output the chain-of-thought reasoning of the driving process, then output the future trajectory.<|im_end|>\n<|im_start|>assistant\n<|cot_start|>",
+            "formatted_system_prompt": "<|im_start|>system\nYou are a driving assistant that generates safe and accurate actions.<|im_end|>\n",
+            "messages": [
+                {
+                    "content": [
+                        {
+                            "text": "You are a driving assistant that generates safe and accurate actions.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "system"
+                },
+                {
+                    "content": [
+                        {
+                            "image": "/home/nvidia/chenrunbin/alpamayo-edge/alpamayo_gate4/frames/camera_cross_left_120fov_1.png",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/nvidia/chenrunbin/alpamayo-edge/alpamayo_gate4/frames/camera_cross_left_120fov_2.png",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/nvidia/chenrunbin/alpamayo-edge/alpamayo_gate4/frames/camera_cross_left_120fov_3.png",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/nvidia/chenrunbin/alpamayo-edge/alpamayo_gate4/frames/camera_cross_left_120fov_4.png",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/nvidia/chenrunbin/alpamayo-edge/alpamayo_gate4/frames/camera_front_wide_120fov_1.png",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/nvidia/chenrunbin/alpamayo-edge/alpamayo_gate4/frames/camera_front_wide_120fov_2.png",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/nvidia/chenrunbin/alpamayo-edge/alpamayo_gate4/frames/camera_front_wide_120fov_3.png",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/nvidia/chenrunbin/alpamayo-edge/alpamayo_gate4/frames/camera_front_wide_120fov_4.png",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/nvidia/chenrunbin/alpamayo-edge/alpamayo_gate4/frames/camera_cross_right_120fov_1.png",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/nvidia/chenrunbin/alpamayo-edge/alpamayo_gate4/frames/camera_cross_right_120fov_2.png",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/nvidia/chenrunbin/alpamayo-edge/alpamayo_gate4/frames/camera_cross_right_120fov_3.png",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/nvidia/chenrunbin/alpamayo-edge/alpamayo_gate4/frames/camera_cross_right_120fov_4.png",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/nvidia/chenrunbin/alpamayo-edge/alpamayo_gate4/frames/camera_front_tele_30fov_1.png",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/nvidia/chenrunbin/alpamayo-edge/alpamayo_gate4/frames/camera_front_tele_30fov_2.png",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/nvidia/chenrunbin/alpamayo-edge/alpamayo_gate4/frames/camera_front_tele_30fov_3.png",
+                            "type": "image"
+                        },
+                        {
+                            "image": "/home/nvidia/chenrunbin/alpamayo-edge/alpamayo_gate4/frames/camera_front_tele_30fov_4.png",
+                            "type": "image"
+                        },
+                        {
+                            "trajectory": [
+                                [
+                                    -13.570470809936523,
+                                    0.06137955188751221,
+                                    -0.021795138716697693
+                                ],
+                                [
+                                    -12.617349624633789,
+                                    0.05502257123589516,
+                                    -0.021485785022377968
+                                ],
+                                [
+                                    -11.672354698181152,
+                                    0.04983367770910263,
+                                    -0.019761288538575172
+                                ],
+                                [
+                                    -10.733928680419922,
+                                    0.04469458386301994,
+                                    -0.01891801320016384
+                                ],
+                                [
+                                    -9.802403450012207,
+                                    0.03998061269521713,
+                                    -0.019592544063925743
+                                ],
+                                [
+                                    -8.87903118133545,
+                                    0.034502264112234116,
+                                    -0.016824787482619286
+                                ],
+                                [
+                                    -7.963467121124268,
+                                    0.03007129393517971,
+                                    -0.011910118162631989
+                                ],
+                                [
+                                    -7.054953098297119,
+                                    0.02519317716360092,
+                                    -0.008388019166886806
+                                ],
+                                [
+                                    -6.15440559387207,
+                                    0.020703254267573357,
+                                    -0.003812047652900219
+                                ],
+                                [
+                                    -5.261260032653809,
+                                    0.016889382153749466,
+                                    0.0007052596774883568
+                                ],
+                                [
+                                    -4.374241828918457,
+                                    0.012481293641030788,
+                                    0.004680476617068052
+                                ],
+                                [
+                                    -3.4911155700683594,
+                                    0.00914590060710907,
+                                    0.0029235705733299255
+                                ],
+                                [
+                                    -2.611931085586548,
+                                    0.005678099580109119,
+                                    7.79956899350509e-05
+                                ],
+                                [
+                                    -1.736931562423706,
+                                    0.003552841255441308,
+                                    -0.0018224255181849003
+                                ],
+                                [
+                                    -0.8664319515228271,
+                                    0.001968142343685031,
+                                    -0.001738768769428134
+                                ],
+                                [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ]
+                            ],
+                            "type": "trajectory"
+                        },
+                        {
+                            "text": "output the chain-of-thought reasoning of the driving process, then output the future trajectory.",
+                            "type": "text"
+                        }
+                    ],
+                    "role": "user"
+                }
+            ],
+            "output_text": "Keep lane to continue driving since no critical agent needs attention.",
+            "output_trajectory": [
+                [
+                    -0.71875,
+                    -0.005367279052734375
+                ],
+                [
+                    -0.8212890625,
+                    0.0010738372802734375
+                ],
+                [
+                    -0.9404296875,
+                    -0.002407073974609375
+                ],
+                [
+                    -1.0166015625,
+                    -0.0046234130859375
+                ],
+                [
+                    -1.0302734375,
+                    -0.0032787322998046875
+                ],
+                [
+                    -0.92822265625,
+                    0.00037288665771484375
+                ],
+                [
+                    -0.8134765625,
+                    0.0029430389404296875
+                ],
+                [
+                    -0.71142578125,
+                    0.003124237060546875
+                ],
+                [
+                    -0.67626953125,
+                    0.0013074874877929688
+                ],
+                [
+                    -0.6591796875,
+                    0.006259918212890625
+                ],
+                [
+                    -0.67041015625,
+                    0.004730224609375
+                ],
+                [
+                    -0.6337890625,
+                    0.00807952880859375
+                ],
+                [
+                    -0.56591796875,
+                    0.009857177734375
+                ],
+                [
+                    -0.5126953125,
+                    0.010894775390625
+                ],
+                [
+                    -0.46533203125,
+                    0.001216888427734375
+                ],
+                [
+                    -0.434814453125,
+                    0.00032901763916015625
+                ],
+                [
+                    -0.429931640625,
+                    0.0068511962890625
+                ],
+                [
+                    -0.407470703125,
+                    0.01103973388671875
+                ],
+                [
+                    -0.397216796875,
+                    0.00836944580078125
+                ],
+                [
+                    -0.38720703125,
+                    0.003360748291015625
+                ],
+                [
+                    -0.36669921875,
+                    -0.0059661865234375
+                ],
+                [
+                    -0.353271484375,
+                    -0.004840850830078125
+                ],
+                [
+                    -0.345947265625,
+                    -0.00655364990234375
+                ],
+                [
+                    -0.345703125,
+                    -0.0152435302734375
+                ],
+                [
+                    -0.352783203125,
+                    -0.022247314453125
+                ],
+                [
+                    -0.35888671875,
+                    -0.01111602783203125
+                ],
+                [
+                    -0.352783203125,
+                    -0.0220489501953125
+                ],
+                [
+                    -0.3642578125,
+                    -0.018035888671875
+                ],
+                [
+                    -0.345703125,
+                    -0.0218048095703125
+                ],
+                [
+                    -0.341552734375,
+                    -0.014923095703125
+                ],
+                [
+                    -0.34375,
+                    -0.0279083251953125
+                ],
+                [
+                    -0.34765625,
+                    -0.024261474609375
+                ],
+                [
+                    -0.3583984375,
+                    -0.0235748291015625
+                ],
+                [
+                    -0.39697265625,
+                    -0.017242431640625
+                ],
+                [
+                    -0.4296875,
+                    -0.021942138671875
+                ],
+                [
+                    -0.537109375,
+                    -0.0243072509765625
+                ],
+                [
+                    -0.74072265625,
+                    -0.0238800048828125
+                ],
+                [
+                    -0.935546875,
+                    -0.021881103515625
+                ],
+                [
+                    -1.1630859375,
+                    -0.016632080078125
+                ],
+                [
+                    -1.3896484375,
+                    -0.018218994140625
+                ],
+                [
+                    -1.58203125,
+                    -0.0090484619140625
+                ],
+                [
+                    -1.7138671875,
+                    -0.0206451416015625
+                ],
+                [
+                    -1.7919921875,
+                    -0.0234222412109375
+                ],
+                [
+                    -1.8359375,
+                    -0.02935791015625
+                ],
+                [
+                    -1.8408203125,
+                    -0.025390625
+                ],
+                [
+                    -1.83203125,
+                    -0.0235748291015625
+                ],
+                [
+                    -1.84375,
+                    -0.02142333984375
+                ],
+                [
+                    -1.8564453125,
+                    -0.00951385498046875
+                ],
+                [
+                    -1.900390625,
+                    -0.02386474609375
+                ],
+                [
+                    -1.8955078125,
+                    -0.0305938720703125
+                ],
+                [
+                    -1.888671875,
+                    -0.034210205078125
+                ],
+                [
+                    -1.876953125,
+                    -0.027099609375
+                ],
+                [
+                    -1.888671875,
+                    -0.0220489501953125
+                ],
+                [
+                    -1.9140625,
+                    -0.024688720703125
+                ],
+                [
+                    -1.96484375,
+                    -0.0288238525390625
+                ],
+                [
+                    -2.00390625,
+                    -0.0175323486328125
+                ],
+                [
+                    -2.033203125,
+                    -0.0271759033203125
+                ],
+                [
+                    -2.029296875,
+                    -0.0225067138671875
+                ],
+                [
+                    -2.04296875,
+                    -0.0262908935546875
+                ],
+                [
+                    -2.046875,
+                    -0.0204010009765625
+                ],
+                [
+                    -2.064453125,
+                    -0.01027679443359375
+                ],
+                [
+                    -2.11328125,
+                    -0.0091400146484375
+                ],
+                [
+                    -2.171875,
+                    -0.00699615478515625
+                ],
+                [
+                    -2.271484375,
+                    -0.005062103271484375
+                ]
+            ],
+            "request_idx": 0
+        }
+    ]
+}
