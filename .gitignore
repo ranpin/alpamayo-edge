@@ -74,6 +74,9 @@ engines/
 /data/droid_demo/
 /eval/accuracy/driving/ood_input_*.json
 /eval/accuracy/driving/pareto/ood_input_*.json
+# Phase R minADE 评测的逐 clip 数据（gated + license:other 数据集的 clip_id 与派生轨迹量，
+#   不入库；聚合数字与分层拆解在 eval/r1/README.md §五）
+/eval/r1/*.csv
 
 # Logs
 logs/

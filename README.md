@@ -20,9 +20,9 @@
 | 分辨率值不值？ | **值，性价比拐点 720p**：INT8 448→1080p +8.2pts（族内校正后显著）；720p 已拿到其中 +7.1、成本仅 1/3（720p 单独未过校正 ⇒ 性价比论点，非显著性结论） |
 | 能进 AV 感知环路吗？ | **不能，也不该**：真实分辨率 0.1–1 Hz ⇒ 定位事件级场景理解（风险解释/日志挖掘/驾驶员问答） |
 | 还有优化空间吗？ | **量化侧已穷尽**：decode 带宽达硬件可达上限（153.1≈152.3 GB/s）、手写 kernel 负结果、31min 零降频 |
-| VLA（轨迹输出）呢？ | PyTorch 路线在 32GB 级不可行（FP16-only 22.16G）；**双轨**：Track 2 = Cosmos3-Edge 4B WAM 官方管线（Phase W，**已收官**：reasoner 落地 + policy 动作链部署打通，但 W4 实测输出**由 seed 主导**、conditioning 三轴均仅 1–2%，根因未定），Track 1 = **Alpamayo-R1**（Phase R，**全链已跑通**：TRTEdge 0.10.1 原生支持，三引擎在 Orin 建成、推理出 6.4s 轨迹 + 思维链文本，seed 敏感性已对照，minADE 定量评测待做） |
+| VLA（轨迹输出）呢？ | PyTorch 路线在 32GB 级不可行（FP16-only 22.16G）；**双轨**：Track 2 = Cosmos3-Edge 4B WAM 官方管线（Phase W，**已收官**：reasoner 落地 + policy 动作链部署打通，但 W4 实测输出**由 seed 主导**、conditioning 三轴均仅 1–2%，根因未定），Track 1 = **Alpamayo-R1**（Phase R，**全链跑通 + minADE 与官方基线一致**：三引擎在 Orin sm_87 建成、推理出 6.4s 轨迹 + 思维链文本，18 clips × 6 seeds 测得 **minADE6@6.4s = 0.804 m vs 官方 0.821 m**，落在 95% CI 内） |
 
-## 现状（2026-10-26）
+## 现状（2026-10-27）
 
 **第一阶段收官**：P0 驾驶域数据四道闸门全过、两个正式实验（驾驶域三精度评测、分辨率 Pareto）
 完成、VLA 可行性闸门实测关闭（结论见上表）。
@@ -39,7 +39,9 @@
   （llm 14.15 G / visual 1.08 G / action 4.25 G），**推理成功**：输出思维链文本 + 6.4 s / 64 waypoint
   的 `(accel, κ)` 轨迹，反归一化积分后物理合理、与文本方向自洽（PROBLEMS §M）。seed 敏感性已按 W4
   方法论对照（SEED/EGO-HIST = 3.84×，比 Cosmos3 policy 的 39.3× 强一个数量级）。
-  **minADE 定量评测待做**（需官方 644 clips + GT）。
+  **minADE 定量评测已做**：`alpamayo_aligned` test split 分层抽 **18 clips × 6 seeds**，
+  **minADE6@6.4s = 0.804 m，与官方基线 0.821 m 一致**（−2.1%，落在 95% CI [0.506, 1.102] 内）；
+  官方那 644 clips 是 NVIDIA 内部集、公开数据无法同口径复现（PROBLEMS §M6）。
 
 ## 核心结论（全部实测，细节与图表在站点）
 

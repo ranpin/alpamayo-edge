@@ -733,20 +733,63 @@ conditioning，不停掉文本采样就量不出干净的 seed 轴。七次推�
 **minADE 的 "min" 本就跨 seed 取最优**，故 seed 间差异大是扩散式多模态轨迹预测器的设计属性，
 官方指标已吸收，不等于缺陷。但**做 demo 必须固定 `--noiseSeed`** 才可复现。
 
-### M6. 尚未验证 / 诚实边界
+### M6. minADE 定量评测（2026-10-27，chunk 3116，18 clips × 6 seeds）
 
-- ⚠️ **mRoPE 黄旗（未解决，但多了间接证据）**：`action/config.json` 写 `rope_type: mrope`、
+**数据**：`nvidia/PhysicalAI-Autonomous-Vehicles`（`gated: auto` + `license: other`）。🔴 **官方那 644 clips
+拿不到**——`compute_minade.py:19` 写 *"Reference: **chefu** PyTorch baseline minADE = 0.82113 m on 644 clips"*，
+`chefu` 是 NVIDIA 内部人名、644 条是内部评测集；两个公开 split（`alpamayo_aligned` = train 276,299 /
+test 28,317 / alpasim 1,536；`default` = 153,625 / 90,928 / 61,599）里**都没有 644 这个规模**。
+⇒ 改用 `alpamayo_aligned` 的 **test** split（数据集 README 确认它 *"follows the train/test partition of
+NVIDIA's Alpamayo models"*）——**分布对，但 clip 集不同，不可声称同口径复现**。
+
+**选片**：chunk 3116 是纯 test chunk（100 clips 全 test+valid）。按轨迹形态**分层抽 18 条**
+（每 (形态×速度) 格取 |横向| 最大的 3 条）：straight 9 / turn 6 / gentle 3；fast 9 / mid 5 / slow 4；
+v0 跨 0.0–26.6 m/s、maxlat 跨 0.00–49.10 m，含静止与起步加速两个边界样本。
+
+**GT 构造**：从 `labels/egomotion/` per-clip parquet（`timestamp` µs + 四元数 + xyz，~100 Hz）按
+**t0=5.1 s**（官方口径，见 `gate4_forward.py`）取 16 点历史 + 64 点未来（均 10 Hz），变换到 t0 的 ego 系
+`p_ego = R0ᵀ(p−p0)`。🔴 **关键修正**：`p0` 必须在 t0 **精确插值**而非取最近采样点——否则快车（18 m/s）
+会因 ~3 ms 采样偏移产生 **5.7 cm 残差**（断言 `|he[-1]|<0.05` 当场抓到）；修正后残差 **0.00000 m**。
+
+**帧抽取**：mp4 是 1920×1080 / 30 fps / hevc / 20.13 s。用随附 `<clip>.<cam>.timestamps.parquet`
+（604 帧权威时间戳）定位 t0−0.3/−0.2/−0.1/0 的最近帧 = **索引 144/147/150/153**（相机与 egomotion
+共享 epoch，恒定偏移 −10.85 ms）。相机顺序按 `camera_indices [0,1,2,6]`：cross_left → front_wide →
+cross_right → front_tele（camera-major）。goat 无 ffmpeg ⇒ 另建 `frames_venv` 装 `imageio-ffmpeg`
+（自带 aarch64 静态 ffmpeg v7.0.2），**不碰 export_venv**（它连 pip 都没有）。
+
+**结果**（官方 `compute_minade.py --num_traj_samples 6`）：
+
+| 指标 | 我们（n=18） | 官方参考 | 差异 |
+|---|---|---|---|
+| **minADE6@6.4s** | **0.80401 m** | **0.82113 m**（chefu PyTorch, 644 clips） | **−2.1%** |
+| minADE6@3s | 0.17460 m | 0.254 m（paper Table 6, AR1 **0.5B**+Route） | −31%（**不同模型**，仅参考） |
+
+@6.4s：mean 0.80401 / median 0.60216 / sd 0.6458 / **95% CI [0.5057, 1.1024]** / min 0.0949 / max 2.5043。
+**官方基线 0.82113 落在我们 95% CI 内** ⇒ 统计上一致。分层（@6.4s）：gentle(n=3) 0.3617 /
+straight(n=9) 0.7316 / **turn(n=6) 1.1338**；fast(n=9,v0≈15.5) 0.8976 / mid(n=5) 0.8495 / slow(n=4) 0.5366。
+
+**物理合理性交叉验证**（「数字可信」的关键旁证）：ADE 与速度/距离**正相关**（corr(v0,@6.4s)=**+0.43**、
+corr(fwd,@6.4s)=**+0.61**、corr(maxlat,@6.4s)=+0.27）⇒ 越快越远绝对误差越大，符合运动学预期、不是随机数；
+**相对误差中位数仅 1.91%**（ADE@6.4s ÷ 纵向位移）；最差 3 条全是高速/大位移（`d1a20a67` v0=26.6 /
+fwd=167.2 m → 2.504 m），最好 3 条全是近静止（→ 0.095 m）。
+
+### M7. 尚未验证 / 诚实边界
+
+- ⚠️ **mRoPE 黄旗（未解决，但间接证据已大幅加强）**：`action/config.json` 写 `rope_type: mrope`、
   `mrope_section: [24,20,20]`、`mrope_interleaved: true`，而分解补丁实现的是 **rotate_half** 约定。
   判断大概率无碍的依据：① `rope_onnx` 接收的是**已算好的 cos/sin**，mRoPE 分段逻辑在上游；
   ② 导出 dummy 的 `attention_pos_id = arange(n_diff)` 是 **1D** 位置，而 mRoPE 需 (t,h,w) 三维
-  ⇒ 疑为从 VLM 继承的残留字段。**间接证据**（M4 新增）：轨迹连贯、物理合理、无发散、与文本方向自洽
-  ——若 RoPE 约定错，输出大概率是垃圾。但**仍无直接对照**（对拍只是「我的分解 vs rotate_half 公式」
-  的自洽检查，不是「rotate_half vs TRT `RotaryEmbedding` 真实语义」的检查）。
-- ❌ **minADE 定量评测未做**：需官方 644 clips 的多相机帧 + GT（`clip_id -> gt_xy/ego_history_xyz/…`）。
-  当前只跑了 **1 个 clip**（gate4 公开样例 `01d3588e-…`），**没有 GT 就算不了 ADE**，故只能声称
-  「轨迹结构合法、物理合理、与文本方向自洽」，**不能声称精度**。
-- ❌ **图像轴未测**：只测了 ego 历史轴与 seed 轴，**没测「换不同驾驶场景图像」**对轨迹的影响
-  （手上只有 gate4 那 16 帧单一场景）——这是 conditioning 强度结论的一个真实缺口。
+  ⇒ 疑为从 VLM 继承的残留字段。**间接证据（M6 大幅加强）**：18 个不同场景的轨迹 minADE 与官方基线
+  一致、ADE 与速度/距离正相关、相对误差中位数仅 1.91%——**若 RoPE 约定错，输出会是垃圾而不可能对上 GT**。
+  但**仍无直接对照**（对拍只是「我的分解 vs rotate_half 公式」的自洽检查，不是「rotate_half vs TRT
+  `RotaryEmbedding` 真实语义」的检查）。
+- ⬜ **官方 644-clip 同口径评测做不到**：那 644 条是 NVIDIA 内部集，公开数据集无此清单。已在
+  `alpamayo_aligned` test split 分层抽 18 clips 做了量级一致的评测（M6），但 **n=18 太小**
+  （95% CI 半宽 0.30 m）⇒ 只能说「与基线一致」，**不能说「复现了 0.82113」更不能说「优于基线」**；
+  −2.1% 的点估计差异远小于 CI 半宽，无统计意义。扩到更大样本仍受数据可得性限制。
+- ⬜ **图像轴的 conditioning 敏感性未单独定量测**：M5 的 seed 对照只用了 gate4 单一场景。不过 M6 的
+  minADE 跨 **18 个不同场景**且与基线一致，已**间接证明图像 conditioning 有效**（否则不同场景会给出
+  同样的错误轨迹、ADE 会爆）。「固定 seed、只换图像」的定量敏感性对照仍未做。
 - ⚠️ **两个输入坑**（已入 `eval/r1/README.md` §五）：① `alpamayo_gate4/meta.npz` 的 ego 历史是
   **退化占位数据**（`ego_history_xyz` 全零、`ego_history_rot` 全单位阵，闸门 4 只验加载不验数据），
   直接喂会得 v0=0、积分出「静止车刹车到倒车」的荒谬轨迹，须改用官方指南真实轨迹；
