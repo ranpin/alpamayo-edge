@@ -77,8 +77,9 @@ engines/
 # Phase R minADE 评测的逐 clip 数据（gated + license:other 数据集的 clip_id 与派生轨迹量，
 #   不入库；聚合数字与分层拆解在 eval/r1/README.md §五）
 /eval/r1/*.csv
-# 轨迹可视化（本地页）：GT+预测轨迹与 clip_id 嵌入 traj_viz.json / index.html，同样不入库不上站
+# 轨迹可视化（本地全量页）：GT+预测轨迹与 clip_id + minADE 嵌入 traj_viz.json / index.html，不入库不上站
 #   （gen_viz_page.py / verify_viz.py 是纯代码，可入库复现）
+#   脱敏公开版另在 docs/site/r1-trajectory/（gen_public_demo.py 生成：匿名化 clip_id、去 minADE/ADE 数字、保留 GT 形态）
 /eval/r1/viz/traj_viz.json
 /eval/r1/viz/index.html
 
