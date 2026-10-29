@@ -74,8 +74,9 @@
 
     <section class="ds-section">
       <h2 class="ds-h2">评测结果</h2>
-      <p class="ds-muted" style="font-size:14px;margin:0 0 4px">reasoner 的定量精度：自建驾驶域基准 n=184（PhysicalAI-AV 人工校验标注，8 选 1 单选，随机基线 12.5%）。上方演示是自由描述（定性），这里是同一基准下的定量精度。完整口径与诚实边界见 <a href="../cosmos3.html">Phase W 报告 §W.2</a>。</p>
+      <p class="ds-muted" style="font-size:14px;margin:0 0 4px">测试数据集：自建驾驶域基准 n=184——PhysicalAI-AV 真实帧 + 人工校验的 8 选 1 单选标注（随机基线 12.5%），单一评测集、无训练/测试划分。上方演示是自由描述（定性），这里是 reasoner 在同一基准下的定量精度。完整口径与诚实边界见 <a href="../cosmos3.html">Phase W 报告 §W.2</a>。</p>
       <table class="c3-table">
+        <caption>表 1 · 自建驾驶域基准（n=184）上的精度对比</caption>
         <tr><th>模型</th><th>n=184 精度</th><th>说明</th></tr>
         <tr><td><strong>Cosmos3-Edge 2B FP16（本页演示模型）</strong></td><td><strong>42.4%</strong></td><td>Wilson 95% CI [35.5, 49.6] · 3.4× 随机基线（12.5%）</td></tr>
         <tr><td>Cosmos-Reason2-8B FP16</td><td>51.6%</td><td>上代 8B 基线</td></tr>
@@ -88,6 +89,7 @@
     <section class="ds-section">
       <h2 class="ds-h2">核心方法</h2>
       <table class="c3-table">
+        <caption>表 2 · 部署配置与关键口径</caption>
         <tr><th>项</th><th>值</th></tr>
         <tr><td>模型</td><td>Cosmos3-Edge（4B 全模态 = 2B VL reasoner + rectified-flow 扩散专家），本页用 reasoner</td></tr>
         <tr><td>引擎</td><td>FP16，llm 3.7G + visual 940M（<strong>分解注意力版</strong>，K4/K6 绕过 TRT-11-only 算子墙）</td></tr>
