@@ -81,8 +81,9 @@
   <section class="ds-section">
     <h2 class="ds-h2">核心方法</h2>
     <div class="r1t-method"><ul>
-      <li><b>模型</b>：Alpamayo-R1 = VLM backbone（Qwen3-VL 8B）+ 扩散动作专家（2.3B）。单次推理同时产出思维链文本与 <code>output_trajectory [64,2]</code>（归一化 <code>accel, κ</code>）。</li>
+      <li><b>模型</b>：Alpamayo-R1 = VLM backbone（Qwen3-VL 8B）+ 扩散动作专家（2.3B），单次推理同时产出思维链文本与动作头输出。</li>
       <li><b>输入</b>：4 路相机（cross_left / front_wide / cross_right / front_tele）× 4 个历史时刻（t₀−0.3…t₀）共 16 帧 + 16 点 ego 历史轨迹。</li>
+      <li><b>输出</b>：思维链（CoT）文本 + <code>output_trajectory [64,2]</code>（归一化 <code>accel, κ</code>）；动作头输出积分后得 BEV 轨迹（见下「轨迹积分」）。</li>
       <li><b>边缘部署</b>：TensorRT-Edge-LLM 三引擎（llm / visual / action）建于 Jetson AGX Orin（sm_87 / JetPack 6.2）。action 专家的 <code>Attention</code>/<code>RotaryEmbedding</code>/<code>TensorScatter</code> 算子需 TRT≥11，用<b>分解注意力补丁</b>打穿该墙（Orin 的 TRT 10.7 不原生支持）。</li>
       <li><b>轨迹积分</b>：动作头输出经运动学自行车模型积分得 BEV 轨迹（6.4s / 64 点 / 10Hz）；初速 v₀ 由 ego 历史经官方 <code>compute_minade</code> 的最小二乘（Cholesky）反解，与 minADE 评测同一套后处理口径。</li>
       <li><b>投影叠加</b>：GT 与 R1 轨迹均用该片段实测的<b>鱼眼相机标定</b>（多项式畸变 fw_poly + 四元数外参）投影回前视图像；GT 带真实路面高程 z，R1 的 2D 输出按 GT 路面高程插值赋 z，使两者都贴合路面。</li>
