@@ -1,7 +1,8 @@
 # Cosmos3-Edge 评测（Phase W · W2）—— reasoner n=184 跨代对比
 
 第二部署目标：`nvidia/Cosmos3-Edge`（4B 全模态世界模型 = 2B VL reasoner + rectified-flow
-扩散专家，MoT 单塔）。部署链路与六道 JetPack 6.2 兼容墙见 `docs/PROBLEMS.md` §K。
+扩散专家，MoT 单塔）。部署链路与六道 JetPack 6.2 兼容墙见 `docs/PROBLEMS.md` §K（摘要存根；
+全文已迁至 [cosmos3-edge 仓 docs/PROBLEMS.md](https://github.com/ranpin/cosmos3-edge/blob/main/docs/PROBLEMS.md)）。
 
 > **拆分说明**：本目录只保留 **reasoner 侧 n=184 驾驶域跨代对比**——这是「CR2-8B→Cosmos3→R1」
 > 研究主线的跨代验证证据，留在 alpamayo-edge。Cosmos3-Edge 的 **policy 动作链（DROID 机器人操作，
