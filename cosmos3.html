@@ -63,7 +63,7 @@ footer a{color:var(--accent)}
   <div class="tabs">
     <a class="tab" href="index.html">CR2-8B 量化部署</a>
     <a class="tab active" href="cosmos3.html">Cosmos3-Edge · Phase W</a>
-    <a class="tab" href="cosmos3-demo/">🎬 Demo</a>
+    <a class="tab" href="r1-trajectory/">R1 轨迹 Demo</a>
   </div>
   <div class="right">
     <a class="btn" href="https://github.com/ranpin/alpamayo-edge" target="_blank">GitHub 源码</a>
@@ -79,7 +79,7 @@ footer a{color:var(--accent)}
     <span class="badge">reasoner + policy 双链</span>
   </div>
 
-  <p style="margin:14px 0"><a href="cosmos3-demo/" style="display:inline-block;background:var(--accent);color:#fff;padding:9px 18px;border-radius:7px;text-decoration:none;font-weight:600;font-size:14.5px">🎬 在线 Demo · Cosmos3-Edge 2B 驾驶场景理解（真实 Orin 推理输出）</a></p>
+  <p style="margin:14px 0"><a href="https://ranpin.github.io/cosmos3-edge/cosmos3-demo/" target="_blank" rel="noopener" style="display:inline-block;background:var(--accent);color:#fff;padding:9px 18px;border-radius:7px;text-decoration:none;font-weight:600;font-size:14.5px">🎬 在线 Demo · Cosmos3-Edge 2B 驾驶场景理解（真实 Orin 推理输出 · demo 已迁至 cosmos3-edge 仓）</a></p>
 
   <h2>摘要</h2>
   <p>本项目第二阶段（Phase W）把 NVIDIA <strong>Cosmos3-Edge</strong>（4B 全模态<strong>世界动作模型</strong> = <strong>2B VL reasoner</strong> + <strong>rectified-flow 扩散动作专家</strong>，MoT 单塔）部署到 Jetson Orin。它在 TRTEdge 0.10.1 官方支持矩阵里只属 <strong>Compatible 档</strong>（Official 是 JetPack 7.2 / CUDA 13 / TRT 11，而 Orin 是 JetPack 6.2 / CUDA 12.6 / TRT 10.7）——部署的代价是<strong>六道具体的兼容墙</strong>，本页记录逐道打通的过程与两条结果线。<span style="color:var(--muted)">零预算 · 零训练 · 全 Orin。</span></p>
@@ -123,6 +123,7 @@ footer a{color:var(--accent)}
   </table>
 
   <h3>W.3 Policy 动作链：部署打通 + 单帧「帧无关」边界</h3>
+  <p style="font-size:13px;color:var(--muted);margin:4px 0 10px">📦 policy 动作链的评测脚本与证据（W3 帧敏感性 / W4 conditioning 敏感性）已拆分到独立仓 <a href="https://github.com/ranpin/cosmos3-edge" target="_blank" rel="noopener" style="color:var(--accent)">cosmos3-edge</a> 的 <code>eval/policy/</code>；本节保留结论与诚实边界。</p>
   <p>Policy-DROID（<code>nvidia/Cosmos3-Edge-Policy-DROID</code>，机器人操作 WAM）四组件引擎全部建成，<code>cosmos3_policy_inference</code> 图+prompt→action.json 冒烟通过（goat）。第六道墙 K6 与打通见表 W1 与 §W.4。</p>
   <table>
     <caption><strong>表 W3</strong>　Policy-DROID 四组件引擎（均为分解注意力版，绕过 K6）。</caption>
@@ -133,7 +134,7 @@ footer a{color:var(--accent)}
     <tr><td>text_tokenizer</td><td>17 M</td><td>+ embed_tokens 513 M（staged）</td></tr>
   </table>
   <p><strong>冒烟结果</strong>（官方 UMI 首帧图 + "pick up the object"，4 步扩散）：exit=0，action shape <strong>[1,16,10]</strong>，160 值全 finite、范围 [−2.13, 2.77]，逐维分布有结构（d3≈−1.93±0.15、d5≈+2.15±0.14 紧聚类，非噪声）；<strong>延迟 5154 ms/policy round</strong>。</p>
-  <figure><img src="figures/cosmos3_policy_frame_insensitive.png" alt="policy frame-insensitivity evidence"><figcaption><b>图 W2 · Policy 单帧 turnkey 路径「帧无关」证据（真实 DROID 帧，lerobot/droid_100 ep0）</b><br><b>左</b>：帧内——每帧（f20/60/100/140）的 16 步动作 chunk 累计末端位移，<strong>每帧都有连贯净位移</strong>（范数 ~1.6）；<b>右</b>：跨帧——任两帧动作 chunk 的 mean|Δ|（160 值）仅 0.0076–0.0116，比帧内自身位移<strong>小约 170×</strong><br><b>结果</strong>：帧内能出连贯位移，但<strong>输出几乎不随输入帧变化</strong>；4/16/40 步扩散范围不变（非欠去噪，<code>DEFAULT_NUM_INFERENCE_STEPS=4</code>）<br><b>分析</b>：这是 <strong>vision-only 单帧 conditioning 的能力边界，非引擎 bug</strong>——turnkey 路径无本体状态锚点（<code>use_state=False</code>，设计如此），单帧图像不足以产生帧敏感动作。因此它做不了"换场景→换动作"的诚实 demo，demo 锚定 reasoning 侧。复现 <code>eval/cosmos3/w3_frame_sensitivity.py</code>（证据 <code>w3_actions/</code> 已入库）。</figcaption></figure>
+  <figure><img src="figures/cosmos3_policy_frame_insensitive.png" alt="policy frame-insensitivity evidence"><figcaption><b>图 W2 · Policy 单帧 turnkey 路径「帧无关」证据（真实 DROID 帧，lerobot/droid_100 ep0）</b><br><b>左</b>：帧内——每帧（f20/60/100/140）的 16 步动作 chunk 累计末端位移，<strong>每帧都有连贯净位移</strong>（范数 ~1.6）；<b>右</b>：跨帧——任两帧动作 chunk 的 mean|Δ|（160 值）仅 0.0076–0.0116，比帧内自身位移<strong>小约 170×</strong><br><b>结果</strong>：帧内能出连贯位移，但<strong>输出几乎不随输入帧变化</strong>；4/16/40 步扩散范围不变（非欠去噪，<code>DEFAULT_NUM_INFERENCE_STEPS=4</code>）<br><b>分析</b>：这是 <strong>vision-only 单帧 conditioning 的能力边界，非引擎 bug</strong>——turnkey 路径无本体状态锚点（<code>use_state=False</code>，设计如此），单帧图像不足以产生帧敏感动作。因此它做不了"换场景→换动作"的诚实 demo，demo 锚定 reasoning 侧。复现脚本与证据已迁至 <a href="https://github.com/ranpin/cosmos3-edge" target="_blank" rel="noopener">cosmos3-edge</a> 仓 <code>eval/policy/</code>（<code>w3_frame_sensitivity.py</code> + <code>w3_actions/</code>）。</figcaption></figure>
   <div class="callout warn">
     <div class="t">为何「预测 vs GT」对照不成立（表示动物园）</div>
     社区 <code>lerobot/droid_100</code> GT 是 <strong>7 维笛卡尔 euler</strong> + lerobot 自归一化；Edge 输出是 <strong>10 维 midtrain rot6d</strong> + NVIDIA quantile 归一化；cosmos cookbook 的 droid 样例又是 <strong>8 维关节空间</strong>。三套表示 + 三套归一化 + 时间分辨率不同（policy 5fps vs GT 15fps）⇒ 四重错配，「对不上」是必然，非引擎错。拿 turnkey 输出比参考 GT 前，必须先核对<strong>表示 / 归一化 / state / 时间</strong>四者是否对齐。
@@ -146,7 +147,7 @@ footer a{color:var(--accent)}
   <ul>
     <li><strong>decomposed_attention</strong>：GQA 折批 grouped matmul + arange 下三角 causal 掩码，覆盖 und 的 is_causal=True 自注意力与 gen 的 is_causal=False 对 cat([und,gen]) 的交叉注意力（GQA H=16/Hkv=8）。</li>
     <li><strong>decomposed_rope</strong>：rotate_half；<code>attention_pos_id</code> 是恒等 gather（cosmos3PolicyRunner.cpp:257）⇒ 逐 token 直接对齐，但仍用 <code>torch.gather</code> 保留 position_ids 防被 DCE 导致 runtime 找不到 binding。</li>
-    <li><strong>门控与对拍</strong>：env <code>USE_DECOMPOSED_POLICY=1</code>，两个 modeling 文件 import 换包装器（additive，不动已工作的 reasoning 路径）。分解实现先经 <code>test_policy_decomposed.py</code> 数值对拍（attention vs <code>F.scaled_dot_product_attention</code> err~1e-7、rope vs LLaMA 全维公式 err=0）再导出——避免 ~1h 导出后才发现语义 bug。脚本 <code>scripts/orin/apply_policy_decomposed_patch.py</code>。</li>
+    <li><strong>门控与对拍</strong>：env <code>USE_DECOMPOSED_POLICY=1</code>，两个 modeling 文件 import 换包装器（additive，不动已工作的 reasoning 路径）。分解实现先经 <code>test_policy_decomposed.py</code> 数值对拍（attention vs <code>F.scaled_dot_product_attention</code> err~1e-7、rope vs LLaMA 全维公式 err=0）再导出——避免 ~1h 导出后才发现语义 bug。补丁与对拍脚本（<code>apply_policy_decomposed_patch.py</code> / <code>apply_decomposed_attn_patch.py</code> / <code>test_policy_decomposed.py</code>）已迁至 <a href="https://github.com/ranpin/cosmos3-edge" target="_blank" rel="noopener">cosmos3-edge</a> 仓 <code>scripts/orin/</code>。</li>
   </ul>
 
   <h3>W.5 动作表示 / 归一化 / state（cosmos-framework 权威定义）</h3>
