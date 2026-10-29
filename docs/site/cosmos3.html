@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Alpamayo-Edge · Phase W：Cosmos3-Edge 4B 世界动作模型的 Jetson Orin 部署</title>
-<meta name="description" content="Cosmos3-Edge（2B VL reasoner + 扩散动作专家）部署到 Jetson Orin：打通六道 JetPack 6.2 兼容墙，reasoner 驾驶域 n=184 跨代对比，policy 动作链部署打通但实测单帧帧无关。">
+<title>Alpamayo-Edge · Cosmos3-Edge 跨代精度对比（n=184 驾驶域）</title>
+<meta name="description" content="一套 TensorRT-Edge 管线部署多代 NVIDIA Physical AI 模型的跨代验证：Cosmos3-Edge 2B reasoner vs 上一代 Cosmos-Reason2-8B 量化版，自建驾驶域基准 n=184，「缩小模型不免费、量化几乎免费」。">
 <style>
 :root{--bg:#fff;--bg2:#f8f9fa;--bg3:#e9ecef;--text:#1a1a2e;--text2:#495057;--muted:#868e96;--accent:#4361ee;--accentL:#eef2ff;--accentD:#3a0ca3;--border:#dee2e6;--ok:#2ecc71;--warn:#f39c12;--err:#e74c3c;--info:#3498db;--nav-h:52px}
 [data-theme=dark]{--bg:#0f0f1a;--bg2:#1a1a2e;--bg3:#2a2a3e;--text:#e0e0e0;--text2:#adb5bd;--muted:#6c757d;--accent:#7b8cff;--accentL:#1a1a3e;--accentD:#a5b4fc;--border:#2a2a3e}
@@ -46,15 +46,10 @@ figure img{width:100%;height:auto;border-radius:5px;display:block;cursor:zoom-in
 figcaption{font-size:13.5px;color:var(--muted);margin-top:10px;text-align:left;line-height:1.65}
 figcaption .zoom{color:var(--accent);font-weight:600}
 figcaption b{display:inline-block;min-width:3.2em;color:var(--accentD);font-weight:700}
-.flow{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;overflow-x:auto;font-family:"JetBrains Mono","Fira Code",monospace;font-size:12px;line-height:1.5;color:var(--text2);white-space:pre}
-#lb{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:2000;cursor:zoom-out;padding:24px}
-#lb img{max-width:96vw;max-height:90vh;width:auto;height:auto;border-radius:6px;box-shadow:0 10px 48px rgba(0,0,0,.6);background:#fff}
-#lb .hint{position:fixed;top:14px;right:18px;color:#fff;font-size:13px;opacity:.85}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 code{font-family:"JetBrains Mono","Fira Code",monospace;font-size:13px;background:var(--bg3);padding:1px 5px;border-radius:3px;color:var(--accent)}
 footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--border);font-size:13px;color:var(--muted)}
 footer a{color:var(--accent)}
-@media(max-width:720px){.grid2{grid-template-columns:1fr}.wrap{padding:calc(var(--nav-h) + 20px) 16px 48px}h1{font-size:23px}.top-nav .tabs{margin-left:10px}}
+@media(max-width:720px){.wrap{padding:calc(var(--nav-h) + 20px) 16px 48px}h1{font-size:23px}.top-nav .tabs{margin-left:10px}}
 </style>
 </head>
 <body>
@@ -62,7 +57,7 @@ footer a{color:var(--accent)}
   <a href="https://ranpin.github.io/" class="logo">← Ranpin</a>
   <div class="tabs">
     <a class="tab" href="index.html">CR2-8B 量化部署</a>
-    <a class="tab active" href="cosmos3.html">Cosmos3-Edge · Phase W</a>
+    <a class="tab active" href="cosmos3.html">Cosmos3 跨代对比</a>
     <a class="tab" href="r1-trajectory/">R1 轨迹 Demo</a>
   </div>
   <div class="right">
@@ -72,48 +67,23 @@ footer a{color:var(--accent)}
 </nav>
 
 <div class="wrap">
-  <h1>Alpamayo-Edge · Phase W：Cosmos3-Edge 4B 世界动作模型的 Jetson Orin 部署</h1>
+  <h1>Cosmos3-Edge 跨代精度对比：n=184 驾驶域</h1>
   <div class="badges">
-    <span class="badge">Cosmos3-Edge 4B WAM</span><span class="badge">TRTEdge 0.10.1</span>
-    <span class="badge">JetPack 6.2 · Compatible 档</span><span class="badge">分解注意力/RoPE 补丁</span>
-    <span class="badge">reasoner + policy 双链</span>
+    <span class="badge">一套管线部署多代模型</span><span class="badge">n=184 驾驶域基准</span>
+    <span class="badge">同帧同题 · 唯一变量=模型</span><span class="badge">跨代验证</span>
   </div>
 
-  <p style="margin:14px 0"><a href="https://ranpin.github.io/cosmos3-edge/cosmos3-demo/" target="_blank" rel="noopener" style="display:inline-block;background:var(--accent);color:#fff;padding:9px 18px;border-radius:7px;text-decoration:none;font-weight:600;font-size:14.5px">🎬 在线 Demo · Cosmos3-Edge 2B 驾驶场景理解（真实 Orin 推理输出 · demo 已迁至 cosmos3-edge 仓）</a></p>
+  <p style="margin:14px 0"><a href="https://ranpin.github.io/cosmos3-edge/cosmos3-demo/" target="_blank" rel="noopener" style="display:inline-block;background:var(--accent);color:#fff;padding:9px 18px;border-radius:7px;text-decoration:none;font-weight:600;font-size:14.5px">🎬 在线 Demo · Cosmos3-Edge 2B 驾驶场景理解（真实 Orin 推理输出 · 见 cosmos3-edge 仓）</a></p>
 
   <h2>摘要</h2>
-  <p>本项目第二阶段（Phase W）把 NVIDIA <strong>Cosmos3-Edge</strong>（4B 全模态<strong>世界动作模型</strong> = <strong>2B VL reasoner</strong> + <strong>rectified-flow 扩散动作专家</strong>，MoT 单塔）部署到 Jetson Orin。它在 TRTEdge 0.10.1 官方支持矩阵里只属 <strong>Compatible 档</strong>（Official 是 JetPack 7.2 / CUDA 13 / TRT 11，而 Orin 是 JetPack 6.2 / CUDA 12.6 / TRT 10.7）——部署的代价是<strong>六道具体的兼容墙</strong>，本页记录逐道打通的过程与两条结果线。<span style="color:var(--muted)">零预算 · 零训练 · 全 Orin。</span></p>
-  <p style="margin-bottom:4px"><strong>两条结果线：</strong></p>
-  <ol style="margin-top:0">
-    <li><strong>Reasoner 侧——跨代验证「缩小模型不免费、量化几乎免费」</strong>：Cosmos3-Edge 的 2B VL reasoner 在自建驾驶域基准 n=184 上 <strong>42.4%</strong>（3.4× 随机基线），<strong>显著低于</strong>上一代 Cosmos-Reason2-8B 的量化版（INT4 50.5% / INT8 47.8%，McNemar b/c=29/12、p=0.0115）。新一代 2B 显著输给上一代 8B 的量化版——与主页结论 2 的"缩小不免费"在<strong>第二个模型家族</strong>上互证（§W.2）。</li>
-    <li><strong>Policy 侧——动作链部署打通，但单帧 turnkey 路径实测「帧无关」</strong>：DROID 动作链四组件引擎全部建成、<code>cosmos3_policy_inference</code> 冒烟通过（action [1,16,10] 全 finite、5154 ms/round）；但换输入帧输出几乎不变（跨帧 mean|Δ|≈0.009，比帧内自身位移小 ~170×）——这是 vision-only 单帧 conditioning 的<strong>能力边界，非引擎 bug</strong>（§W.3）。因此在线 demo 锚定已验证 works 且帧敏感的 reasoning 侧。</li>
-  </ol>
-  <p style="font-size:13px;color:var(--muted)">本页是 Phase W 专篇；第一阶段（CR2-8B 量化部署，图 1–21 / 表 1–13）见 <a href="index.html" style="color:var(--accent)">CR2-8B 量化部署</a>。问题、根因与解决的完整工程记录见 <a href="https://github.com/ranpin/alpamayo-edge/blob/main/docs/PROBLEMS.md" target="_blank" style="color:var(--accent)">PROBLEMS.md §K/§L</a>。</p>
+  <p>本仓用<strong>一套 TensorRT-Edge 管线部署多代 NVIDIA Physical AI 模型</strong>。把同一把尺子（自建驾驶域基准 <strong>n=184</strong>，同帧、同题、同标答）量到两代 reasoner 上——上一代 <strong>Cosmos-Reason2-8B</strong> 与新一代 <strong>Cosmos3-Edge 的 2B VL reasoner</strong>——做跨代精度对比，验证「<strong>缩小模型不免费、量化几乎免费</strong>」这一部署策略结论是否在第二个模型家族上成立。<span style="color:var(--muted)">零预算 · 零训练 · 全 Orin。</span></p>
+  <p style="font-size:13px;color:var(--muted)">本页只保留跨代对比结论。Cosmos3-Edge 的<strong>部署细节</strong>（六道 JetPack 6.2 兼容墙、分解注意力/RoPE 补丁、动作表示）与 <strong>policy 动作链</strong>（DROID 机器人操作）已拆分到独立仓 <a href="https://github.com/ranpin/cosmos3-edge" target="_blank" rel="noopener" style="color:var(--accent)">cosmos3-edge</a>。第一阶段（CR2-8B 量化部署，图 1–21 / 表 1–13）见 <a href="index.html" style="color:var(--accent)">CR2-8B 量化部署</a>。</p>
 
-  <h2>一、核心结果</h2>
-
-  <h3>W.1 部署：六道 JetPack 6.2 兼容墙与打通</h3>
-  <p>TRTEdge 0.10.x 官方支持 Cosmos3-Edge，但 Orin 的 JetPack 6.2 只是 Compatible 档。实测代价 = 六道墙，各有工程解；其中两道同源（都是"TRT-11-only 算子墙"），用同一把自研武器解决。</p>
-  <table>
-    <caption><strong>表 W1</strong>　六道 JetPack 6.2 兼容墙（现象 → 根因 → 解法）。K4/K6 同源同解：都是 TRT≥11 才认识的算子，用基础 ONNX 算子分解绕过（§W.4）。</caption>
-    <tr><th>墙</th><th>现象 / 根因</th><th>解法</th></tr>
-    <tr><td><strong>K1</strong></td><td>CuTe DSL 预编译件缺 sm_87+cuda12 ⇒ configure FATAL（上游 cuda13 targets 含 aarch64:sm_87，cuda12 只有 sm_110/121，<strong>刻意排除</strong>）</td><td>初解 <code>-DENABLE_CUTE_DSL=OFF</code>（见 K5 反噬）；根治见 K5 自生成</td></tr>
-    <tr><td><strong>K2</strong></td><td>nlohmann 子模块缺失（depth-1 clone）⇒ C++ 编译失败</td><td><code>git submodule update --init --recursive</code></td></tr>
-    <tr><td><strong>K3</strong></td><td>XQA JIT NVRTC 缺头 ⇒ llm_build 插件创建失败（cuda12.6 的 <code>cuda_fp16.h</code> 依赖链被 CUDA 13 重组掉）</td><td><code>pluginJitCompiler.cpp</code> 注入 <code>-I$CUDA_HOME/include</code>（NVRTC 从磁盘解析系统头，一处补丁覆盖全部 JIT kernel）</td></tr>
-    <tr><td><strong>K4</strong></td><td>ViTAttentionPlugin 无 legacy 后端 ⇒ visual_build 失败（枚举只剩 CuTe DSL；<code>USE_TRT_NATIVE_ATTN=1</code> 导出的 <code>TRT_Attention</code> 要 TRT≥11）</td><td><strong>分解注意力导出补丁</strong>（基础算子块对角 ragged self-attn）</td></tr>
-    <tr><td><strong>K5</strong></td><td>prefill FMHA 无 legacy 后端 ⇒ 引擎能建、推理必挂（<code>ContextFMHABackend</code> 只剩 CuTe DSL）</td><td><strong>自生成</strong> <code>cutedsl_aarch64_sm_87_cuda12.tar.gz</code>（<code>CUDA_CTK_VERSION=12.6 CUTE_DSL_TARGETS=aarch64:sm_87</code>）→ <code>-DENABLE_CUTE_DSL=fmha</code> 重建 → 冒烟全绿</td></tr>
-    <tr><td><strong>K6</strong></td><td>policy und_prefill/gen 导出 <strong>ONNX 标准 <code>Attention</code>/<code>RotaryEmbedding</code></strong> ⇒ TRT 10.7 parser 不认（und：28 Attention + 84 RotaryEmbedding）</td><td><strong>分解注意力 + RoPE 补丁</strong>（<code>USE_DECOMPOSED_POLICY=1</code> 门控，§W.4）</td></tr>
-  </table>
-  <div class="callout ok">
-    <div class="t">三条教训</div>
-    ① <strong>Compatible 档的代价是具体、有限、可逐个击破的</strong>——六道墙各有工程解，不是"不支持"。② <strong>"上游不给预编译件"≠"不能生成"</strong>：构建脚本支持显式 target 覆盖，sm_87+cuda12 一次通过（K5）。③ <strong>分解导出补丁是对「TRT-11-only 算子墙」的通用武器</strong>：K4（visual 的 <code>TRT_Attention</code>）与 K6（policy 的 ONNX <code>Attention</code>/<code>RotaryEmbedding</code>）同源同解；K6 是 policy 链唯一通路（gen 无 FMHA backend 可选）。
-  </div>
-
-  <h3>W.2 Reasoner 跨代对比：n=184 驾驶域（同帧同题，唯一变量 = 模型）</h3>
+  <h2>一、跨代对比：n=184 驾驶域（同帧同题，唯一变量 = 模型）</h2>
   <p>协议与主页 §1.11/§1.12 <strong>完全一致</strong>（同帧、同题、同标答、贪心、cap 12、6 帧 @448），唯一变量是模型。输入直接复用 <code>bench/ood_eval/ood_input_goat.json</code>（messages 格式模型无关，runtime 用引擎目录内自己的 chat template）。打分复用同一套解析 / Wilson CI / McNemar 实现，故与 CR2-8B 各档<strong>方法学逐位可比</strong>。</p>
-  <figure><img src="figures/cosmos3_crossgen.png" alt="cross-generation driving-domain accuracy"><figcaption><b>图 W1 · 驾驶域 n=184 跨代对比（8 选 1，随机基线 12.5%）</b><br><b>横轴</b>：四个模型档——CR2-8B 的 FP16/INT8/INT4 与 Cosmos3-Edge 2B FP16；<b>竖轴</b>：正确率 %，误差棒 = Wilson 95%CI<br><b>结果</b>：Cosmos3-Edge 2B 42.4% [35.5,49.6]，比 CR2-8B FP16 的 51.6% 低 9.2 pts，McNemar b/c=29/12、p=0.0115 <strong>显著</strong>；而 CR2-8B 自己的 INT8/INT4 掉点（−3.8/−1.1）均不显著<br><b>分析</b>：把"代际差"与"量化差"放在同一张图上，结论一目了然——<strong>量化几乎免费（掉点 &lt; MDE≈7pts、不显著），缩小模型不免费（−9.2 pts、显著）</strong>。2B reasoner 仍是随机基线的 3.4×，有真实场景理解力，但显著输给上一代 8B 的量化版。此图数字全部由 <code>eval/cosmos3/cosmos3_viz.py</code> 从原始输出重算（Cosmos3 k=78/184、unparsed=0），非手填。</figcaption></figure>
+  <figure><img src="figures/cosmos3_crossgen.png" alt="cross-generation driving-domain accuracy"><figcaption><b>图 1 · 驾驶域 n=184 跨代对比（8 选 1，随机基线 12.5%）</b><br><b>横轴</b>：四个模型档——CR2-8B 的 FP16/INT8/INT4 与 Cosmos3-Edge 2B FP16；<b>竖轴</b>：正确率 %，误差棒 = Wilson 95%CI<br><b>结果</b>：Cosmos3-Edge 2B 42.4% [35.5,49.6]，比 CR2-8B FP16 的 51.6% 低 9.2 pts，McNemar b/c=29/12、p=0.0115 <strong>显著</strong>；而 CR2-8B 自己的 INT8/INT4 掉点（−3.8/−1.1）均不显著<br><b>分析</b>：把"代际差"与"量化差"放在同一张图上，结论一目了然——<strong>量化几乎免费（掉点 &lt; MDE≈7pts、不显著），缩小模型不免费（−9.2 pts、显著）</strong>。2B reasoner 仍是随机基线的 3.4×，有真实场景理解力，但显著输给上一代 8B 的量化版。此图数字全部由 <code>eval/cosmos3/cosmos3_viz.py</code> 从原始输出重算（Cosmos3 k=78/184、unparsed=0），非手填。</figcaption></figure>
   <table>
-    <caption><strong>表 W2</strong>　Reasoner 跨代对比（n=184，8 选 1，随机基线 12.5%；Wilson 95%CI、McNemar vs CR2-8B FP16）。</caption>
+    <caption><strong>表 1</strong>　Reasoner 跨代对比（n=184，8 选 1，随机基线 12.5%；Wilson 95%CI、McNemar vs CR2-8B FP16）。</caption>
     <tr><th>模型</th><th>正确率</th><th>Wilson 95%CI</th><th>vs CR2-8B FP16</th><th>E2E/请求</th></tr>
     <tr><td>CR2-8B FP16（goat）</td><td><strong>51.6%</strong></td><td>[44.5, 58.7]</td><td>—</td><td>~1.2 s</td></tr>
     <tr><td>CR2-8B INT8（dog）</td><td>47.8%</td><td>[40.7, 55.0]</td><td>−3.8 pts（p=0.143 ns）</td><td>0.50 s</td></tr>
@@ -122,66 +92,25 @@ footer a{color:var(--accent)}
     <tr><td colspan="5" style="background:#f8fafc;font-size:12.5px;color:#475569">184/184 全 EOS、零解析失败、字母分布均衡（A17 B22 C20 D23 E29 F26 G19 H28，无坍缩）。引擎：FP16，llm 3.7G + visual 940M（分解注意力版）。</td></tr>
   </table>
 
-  <h3>W.3 Policy 动作链：部署打通 + 单帧「帧无关」边界</h3>
-  <p style="font-size:13px;color:var(--muted);margin:4px 0 10px">📦 policy 动作链的评测脚本与证据（W3 帧敏感性 / W4 conditioning 敏感性）已拆分到独立仓 <a href="https://github.com/ranpin/cosmos3-edge" target="_blank" rel="noopener" style="color:var(--accent)">cosmos3-edge</a> 的 <code>eval/policy/</code>；本节保留结论与诚实边界。</p>
-  <p>Policy-DROID（<code>nvidia/Cosmos3-Edge-Policy-DROID</code>，机器人操作 WAM）四组件引擎全部建成，<code>cosmos3_policy_inference</code> 图+prompt→action.json 冒烟通过（goat）。第六道墙 K6 与打通见表 W1 与 §W.4。</p>
-  <table>
-    <caption><strong>表 W3</strong>　Policy-DROID 四组件引擎（均为分解注意力版，绕过 K6）。</caption>
-    <tr><th>组件</th><th>引擎</th><th>说明</th></tr>
-    <tr><td>und_prefill</td><td>2.7 G</td><td>理解 prefill（28 层）</td></tr>
-    <tr><td>gen</td><td>2.7 G</td><td>rectified-flow 扩散动作专家</td></tr>
-    <tr><td>vae_encoder</td><td>292 M</td><td>观测编码</td></tr>
-    <tr><td>text_tokenizer</td><td>17 M</td><td>+ embed_tokens 513 M（staged）</td></tr>
-  </table>
-  <p><strong>冒烟结果</strong>（官方 UMI 首帧图 + "pick up the object"，4 步扩散）：exit=0，action shape <strong>[1,16,10]</strong>，160 值全 finite、范围 [−2.13, 2.77]，逐维分布有结构（d3≈−1.93±0.15、d5≈+2.15±0.14 紧聚类，非噪声）；<strong>延迟 5154 ms/policy round</strong>。</p>
-  <figure><img src="figures/cosmos3_policy_frame_insensitive.png" alt="policy frame-insensitivity evidence"><figcaption><b>图 W2 · Policy 单帧 turnkey 路径「帧无关」证据（真实 DROID 帧，lerobot/droid_100 ep0）</b><br><b>左</b>：帧内——每帧（f20/60/100/140）的 16 步动作 chunk 累计末端位移，<strong>每帧都有连贯净位移</strong>（范数 ~1.6）；<b>右</b>：跨帧——任两帧动作 chunk 的 mean|Δ|（160 值）仅 0.0076–0.0116，比帧内自身位移<strong>小约 170×</strong><br><b>结果</strong>：帧内能出连贯位移，但<strong>输出几乎不随输入帧变化</strong>；4/16/40 步扩散范围不变（非欠去噪，<code>DEFAULT_NUM_INFERENCE_STEPS=4</code>）<br><b>分析</b>：这是 <strong>vision-only 单帧 conditioning 的能力边界，非引擎 bug</strong>——turnkey 路径无本体状态锚点（<code>use_state=False</code>，设计如此），单帧图像不足以产生帧敏感动作。因此它做不了"换场景→换动作"的诚实 demo，demo 锚定 reasoning 侧。复现脚本与证据已迁至 <a href="https://github.com/ranpin/cosmos3-edge" target="_blank" rel="noopener">cosmos3-edge</a> 仓 <code>eval/policy/</code>（<code>w3_frame_sensitivity.py</code> + <code>w3_actions/</code>）。</figcaption></figure>
-  <div class="callout warn">
-    <div class="t">为何「预测 vs GT」对照不成立（表示动物园）</div>
-    社区 <code>lerobot/droid_100</code> GT 是 <strong>7 维笛卡尔 euler</strong> + lerobot 自归一化；Edge 输出是 <strong>10 维 midtrain rot6d</strong> + NVIDIA quantile 归一化；cosmos cookbook 的 droid 样例又是 <strong>8 维关节空间</strong>。三套表示 + 三套归一化 + 时间分辨率不同（policy 5fps vs GT 15fps）⇒ 四重错配，「对不上」是必然，非引擎错。拿 turnkey 输出比参考 GT 前，必须先核对<strong>表示 / 归一化 / state / 时间</strong>四者是否对齐。
-  </div>
-
-  <h2>二、方法细节（可复现）</h2>
-
-  <h3>W.4 分解注意力 / RoPE 导出补丁：对「TRT-11-only 算子墙」的通用武器</h3>
-  <p>K4（visual）与 K6（policy）同源：TRTEdge 把注意力/RoPE 经 <code>trt::attention_onnx</code>/<code>trt::rope_onnx</code> custom op lower 成<strong>只有 TRT≥11 parser 认识</strong>的算子。解法 = 在导出前把它们<strong>用基础 ONNX 算子分解掉</strong>，任何 TRT 版本可解析，TRT 用 Myelin 自行融合：</p>
-  <ul>
-    <li><strong>decomposed_attention</strong>：GQA 折批 grouped matmul + arange 下三角 causal 掩码，覆盖 und 的 is_causal=True 自注意力与 gen 的 is_causal=False 对 cat([und,gen]) 的交叉注意力（GQA H=16/Hkv=8）。</li>
-    <li><strong>decomposed_rope</strong>：rotate_half；<code>attention_pos_id</code> 是恒等 gather（cosmos3PolicyRunner.cpp:257）⇒ 逐 token 直接对齐，但仍用 <code>torch.gather</code> 保留 position_ids 防被 DCE 导致 runtime 找不到 binding。</li>
-    <li><strong>门控与对拍</strong>：env <code>USE_DECOMPOSED_POLICY=1</code>，两个 modeling 文件 import 换包装器（additive，不动已工作的 reasoning 路径）。分解实现先经 <code>test_policy_decomposed.py</code> 数值对拍（attention vs <code>F.scaled_dot_product_attention</code> err~1e-7、rope vs LLaMA 全维公式 err=0）再导出——避免 ~1h 导出后才发现语义 bug。补丁与对拍脚本（<code>apply_policy_decomposed_patch.py</code> / <code>apply_decomposed_attn_patch.py</code> / <code>test_policy_decomposed.py</code>）已迁至 <a href="https://github.com/ranpin/cosmos3-edge" target="_blank" rel="noopener">cosmos3-edge</a> 仓 <code>scripts/orin/</code>。</li>
-  </ul>
-
-  <h3>W.5 动作表示 / 归一化 / state（cosmos-framework 权威定义）</h3>
-  <ul>
-    <li><strong>表示</strong>：Edge 用 <code>midtrain</code> 10 维 = [eef_pos(3) + rot6d(6) + gripper(1)]、<strong>相对位姿</strong>；后处理链 <code>denormalize_action</code> → <code>pose_rel_to_abs</code>（需当前 state 做参照）。</li>
-    <li><strong>归一化</strong>：quantile(q01/q99)→[−1,1]，stats 在 <code>droid_lerobot_stats.json</code>（dim0-2 位置 delta≈±0.015 米、dim3-8 rot6d、dim9 gripper[0,1]）；反归一化 <code>0.5(a+1)(q99−q01)+q01</code>。</li>
-    <li><strong>state 注入定论</strong>：Edge 是 <strong>vision+language-only</strong>（gen 图 = 16 行、无 +1 state 行 ⇒ <code>use_state=False</code>）。TRTEdge PolicyRunner 把 action_latent 全填高斯噪声、mask 全 1、只注入 frame-0 图像 latent + und K/V，无本体状态——<strong>设计如此，非 bug</strong>。这正是 §W.3 帧无关的机理。</li>
-  </ul>
-  <p style="font-size:13px;color:var(--muted)">AV 行车轨迹另走 <strong>inverse-dynamics</strong> 模式（起始帧+视频→ego 轨迹，无需单独 AV policy 权重），但该模式<strong>仅 PyTorch 框架路径、非 turnkey</strong>，未 TRTEdge 化（列后续）。</p>
-
-  <h2>三、思考讨论</h2>
+  <h2>二、思考讨论</h2>
   <div class="callout ok">
     <div class="t">跨代结论：「缩小不免费、量化几乎免费」在第二个模型家族上成立</div>
-    第一阶段在 CR2-8B 上得到"量化几乎免费、2B 显著掉点"（主页结论 2）；Phase W 把同一把尺子（同帧同题 n=184）量到 Cosmos3-Edge：<strong>新一代 2B reasoner（42.4%）显著输给上一代 8B 的量化版（INT4 50.5% / INT8 47.8%）</strong>。两个独立模型家族同向 ⇒ 该结论不是 CR2 单家的偶然，强化了部署策略"激进量化 + 保留大模型"。
-  </div>
-  <div class="callout">
-    <div class="t">turnkey 工具的能力边界：测出边界并据实定位 &gt; 假装能用</div>
-    <code>cosmos3_policy_inference</code> 是<strong>简化路径</strong>——vision+language-only、单帧、无 state 锚点，与 cosmos-framework 参考 server（state-conditioned、多帧历史）输入契约不同。W2 冒烟是<strong>部署管线验证</strong>（分解引擎端到端跑通、产出结构合法动作），<strong>不是动作语义正确性验证</strong>；W3 换独立变量（帧）复测后把初判"原地抖动出不了动作"修正为"帧内有连贯位移、但帧无关"——结论从"模型坏"变成"单帧 conditioning 的能力边界"，方向完全不同。<strong>demo 因此锚定已验证 works 且帧敏感的 reasoning 侧</strong>，policy 动作链定位为「部署打通 + 帧无关边界」。
+    第一阶段在 CR2-8B 上得到"量化几乎免费、2B 显著掉点"（主页结论 2）；这里把同一把尺子（同帧同题 n=184）量到 Cosmos3-Edge：<strong>新一代 2B reasoner（42.4%）显著输给上一代 8B 的量化版（INT4 50.5% / INT8 47.8%）</strong>。两个独立模型家族同向 ⇒ 该结论不是 CR2 单家的偶然，强化了部署策略"激进量化 + 保留大模型"。
   </div>
   <h3>诚实的边界</h3>
   <ul>
     <li><strong>Reasoner 侧</strong>：n=184 ⇒ MDE ≈ 7 pts，更小差异测不出；驾驶域标注是 clip 级事件聚类、train split 无法排除训练见过（同主页 §1.11 边界，对跨代对照不受影响）。</li>
-    <li><strong>Policy 侧</strong>：冒烟只验管线跑通与输出格式，<strong>不验动作语义正确性</strong>；帧无关是 turnkey 单帧路径的边界，不代表 Cosmos3 policy 在 state-conditioned / 多帧参考实现下的能力。</li>
-    <li><strong>无 AV 轨迹输出</strong>：inverse-dynamics 仅 PyTorch、非 turnkey，未部署；ADE/FDE 属 VLA 轨道（主页结论 7）。</li>
     <li><strong>帧必须缩到长边 448</strong>：原生 1920×1088 = 2040 token/帧，6 帧 12240 &gt; 引擎 maxInputLen 2048 会失败；缩后与 n=184 同口径。</li>
   </ul>
+  <p style="font-size:13px;color:var(--muted)">Cosmos3-Edge 的部署打通（六道 JetPack 6.2 兼容墙、分解注意力/RoPE 补丁）、policy 动作链（DROID 机器人操作，部署打通 + conditioning 弱耦合边界）见独立仓 <a href="https://github.com/ranpin/cosmos3-edge" target="_blank" rel="noopener" style="color:var(--accent)">cosmos3-edge</a>。</p>
 
   <footer>
-    源码与完整文档：<a href="https://github.com/ranpin/alpamayo-edge" target="_blank">github.com/ranpin/alpamayo-edge</a><br>
-    Phase W 工程记录 <code>docs/PROBLEMS.md §K/§L</code> · 评测 <code>eval/cosmos3/README.md</code> · 设备脚本 <code>scripts/orin/README.md</code> · 第一阶段 <a href="index.html">CR2-8B 量化部署</a>
+    源码与完整文档：<a href="https://github.com/ranpin/alpamayo-edge" target="_blank">github.com/ranpin/alpamayo-edge</a> · Cosmos3-Edge 部署与 policy：<a href="https://github.com/ranpin/cosmos3-edge" target="_blank">github.com/ranpin/cosmos3-edge</a><br>
+    跨代评测 <code>eval/cosmos3/README.md</code> · 第一阶段 <a href="index.html">CR2-8B 量化部署</a>
   </footer>
 </div>
 
-<div id="lb"><span class="hint">点击任意处关闭 · Esc</span><img alt="放大图"></div>
+<div id="lb" style="position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:2000;cursor:zoom-out;padding:24px"><span style="position:fixed;top:14px;right:18px;color:#fff;font-size:13px;opacity:.85">点击任意处关闭 · Esc</span><img alt="放大图" style="max-width:96vw;max-height:90vh;width:auto;height:auto;border-radius:6px;box-shadow:0 10px 48px rgba(0,0,0,.6);background:#fff"></div>
 <script>
 (function(){
   var lb=document.getElementById('lb'), im=lb.querySelector('img');
