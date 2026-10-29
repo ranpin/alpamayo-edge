@@ -19,7 +19,10 @@
 .r1t-legend i{display:inline-block;width:22px;height:4px;border-radius:2px;margin-right:7px;vertical-align:middle}
 .r1t-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:18px}
 .r1t-card{background:var(--ds-panel);border:1px solid var(--ds-border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.r1t-figwrap{position:relative}
 .r1t-fig{width:100%;height:auto;display:block;background:var(--ds-bg)}
+.r1t-seq{position:absolute;top:10px;right:10px;min-width:31px;height:31px;padding:0 5px;border-radius:16px;background:var(--ds-accent);color:#fff;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 6px rgba(0,0,0,.55)}
+.r1t-seqsm{display:inline-flex;min-width:19px;height:19px;padding:0 3px;border-radius:10px;background:var(--ds-accent);color:#fff;font-weight:700;font-size:11.5px;align-items:center;justify-content:center;vertical-align:middle;margin-right:6px}
 .r1t-cap{padding:12px 15px 14px;display:flex;flex-direction:column;gap:9px}
 .r1t-captop{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .r1t-tag{font-size:12px;padding:2px 11px;border-radius:11px;background:var(--ds-accent-soft);color:var(--ds-accent-strong);border:1px solid var(--ds-accent-ring);white-space:nowrap;font-weight:600}
@@ -57,7 +60,7 @@
   <section class="ds-section">
     <h2 class="ds-h2">演示</h2>
     <p>每张图为一个真实驾驶片段的<b>前视相机原始帧</b>，叠加两条 6.4 秒未来轨迹：<b style="color:#16a34a">GT 真值（绿）</b>取自数据集 egomotion 标签、<b style="color:var(--ds-accent)">Alpamayo-R1 预测（蓝）</b>为 Orin 实机推理输出。两者都用该片段实测的鱼眼标定投影回图像平面，因此贴合实际路面。</p>
-    <p>卡片标签 <b>「6.4s 终点：前行 X m · 左/右偏 Y m」</b> 是该片段 <b>GT 轨迹在 6.4 秒预测窗末端</b>、相对自车 t₀ 位置的<b>位移分解</b>——前行 X m 为纵向分量、左/右偏 Y m 为横向分量，合起来描述<b>终点落在哪</b>（一个位移矢量的两个分量），<b>不是</b>「先直行 X m 再转弯」这类分段机动指令。卡片另标初速 v₀ 与 ADE@6.4s（误差指标的公式与口径见下方「评测结果」），以及模型同时产出的思维链（CoT）。</p>
+    <p>卡片标签 <b>「6.4s 终点：前行 X m · 左/右偏 Y m」</b> 是该片段 <b>GT 轨迹在 6.4 秒预测窗末端</b>、相对自车 t₀ 位置的<b>位移分解</b>——前行 X m 为纵向分量、左/右偏 Y m 为横向分量，合起来描述<b>终点落在哪</b>（一个位移矢量的两个分量），<b>不是</b>「先直行 X m 再转弯」这类分段机动指令。卡片另标初速 v₀ 与 ADE@6.4s（误差指标的公式与口径见下方「评测结果」），以及模型同时产出的思维链（CoT）。每张图右上角的<b>序号 1–6</b> 按 ADE@6.4s 从好到差编排，与下方「评测结果」表逐行对应。</p>
     <div class="r1t-legend">
       <span><i style="background:#16a34a"></i>GT 真值轨迹</span>
       <span><i style="background:var(--ds-accent)"></i>Alpamayo-R1 预测</span>
@@ -91,11 +94,11 @@
   </footer>
 </div>
 <script>
-const DATA=[{"id":"ecafce84","turn":"左转","lat":31,"fwd":26,"v0":5.0,"ade3":0.34,"ade6":0.84,"fde":2.58,"cot":"Turn left due to green traffic light.","note":"CoT 正确识别「绿灯左转」→ 轨迹几乎完美贴合（本组最佳）","img":"assets/ecafce84.jpg"},{"id":"76f4a312","turn":"右转","lat":26,"fwd":35,"v0":11.7,"ade3":0.63,"ade6":1.57,"fde":4.1,"cot":"Change lanes to the right and slow to enter the right-turn lane due to the upcoming intersection and the need to merge across the bike lane while ensuring the bike lane is clear and maintaining clearance from the curb and parked vehicles.","note":"CoT 识别「并入右转道并减速」→ 贴合良好","img":"assets/76f4a312.jpg"},{"id":"46003675","turn":"左转","lat":13,"fwd":48,"v0":13.8,"ade3":0.73,"ade6":2.71,"fde":6.48,"cot":"Keep lane to continue driving since no critical agent needs attention.","note":"CoT 说「保持车道」，轨迹却过度左转 —— 思维链与动作脱节","img":"assets/46003675.jpg"},{"id":"1f7ef408","turn":"右转","lat":22,"fwd":44,"v0":12.9,"ade3":0.98,"ade6":3.01,"fde":9.13,"cot":"Keep distance to the lead vehicle because it is directly ahead in the same lane.","note":"CoT 只盯「跟前车」→ 对右转欠转、冲得偏远","img":"assets/1f7ef408.jpg"},{"id":"fa83bcb8","turn":"右转","lat":44,"fwd":64,"v0":14.7,"ade3":1.25,"ade6":4.57,"fde":14.59,"cot":"Slow down due to the yield sign at the merge.","note":"CoT 关注「让行标志减速」→ 高速右转欠转","img":"assets/fa83bcb8.jpg"},{"id":"058bf960","turn":"左转","lat":16,"fwd":27,"v0":6.6,"ade3":1.37,"ade6":5.9,"fde":18.76,"cot":"Keep distance to the lead vehicle because it is directly ahead in the same lane.","note":"CoT 只盯「跟前车」→ 漏判即将到来的左转（蓝线直冲，本组最差）","img":"assets/058bf960.jpg"}];
+const DATA=[{"id":"ecafce84","turn":"左转","lat":31,"fwd":26,"v0":5.0,"ade3":0.34,"ade6":0.84,"fde":2.58,"cot":"Turn left due to green traffic light.","note":"CoT 正确识别「绿灯左转」→ 轨迹几乎完美贴合（本组最佳）","img":"assets/ecafce84.jpg","seq":1},{"id":"76f4a312","turn":"右转","lat":26,"fwd":35,"v0":11.7,"ade3":0.63,"ade6":1.57,"fde":4.1,"cot":"Change lanes to the right and slow to enter the right-turn lane due to the upcoming intersection and the need to merge across the bike lane while ensuring the bike lane is clear and maintaining clearance from the curb and parked vehicles.","note":"CoT 识别「并入右转道并减速」→ 贴合良好","img":"assets/76f4a312.jpg","seq":2},{"id":"46003675","turn":"左转","lat":13,"fwd":48,"v0":13.8,"ade3":0.73,"ade6":2.71,"fde":6.48,"cot":"Keep lane to continue driving since no critical agent needs attention.","note":"CoT 说「保持车道」，轨迹却过度左转 —— 思维链与动作脱节","img":"assets/46003675.jpg","seq":3},{"id":"1f7ef408","turn":"右转","lat":22,"fwd":44,"v0":12.9,"ade3":0.98,"ade6":3.01,"fde":9.13,"cot":"Keep distance to the lead vehicle because it is directly ahead in the same lane.","note":"CoT 只盯「跟前车」→ 对右转欠转、冲得偏远","img":"assets/1f7ef408.jpg","seq":4},{"id":"fa83bcb8","turn":"右转","lat":44,"fwd":64,"v0":14.7,"ade3":1.25,"ade6":4.57,"fde":14.59,"cot":"Slow down due to the yield sign at the merge.","note":"CoT 关注「让行标志减速」→ 高速右转欠转","img":"assets/fa83bcb8.jpg","seq":5},{"id":"058bf960","turn":"左转","lat":16,"fwd":27,"v0":6.6,"ade3":1.37,"ade6":5.9,"fde":18.76,"cot":"Keep distance to the lead vehicle because it is directly ahead in the same lane.","note":"CoT 只盯「跟前车」→ 漏判即将到来的左转（蓝线直冲，本组最差）","img":"assets/058bf960.jpg","seq":6}];
 const grid=document.getElementById('grid');
 DATA.forEach(d=>{
   const c=document.createElement('div');c.className='r1t-card';
-  c.innerHTML=`<img class="r1t-fig" src="${d.img}" alt="${d.id} 真实帧轨迹叠加：GT 与 R1 预测" loading="lazy">
+  c.innerHTML=`<div class="r1t-figwrap"><img class="r1t-fig" src="${d.img}" alt="示例${d.seq} ${d.id} 真实帧轨迹叠加：GT 与 R1 预测" loading="lazy"><span class="r1t-seq">${d.seq}</span></div>
    <div class="r1t-cap">
     <div class="r1t-captop"><span class="r1t-tag">6.4s 终点：前行 ${d.fwd}m · ${d.turn==='右转'?'右偏':'左偏'} ${d.lat}m</span>
       <span class="r1t-metrics">v₀=<b>${d.v0}</b> m/s · ADE@6.4s=<b>${d.ade6}</b> m</span></div>
@@ -106,10 +109,10 @@ DATA.forEach(d=>{
 });
 const tbl=document.getElementById('tbl');
 const best=Math.min(...DATA.map(d=>d.ade6)),worst=Math.max(...DATA.map(d=>d.ade6));
-let h='<thead><tr><th class="l">片段</th><th>转向</th><th>v₀ (m/s)</th><th>ADE@3s (m)</th><th>ADE@6.4s (m)</th><th>FDE@6.4s (m)</th></tr></thead><tbody>';
+let h='<thead><tr><th class="l">示例</th><th>转向</th><th>v₀ (m/s)</th><th>ADE@3s (m)</th><th>ADE@6.4s (m)</th><th>FDE@6.4s (m)</th></tr></thead><tbody>';
 DATA.forEach(d=>{
   const cls=d.ade6===best?'r1t-best':(d.ade6===worst?'r1t-worst':'');
-  h+=`<tr><td class="l"><code>${d.id}</code></td><td>${d.turn}</td><td>${d.v0}</td><td>${d.ade3}</td><td class="${cls}">${d.ade6}</td><td>${d.fde}</td></tr>`;
+  h+=`<tr><td class="l"><span class="r1t-seqsm">${d.seq}</span><code>${d.id}</code></td><td>${d.turn}</td><td>${d.v0}</td><td>${d.ade3}</td><td class="${cls}">${d.ade6}</td><td>${d.fde}</td></tr>`;
 });
 h+='</tbody>';tbl.innerHTML=h;
 </script>
