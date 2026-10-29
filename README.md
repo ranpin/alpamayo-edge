@@ -6,6 +6,7 @@
 能耗、内存、可靠性五轴证据，零预算、零训练、全 Orin 实测。
 
 🎬 **在线 Demo（Cosmos3-Edge 2B 驾驶场景理解 · 真实 Orin 推理输出）**：<https://ranpin.github.io/alpamayo-edge/cosmos3-demo/>
+🛣️ **在线 Demo（Alpamayo-R1 轨迹预测 · 真实帧叠加 · 真实 Orin 推理输出）**：<https://ranpin.github.io/alpamayo-edge/r1-trajectory/>
 
 📊 **呈现站点（论文式）**：[第一阶段 · CR2-8B 量化部署（图 1–21 / 表 1–13）](https://ranpin.github.io/alpamayo-edge/)
 ｜ [Phase W · Cosmos3-Edge 部署（图 W1–W2 / 表 W1–W3）](https://ranpin.github.io/alpamayo-edge/cosmos3.html)
