@@ -56,11 +56,12 @@
 
   <section class="ds-section">
     <h2 class="ds-h2">演示</h2>
-    <p>每张图为一个真实驾驶片段的<b>前视相机原始帧</b>，叠加两条 6.4 秒未来轨迹：<b style="color:#16a34a">GT 真值（绿）</b>取自数据集 egomotion 标签、<b style="color:var(--ds-accent)">Alpamayo-R1 预测（蓝）</b>为 Orin 实机推理输出。两者都用该片段实测的鱼眼标定投影回图像平面，因此贴合实际路面。卡片下方标注该例的转向、初速、轨迹误差，以及模型同时产出的思维链（CoT）。</p>
+    <p>每张图为一个真实驾驶片段的<b>前视相机原始帧</b>，叠加两条 6.4 秒未来轨迹：<b style="color:#16a34a">GT 真值（绿）</b>取自数据集 egomotion 标签、<b style="color:var(--ds-accent)">Alpamayo-R1 预测（蓝）</b>为 Orin 实机推理输出。两者都用该片段实测的鱼眼标定投影回图像平面，因此贴合实际路面。</p>
+    <p>卡片标签 <b>「6.4s 终点：前行 X m · 左/右偏 Y m」</b> 是该片段 <b>GT 轨迹在 6.4 秒预测窗末端</b>、相对自车 t₀ 位置的<b>位移分解</b>——前行 X m 为纵向分量、左/右偏 Y m 为横向分量，合起来描述<b>终点落在哪</b>（一个位移矢量的两个分量），<b>不是</b>「先直行 X m 再转弯」这类分段机动指令。卡片另标初速 v₀ 与 ADE@6.4s（误差指标的公式与口径见下方「评测结果」），以及模型同时产出的思维链（CoT）。</p>
     <div class="r1t-legend">
       <span><i style="background:#16a34a"></i>GT 真值轨迹</span>
       <span><i style="background:var(--ds-accent)"></i>Alpamayo-R1 预测</span>
-      <span style="color:var(--ds-muted)">ADE=平均位移误差 · FDE=终点位移误差</span>
+      <span style="color:var(--ds-muted)">ADE / FDE 误差公式与口径见下方「评测结果」</span>
     </div>
     <div class="r1t-grid" id="grid"></div>
   </section>
@@ -69,7 +70,7 @@
     <h2 class="ds-h2">评测结果</h2>
     <p>下表为 6 个片段上 R1 预测相对 GT 的逐点欧氏位移误差（ego 系，按 ADE@6.4s 升序）。<b>核心观察：R1 的思维链与其轨迹精度强相关</b>——当 CoT 正确识别出机动（如「绿灯左转」「并入右转道」）时轨迹几乎完美贴合（ADE 低至 0.84m）；当 CoT 退化为泛化的「跟前车」时，模型会漏判或欠判即将到来的转弯（最差例蓝线直冲、绿线左拐，ADE 5.90m）。</p>
     <div class="r1t-tablewrap"><table class="r1t-table" id="tbl"></table></div>
-    <div class="r1t-cal"><b>口径与诚实边界</b>：① 单噪声种子（seed=5、temperature=0）确定性推理，<b>非</b>官方 minADE6（6 采样取最优）；② 6 个片段均为「6.4s 预测窗内明显转弯」的困难样本、非随机抽样，误差天然高于官方全集；③ 数据源 dgural 公开样本的 README 明确声明「不适合 benchmarking / 统计分析」——本页数字仅为<b>逐例行为展示</b>，不构成代表性精度结论；④ 官方 Alpamayo-R1 在 644 clip 上报告 minADE6@6.4s≈0.79m，口径不同，不可与本表直接比较。</div>
+    <div class="r1t-cal"><b>误差公式</b>：ADE@T（平均位移误差）= 预测与 GT 在前 T 秒每个 waypoint 上欧氏距离的均值 = (1/N)·Σᵢ‖predᵢ − gtᵢ‖；FDE@T（终点位移误差）= 第 T 秒末 waypoint 的欧氏距离 = ‖pred_N − gt_N‖。@3s 取前 30 点、@6.4s 取全部 64 点（10 Hz）；均在 t₀ 时刻 ego 系（自车为原点、x 前 y 左）计算，单位米。<br><b>口径与诚实边界</b>：① 单噪声种子（seed=5、temperature=0）确定性推理，<b>非</b>官方 minADE6（6 采样取最优）；② 6 个片段均为「6.4s 预测窗内明显转弯」的困难样本、非随机抽样，误差天然高于官方全集；③ 数据源 dgural 公开样本的 README 明确声明「不适合 benchmarking / 统计分析」——本页数字仅为<b>逐例行为展示</b>，不构成代表性精度结论；④ 官方 Alpamayo-R1 在 644 clip 上报告 minADE6@6.4s≈0.79m，口径不同，不可与本表直接比较。</div>
   </section>
 
   <section class="ds-section">
@@ -96,7 +97,7 @@ DATA.forEach(d=>{
   const c=document.createElement('div');c.className='r1t-card';
   c.innerHTML=`<img class="r1t-fig" src="${d.img}" alt="${d.id} 真实帧轨迹叠加：GT 与 R1 预测" loading="lazy">
    <div class="r1t-cap">
-    <div class="r1t-captop"><span class="r1t-tag">${d.turn} ${d.lat}m · 前行 ${d.fwd}m</span>
+    <div class="r1t-captop"><span class="r1t-tag">6.4s 终点：前行 ${d.fwd}m · ${d.turn==='右转'?'右偏':'左偏'} ${d.lat}m</span>
       <span class="r1t-metrics">v₀=<b>${d.v0}</b> m/s · ADE@6.4s=<b>${d.ade6}</b> m</span></div>
     <div class="r1t-cot">“${d.cot}”</div>
     <div class="r1t-note">${d.note}</div>
