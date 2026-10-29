@@ -5,7 +5,7 @@
 **Cosmos3-Edge**（4B 世界动作模型，Phase W 已收官）；INT4(AWQ)/INT8(SmoothQuant) 量化，精度、延迟、
 能耗、内存、可靠性五轴证据，零预算、零训练、全 Orin 实测。
 
-🎬 **在线 Demo（Cosmos3-Edge 2B 驾驶场景理解 · 真实 Orin 推理输出）**：<https://ranpin.github.io/alpamayo-edge/cosmos3-demo/>
+🎬 **在线 Demo（Cosmos3-Edge 2B 驾驶场景理解 · 真实 Orin 推理输出）**：<https://ranpin.github.io/cosmos3-edge/cosmos3-demo/>（demo 与 policy 动作链评测已拆至独立仓 [cosmos3-edge](https://github.com/ranpin/cosmos3-edge)）
 🛣️ **在线 Demo（Alpamayo-R1 轨迹预测 · 真实帧叠加 · 真实 Orin 推理输出）**：<https://ranpin.github.io/alpamayo-edge/r1-trajectory/>
 
 📊 **呈现站点（论文式）**：[第一阶段 · CR2-8B 量化部署（图 1–21 / 表 1–13）](https://ranpin.github.io/alpamayo-edge/)
@@ -96,8 +96,8 @@
 ```
 ├── docs/            结果报告 / 方法论 / 问题记录(A–L) / 构建日志 / 规划
 │   ├── figures/       图片唯一真源（21 张）
-│   └── site/          呈现站点源码（index.html + cosmos3-demo/；部署于 gh-pages 分支）
-├── eval/            评测资产：n=210 基准、n=184 驾驶域基准、分辨率 Pareto、VLA 闸门、roofline、kernel、cosmos3
+│   └── site/          呈现站点源码（index.html + cosmos3.html + r1-trajectory/；部署于 gh-pages 分支）
+├── eval/            评测资产：n=210 基准、n=184 驾驶域基准、分辨率 Pareto、VLA 闸门、roofline、kernel、cosmos3（reasoner 跨代）
 ├── cloud/           Kaggle 免费云量化/导出管线
 ├── scripts/orin/    设备端脚本归档
 ├── configs/         设备环境配置（orin.env）
@@ -125,7 +125,7 @@
 | [docs/FINDINGS.md](docs/FINDINGS.md) | 选型背景（已定案） |
 | [eval/accuracy/benchmark/](eval/accuracy/benchmark/) | n=210 机器人域基准：manifest + 三方输出 + 打分脚本 |
 | [eval/accuracy/driving/](eval/accuracy/driving/) | **n=184 驾驶域基准**（§1.11）+ [pareto/](eval/accuracy/driving/pareto/) 分辨率 Pareto（§1.12） |
-| [eval/cosmos3/](eval/cosmos3/) | **Cosmos3-Edge（Phase W）**：reasoner n=184 跨代对比 + policy 动作链（W2 打通 / W3 帧无关边界，含 repro 脚本） |
+| [eval/cosmos3/](eval/cosmos3/) | **Cosmos3-Edge（Phase W）**：reasoner n=184 跨代对比（policy 动作链评测已拆至 [cosmos3-edge](https://github.com/ranpin/cosmos3-edge) 仓） |
 | [eval/vla_gate4/](eval/vla_gate4/) | Alpamayo-1.5-10B 可行性闸门：README + 实测结果 |
 | [scripts/orin/](scripts/orin/) | 设备端脚本归档（构建/评测/功耗/闸门 4） |
 | [cloud/](cloud/README.md) | Kaggle 免费云量化/导出管线 |
@@ -136,7 +136,7 @@
 |---|---|---|---|
 | 机器人域 MC 基准 | n=210（robovqa 110 + robofail 100） | 官方 Cosmos-Reason1-Benchmark（repo 自带视频的全部） | 精度主基准（§1.2） |
 | **驾驶域 MC 基准** | n=184（8 类 × 23，答案字母配平） | NVIDIA PhysicalAI-AV `ood_reasoning`（人工核验标注） | 驾驶域精度（§1.11）+ 分辨率 Pareto（§1.12） |
-| Cosmos3-Edge 评测 | n=184（同驾驶域题）+ policy 动作链 | 同上（唯一变量=模型）+ DROID 真实帧 | 跨代对比 + policy 帧无关边界（结论 8） |
+| Cosmos3-Edge 评测 | n=184（同驾驶域题） | 同上（唯一变量=模型） | 跨代对比（结论 8）；policy 动作链评测已拆至 [cosmos3-edge](https://github.com/ranpin/cosmos3-edge) 仓 |
 | CVM 轨迹基线 | 合成占位 | legacy 项目迁移 | VLA 轨道对照（暂缓） |
 
 ## 快速复现（Orin，量化产物已在设备）
@@ -171,7 +171,7 @@ bash $A/scripts/run_pareto.sh int4_1080 $A/engines/int4_len16384/llm \
   ⇒ 不声称"未见数据上的绝对能力"，跨精度对照不受影响。
 - 无轨迹预测输出（ADE/FDE 属 VLA 轨道，受阻点见结论 7）；无多相机实测（token 账见站点 §1.10）。
 - Cosmos3-Edge policy 动作链是**部署打通 + 单帧帧无关边界**（非动作语义正确性验证，PROBLEMS §L）；
-  demo 因此锚定 reasoning 侧，不展示 policy 动作。
+  其评测脚本与证据已拆至 [cosmos3-edge](https://github.com/ranpin/cosmos3-edge) 仓，demo 因此锚定 reasoning 侧，不展示 policy 动作。
 - INT4@原生 1080p 有 16% 空输出的运行时缺陷（INT8 全干净，PROBLEMS J1，机理未明）。
 
 ## 许可与致谢
