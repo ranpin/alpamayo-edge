@@ -4,6 +4,9 @@
 > 输出 `output_text`（VLM 思维链）+ `output_trajectory` `[64,2]` = `(accel, kappa)`。
 > **minADE 定量评测已做**：chunk 3116 分层抽 **18 clips × 6 seeds**，
 > **minADE6@6.4s = 0.804 m，与官方基线 0.821 m 一致（−2.1%，落在我们 95% CI 内）**。
+> **跨代对比（2026-10-30）**：1.5 经 repack 管线（纯 config 改写、不动权重）跑上 Orin，同口径
+> **R1 胜 1.5（0.804 vs 1.815 m，+126%）**，且「1.5 需要导航引导」假设被语义+量化两个独立测量否定——
+> 详见 [`crossgen_a15.md`](crossgen_a15.md)。
 > 墙的打通过程见 [`../../docs/PROBLEMS.md`](../../docs/PROBLEMS.md) **§M**。
 > ⚠️ 输入帧与 GT 来自 **gated + license:other** 数据集，**只在机上跑，帧与逐 clip 原始数据不入库**。
 

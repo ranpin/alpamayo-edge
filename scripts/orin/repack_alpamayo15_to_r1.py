@@ -13,6 +13,15 @@
 - vlm_name_or_path=nvidia/Cosmos-Reason2-8B 保留（1.5 真实 backbone，加载器
   凭它取 VLM text config，设备侧需 HF_ENDPOINT=hf-mirror）；include_camera_ids
   等 3 个 1.5-only 键保留（TRTEdge 不消费，最小 diff 原则）。
+- 🔴 tokenizer 陷阱（2026-10-30 实测）：若 vlm_name_or_path 指向本地 processor 目录
+  （如 gate4 的 alpamayo_gate4/processor），导出进引擎目录的 chat template 不认识
+  {"type":"image"} 内容（tokenizer_config 无 image_pad/vision_start/vision_end），
+  推理时全部请求报 EDGELLM_BAD_MEDIA_COUNT（"pad count is smaller than this
+  request's media count"）。修复 = 引擎建成后把 R1 引擎 llm/ 的 tokenizer.json /
+  tokenizer_config.json / processed_chat_template.json 三件拷入 1.5 引擎 llm/ 覆盖
+  （两代同词表 151936、同架构，R1 的即 Qwen3-VL-8B-Instruct tokenizer）；这也让
+  跨代对比更受控——两代用完全相同的 tokenizer/chat template，唯一变量=权重。
+  或：导出前把 vlm_name_or_path 改为 Qwen/Qwen3-VL-8B-Instruct 再导出（走 HF 抓取）。
 
 用法（在有权重的设备上）：python3 repack_alpamayo15_to_r1.py <1.5_ckpt_dir>
 产出 config.json.orig 备份；幂等（已是 r1 格式则跳过）。

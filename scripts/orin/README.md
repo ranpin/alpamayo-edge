@@ -3,8 +3,8 @@
 从两台 Orin 归档到仓库的原始脚本。设备上的副本在各自的
 `chenrunbin/alpamayo-edge/scripts/`（见 [`../../docs/device_layout.md`](../../docs/device_layout.md)）。
 
-本目录共 30 个脚本，按阶段分四节：**第一阶段（CR2-8B 量化部署）** → **Phase W（Cosmos3-Edge）**
-→ **Phase R（Alpamayo-R1，进行中）** → **其余（按用途索引）**。
+本目录共 27 个脚本，按阶段分四节：**第一阶段（CR2-8B 量化部署）** → **Phase W（Cosmos3-Edge）**
+→ **Phase R（Alpamayo-R1，进行中，含 1.5 跨代）** → **其余（按用途索引）**。
 
 ## 第一阶段：CR2-8B 量化部署
 
@@ -76,6 +76,17 @@ TensorScatter，需 TRT≥11）。最小验证 = **只导 + 只建 action 单引
 3. **`kv_cache_update` 的 `cache_indices` 是运行期张量输入**（导出 dummy=3027、dim0 动态）
    ⇒ trace 期值未知，`torch.cat` 静态切片不可用，改用 `scatter` 动态写入（索引仅 `[B,H,S,D]`，
    比 gather+mask 的 `[B,H,C,D]` 省 ~C/S 倍）。
+
+### 跨代：Alpamayo-1.5 repack + 导航引导检验（2026-10-30）
+
+1.5 经 repack 跑上 Orin、与 R1 同口径 minADE 对比、导航引导假设否定，结论见
+[`../../eval/r1/crossgen_a15.md`](../../eval/r1/crossgen_a15.md)。
+
+| 脚本 | 设备 | 作用 | 产出/结论 |
+|---|---|---|---|
+| `repack_alpamayo15_to_r1.py` | goat | 把 1.5 checkpoint 重打包为 `alpamayo_r1` 格式（纯 config 改写、不动权重、幂等、留 .orig） | 1.5 走 R1 全链；docstring 含 🔴 tokenizer 陷阱（须拷 R1 引擎 tokenizer 三件套，否则 EDGELLM_BAD_MEDIA_COUNT） |
+| `derive_a15_oracle_nav.py` | goat | 从 GT 未来轨迹反推 oracle nav（按航向变化分 RIGHT/LEFT/STRAIGHT），建 `io/r1_eval_in18_nav.json` | 本批 6 RIGHT + 12 STRAIGHT + 0 LEFT |
+| `a15_nav_eval.sh` | goat | 1.5 6-seed 推理 + merge + compute_minade（nav/无nav 共用，入参区分） | oracle nav 仅 −1% within-noise ⇒ 导航假设否定 |
 
 ## 其余脚本（按用途索引）
 
