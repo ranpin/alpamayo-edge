@@ -76,6 +76,23 @@
     <p>下表为 6 个片段上 R1 预测相对 GT 的逐点欧氏位移误差（ego 系，按 ADE@6.4s 升序）。<b>核心观察：R1 的思维链与其轨迹精度强相关</b>——当 CoT 正确识别出机动（如「绿灯左转」「并入右转道」）时轨迹几乎完美贴合（ADE 低至 0.84m）；当 CoT 退化为泛化的「跟前车」时，模型会漏判或欠判即将到来的转弯（最差例蓝线直冲、绿线左拐，ADE 5.90m）。</p>
     <div class="r1t-tablewrap"><table class="r1t-table" id="tbl"></table></div>
     <div class="r1t-cal"><b>误差公式</b>：ADE@T（平均位移误差）= 预测与 GT 在前 T 秒每个 waypoint 上欧氏距离的均值 = (1/N)·Σᵢ‖predᵢ − gtᵢ‖；FDE@T（终点位移误差）= 第 T 秒末 waypoint 的欧氏距离 = ‖pred_N − gt_N‖。@3s 取前 30 点、@6.4s 取全部 64 点（10 Hz）；均在 t₀ 时刻 ego 系（自车为原点、x 前 y 左）计算，单位米。<br><b>口径与诚实边界</b>：① 单噪声种子（seed=5、temperature=0）确定性推理，<b>非</b>官方 minADE6（6 采样取最优）；② 6 个片段均为「6.4s 预测窗内明显转弯」的困难样本、非随机抽样，误差天然高于官方全集；③ 数据源 dgural 公开样本的 README 明确声明「不适合 benchmarking / 统计分析」——本页数字仅为<b>逐例行为展示</b>，不构成代表性精度结论；④ 官方 Alpamayo-R1 在 644 clip 上报告 minADE6@6.4s≈0.79m，口径不同，不可与本表直接比较。</div>
+    <div class="r1t-tablewrap" style="margin-top:20px"><table class="r1t-table" id="tbl2">
+      <caption>表 2 · Orin 部署与性能（Alpamayo-R1 FP16 · Jetson AGX Orin 64G · TRTEdge 0.10.1）</caption>
+      <thead><tr><th class="l">指标</th><th>数值</th><th class="l">口径 / 说明</th></tr></thead>
+      <tbody>
+      <tr><td class="l">引擎总大小</td><td>19.5 GB</td><td class="l">llm 14.15 + visual 1.08 + action 4.25，FP16 落盘</td></tr>
+      <tr><td class="l">引擎构建耗时</td><td>172 / 112 / 90 s</td><td class="l">llm / visual / action，自 ONNX 构建，一次性</td></tr>
+      <tr><td class="l">冷启动加载 + 初始化</td><td>36–47 s</td><td class="l">进程启动 → CUDA graph 捕获（含引擎反序列化）</td></tr>
+      <tr><td class="l">单请求端到端</td><td>5.0 s</td><td class="l">warmup 后 3 次均值（短 CoT 示例片段）</td></tr>
+      <tr><td class="l">├ VLM prefill</td><td>1.73 s</td><td class="l">3006 输入 token，1740 tok/s</td></tr>
+      <tr><td class="l">├ CoT 解码</td><td>1.82 s</td><td class="l">19 token，10.4 tok/s（CoT 越长此段越长）</td></tr>
+      <tr><td class="l">└ 动作专家（扩散）</td><td>0.60 s</td><td class="l">扩散轨迹头；端到端余量为预处理与调度</td></tr>
+      <tr><td class="l">批量（6 clip）均值</td><td>5.7 s/请求</td><td class="l">含长 CoT 片段</td></tr>
+      <tr><td class="l">运行峰值统一内存</td><td>25.5 GB</td><td class="l">cuda_free_memory_delta，含 KV cache/激活/workspace；引擎驻留 19.5 GB</td></tr>
+      <tr><td class="l">推理功耗</td><td>32.6 W</td><td class="l">模块总功耗（GPU_SOC 31.7 + CPU_CV 0.9），GPU 利用率 82%</td></tr>
+      </tbody>
+    </table></div>
+    <div class="r1t-cal"><b>性能口径</b>：2026-10-30 测于 Jetson AGX Orin 64G（JetPack 6.2 / TRTEdge 0.10.1），输入为 dgural 公开样本帧（16 帧 + ego 历史），seed=5 / temperature=0 确定性推理。端到端为 warmup 后单请求计时、冷启动加载单列；三段拆解来自 TRT profiling，与端到端之差为预处理与调度开销，其中 CoT 解码随输出 token 数线性变化。功耗为 tegrastats 对 6 请求批量段的均值（模块总功耗 = VDD_GPU_SOC + VDD_CPU_CV）；内存为单请求峰值。全部为实机实测。</div>
   </section>
 
   <section class="ds-section">
