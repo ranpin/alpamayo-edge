@@ -22,6 +22,12 @@ Alpamayo-R1（AV 轨迹预测）。零预算、零训练、全 Orin 实测。
 7. **Alpamayo-R1 全链跑通、minADE 与官方基线一致**——minADE6@6.4s = 0.804 m vs 官方 0.821 m（落在 95% CI 内）。
 8. **Cosmos3-Edge 跨代验证「缩小不免费、量化几乎免费」**——2B reasoner n=184 驾驶域 42.4%，显著输给上一代 8B 量化版（详见 [cosmos3-edge](https://github.com/ranpin/cosmos3-edge) 与[跨代对比](https://ranpin.github.io/alpamayo-edge/cosmos3.html)）。
 
+## 快速开始
+
+量化构建与 Orin 复现的完整命令见 [docs/orin_build_notes.md](docs/orin_build_notes.md)；评测资产
+（n=210 / n=184 驾驶域基准、分辨率 Pareto、VLA 闸门等，各带 README）在 `eval/`。需 Jetson AGX Orin
+实机（32GB），无消费级一键入口。
+
 ## 仓库布局
 
 ```
