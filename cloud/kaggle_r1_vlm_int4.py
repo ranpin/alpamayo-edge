@@ -29,6 +29,12 @@
 #   /kaggle/working/TRTEdge (v1's errored run left the ~100MB clone in kernel output, making
 #   `kaggle kernels output` unusably slow; the run log is retrievable from the API's inline
 #   `log` field: GET /api/v1/kernels/output?userName=..&kernelSlug=..).
+# v3 (2026-11-02): v2 passed pip/patches/ENV_OK/R1-download but died fetching the Qwen tokenizer
+#   files — hub 1.x `hf download` misparses `--include "*.json" "*.txt"` (second pattern leaks
+#   into positional filenames; it tried to fetch a literal "*.txt"). Fix: snapshot_download
+#   Python API for both fetches; ENV_OK gate now also asserts CUDA compute works (torch resolved
+#   to a cu130 build on T4); except re-raises so failures surface as kernel ERROR instead of a
+#   misleading COMPLETE (v2's swallowed exit was only caught because the sentinel watched both).
 import os, subprocess, glob, shutil, json, sys
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
@@ -132,14 +138,19 @@ os.chdir("/kaggle/working")
 subprocess.run("nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader", shell=True)
 # v2 early gate: source tree must import and versions must match goat's export env
 # (fails fast BEFORE the 22GB download if the no-install bypass is broken)
-sh("""python -c 'import tensorrt_edgellm, torch, transformers; print("ENV_OK trtedge", tensorrt_edgellm.__version__, "torch", torch.__version__, "tfm", transformers.__version__)'""")
+# v3: also assert real CUDA compute — torch resolved to a cu130 build on T4 (sm_75)
+sh("""python -c 'import tensorrt_edgellm, torch, transformers; assert torch.cuda.is_available(), "CUDA unavailable"; x = torch.randn(64, 64, device="cuda"); print("ENV_OK trtedge", tensorrt_edgellm.__version__, "torch", torch.__version__, "tfm", transformers.__version__, "cuda_matmul", float((x @ x).sum()))'""")
 
 ok = False
 try:
-    # 3) Downloads — both public, no token
-    sh(f"hf download nvidia/Alpamayo-R1-10B --local-dir {R1_DIR}")
+    # 3) Downloads — both public, no token. v3: Python API instead of `hf` CLI —
+    #    hub 1.x misparses `--include "*.json" "*.txt"` (second pattern leaks into
+    #    positional filenames -> tried to fetch a literal "*.txt" -> v2 failure).
+    from huggingface_hub import snapshot_download
+    snapshot_download("nvidia/Alpamayo-R1-10B", local_dir=R1_DIR)
     df("after-r1-download")
-    sh(f'hf download Qwen/Qwen3-VL-8B-Instruct --include "*.json" "*.txt" --local-dir {QWEN_FILES}')
+    snapshot_download("Qwen/Qwen3-VL-8B-Instruct", allow_patterns=["*.json", "*.txt"],
+                      local_dir=QWEN_FILES)
 
     # 4) Repack: vlm.* -> strip prefix; CR2 config template + R1 vocab; Qwen3-VL tokenizer files
     import torch  # noqa: F401  (safetensors.torch backend)
@@ -239,6 +250,7 @@ try:
     ok = True
 except Exception as e:
     print("R1_VLM_INT4_FAILED:", repr(e), flush=True)
+    raise  # v3: surface as kernel ERROR — v2 swallowed the exit and Kaggle logged COMPLETE
 finally:
     # v2: ALWAYS drop the source clone — v1's errored run left it in kernel output,
     # making `kaggle kernels output` download the whole tree file-by-file
