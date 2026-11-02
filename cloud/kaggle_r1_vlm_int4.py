@@ -41,6 +41,14 @@
 #   against torch 2.13.0+cu130. Fix: uninstall torchaudio (audio unused here; the transformers
 #   availability guard then skips the import) + ENV_OK gate now imports both entry-point chains
 #   (quantize/export) so import-class landmines detonate BEFORE the 22GB download, not after.
+# v5 (2026-11-02): v4 cleared imports/downloads/repack and died in AWQ calibration — CUDA OOM
+#   (3.46GiB SDPA alloc). Mechanism: VLM + awq_lite forces the multimodal calibration path
+#   (_is_image_blind_calibration, BY DESIGN — text-only calibration "optimizes the image-token
+#   ranges away and the model degenerates on image input", so the multimodal recipe must stay);
+#   MMMU images go through the processor UNCAPPED, and torch 2.13 SDPA on T4 (sm_75) has only
+#   the math backend (flash needs sm_80+), materialising S^2 attention over multi-k visual-token
+#   sequences. Fix: patch D caps calibration images to ~400k px (~392 visual tokens) inside
+#   _multimodal_calib_dataloader — recipe intact, attention drops to tens of MB.
 import os, subprocess, glob, shutil, json, sys
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
@@ -136,12 +144,46 @@ _C_new = (
     '\n'
     '    os.makedirs(output_dir, exist_ok=True)\n'
 )
+# v5 patch D: cap calibration image resolution — torch 2.13 SDPA on T4 (sm_75) is
+# math-backend-only and materialises S^2; uncapped MMMU images OOM'd v4 (3.46GiB alloc).
+_D_old = (
+    '    batches: list[dict[str, Any]] = []\n'
+    '    for image, question in image_dataset():\n'
+    '        messages = [{'
+)
+_D_new = (
+    '    batches: list[dict[str, Any]] = []\n'
+    '    for image, question in image_dataset():\n'
+    '        # [edge-patch D] Cap calibration image resolution (~400k px -> ~392\n'
+    '        # visual tokens): torch 2.13 SDPA on T4 (sm_75) has only the math\n'
+    '        # backend and materialises S^2 attention; uncapped MMMU images explode\n'
+    '        # to multi-k visual-token sequences -> multi-GiB alloc -> OOM (v4).\n'
+    '        # Multimodal recipe stays intact (see _is_image_blind_calibration).\n'
+    '        try:\n'
+    '            from PIL import Image as _PILImage\n'
+    '            if isinstance(image, _PILImage.Image):\n'
+    '                _w, _h = image.size\n'
+    '                _CAP = 401408\n'
+    '                if _w * _h > _CAP:\n'
+    '                    _s = (_CAP / (_w * _h)) ** 0.5\n'
+    '                    image = image.resize((max(32, int(_w * _s)), max(32, int(_h * _s))))\n'
+    '                if not globals().get("_EDGE_D_LOGGED"):\n'
+    '                    globals()["_EDGE_D_LOGGED"] = True\n'
+    '                    print(f"[edge-patch D] image cap active: {_w}x{_h} -> {image.size}", flush=True)\n'
+    '            elif not globals().get("_EDGE_D_LOGGED"):\n'
+    '                globals()["_EDGE_D_LOGGED"] = True\n'
+    '                print(f"[edge-patch D] WARNING non-PIL image {type(image)} - cap NOT applied", flush=True)\n'
+    '        except Exception as _edge_e:\n'
+    '            print("[edge-patch] image cap skipped:", _edge_e, flush=True)\n'
+    '        messages = [{'
+)
 assert _src.count(_A_old) == 1, "PATCH A needle not found — TRTEdge v0.10.1 source drifted"
 assert _src.count(_B_old) == 1, "PATCH B needle not found"
 assert _src.count(_C_old) == 1, "PATCH C needle not found"
-open(QP, "w").write(_src.replace(_A_old, _A_new).replace(_B_old, _B_new).replace(_C_old, _C_new))
+assert _src.count(_D_old) == 1, "PATCH D needle not found"
+open(QP, "w").write(_src.replace(_A_old, _A_new).replace(_B_old, _B_new).replace(_C_old, _C_new).replace(_D_old, _D_new))
 subprocess.run(f"python -m py_compile {QP}", shell=True, check=True)
-print("[edge-patch] A(device_map)+B(to-dtype)+C(cpu-export) applied on v0.10.1", flush=True)
+print("[edge-patch] A(device_map)+B(to-dtype)+C(cpu-export)+D(image-cap) applied on v0.10.1", flush=True)
 
 os.environ["PYTHONPATH"] = "/kaggle/working/TRTEdge"
 os.chdir("/kaggle/working")
