@@ -18,8 +18,18 @@
 #     only the final tgz goes to /kaggle/working (pattern proven in kaggle_cosmos_only.py).
 #
 # PREREQ: Accelerator = GPU T4 x2, Internet = On.
-# RUN AS: pushed via `kaggle kernels push` (see kernel-metadata template in cloud/README).
-import os, subprocess, glob, shutil, json
+# RUN AS: pushed via `kaggle kernels push` (kernel-metadata.json committed in cloud/).
+#
+# v2 (2026-11-02): v1 ERRORed at 16s — `pip install '.[tools]'` died inside scikit-build-core's
+#   metadata step on Kaggle's Python 3.13 image (real error swallowed by pip -q: "No available
+#   output"). Fix: never build/install the TRTEdge package — pip-install the v0.10.1 tools-extra
+#   dependency pins directly and run from the source tree via PYTHONPATH (the wheel is
+#   python-only anyway: EDGELLM_PYTHON_ONLY_WHEEL=ON; __init__ reads _version.py, no dist-info
+#   needed); console scripts invoked via `python -c`. finally now ALWAYS removes
+#   /kaggle/working/TRTEdge (v1's errored run left the ~100MB clone in kernel output, making
+#   `kaggle kernels output` unusably slow; the run log is retrievable from the API's inline
+#   `log` field: GET /api/v1/kernels/output?userName=..&kernelSlug=..).
+import os, subprocess, glob, shutil, json, sys
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
@@ -42,10 +52,25 @@ def df(tag):
     subprocess.run("df -h /kaggle/working /tmp 2>/dev/null | sort -u", shell=True)
 
 
+def entry(ep, argv):
+    # v2: run console-script entry point "mod:fn" from the source tree (package not installed).
+    mod, fn = ep.split(":")
+    code = f"import sys; sys.argv = {argv!r}; from {mod} import {fn} as _m; _m()"
+    print("+", ep, " ".join(argv[1:]), flush=True)
+    subprocess.run([sys.executable, "-c", code], check=True)
+
+
 # 1) TRTEdge pinned to goat's runtime version
 df("start")
 sh("git clone --depth 1 --branch v0.10.1 https://github.com/NVIDIA/TensorRT-Edge-LLM.git /kaggle/working/TRTEdge")
-sh("cd /kaggle/working/TRTEdge && pip -q install '.[tools]'")
+# v2: exact v0.10.1 tools-extra pins (== goat export env), installed directly. The TRTEdge
+# package itself is NOT built (scikit-build-core metadata dies on Kaggle py3.13) — the source
+# tree + PYTHONPATH is the package. No -q: v1's real error was swallowed by it.
+sh("pip install --progress-bar off "
+   "torch==2.13.0 torchvision==0.28.0 transformers==5.14.1 accelerate huggingface-hub "
+   "onnx==1.19.0 onnxscript==0.7.1 onnx-graphsurgeon==0.6.1 safetensors==0.8.0 numpy==2.2.6 "
+   "nvidia-modelopt==0.45.0 datasets==5.0.0 peft==0.19.1 einops==0.8.2 tiktoken==0.13.0 "
+   "librosa==0.11.0 soundfile==0.14.0 tqdm==4.69.0 backoff 'cuda-python>=12.6,<14'")
 
 # 2) Same three patches as kaggle_cosmos_only.py (A needle updated for 0.10.1).
 #    Needles asserted unique so upstream drift can't silently skip a patch.
@@ -105,6 +130,9 @@ print("[edge-patch] A(device_map)+B(to-dtype)+C(cpu-export) applied on v0.10.1",
 os.environ["PYTHONPATH"] = "/kaggle/working/TRTEdge"
 os.chdir("/kaggle/working")
 subprocess.run("nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader", shell=True)
+# v2 early gate: source tree must import and versions must match goat's export env
+# (fails fast BEFORE the 22GB download if the no-install bypass is broken)
+sh("""python -c 'import tensorrt_edgellm, torch, transformers; print("ENV_OK trtedge", tensorrt_edgellm.__version__, "torch", torch.__version__, "tfm", transformers.__version__)'""")
 
 ok = False
 try:
@@ -192,14 +220,17 @@ try:
     # free the 22GB raw checkpoint — repack is verified complete
     shutil.rmtree(R1_DIR, ignore_errors=True)
 
-    # 5) Quantize (same CLI as proven CR2 run)
-    sh(f"tensorrt-edgellm-quantize llm --model_dir {REPACK} --output_dir {QCKPT} --quantization int4_awq")
+    # 5) Quantize (same CLI as proven CR2 run; v2: entry point via python -c)
+    entry("tensorrt_edgellm.scripts.quantize:main",
+          ["tensorrt-edgellm-quantize", "llm", "--model_dir", REPACK,
+           "--output_dir", QCKPT, "--quantization", "int4_awq"])
     print("QUANTIZE_OK", flush=True)
     df("after-quantize")
     shutil.rmtree(REPACK, ignore_errors=True)
 
     # 6) Export ONNX (KV capacity must match deployed alpamayo llm engine)
-    sh(f"tensorrt-edgellm-export {QCKPT} {QCKPT}/onnx --max-kv-cache-capacity 4096")
+    entry("tensorrt_edgellm.scripts.export:main",
+          ["tensorrt-edgellm-export", QCKPT, f"{QCKPT}/onnx", "--max-kv-cache-capacity", "4096"])
     print("EXPORT_OK", flush=True)
     df("after-export")
     dest = f"{ART}/R1-vlm-int4_awq-onnx"
@@ -209,10 +240,12 @@ try:
 except Exception as e:
     print("R1_VLM_INT4_FAILED:", repr(e), flush=True)
 finally:
+    # v2: ALWAYS drop the source clone — v1's errored run left it in kernel output,
+    # making `kaggle kernels output` download the whole tree file-by-file
+    shutil.rmtree("/kaggle/working/TRTEdge", ignore_errors=True)
     produced = glob.glob(f"{ART}/*-onnx")
     if produced:
         try:
-            shutil.rmtree("/kaggle/working/TRTEdge", ignore_errors=True)
             sh("tar -czf /kaggle/working/r1_vlm_int4_onnx.tgz -C " + ART + " " +
                " ".join(os.path.basename(p) for p in produced))
             print("PACKED_OK", [os.path.basename(p) for p in produced], flush=True)

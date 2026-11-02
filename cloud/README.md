@@ -8,6 +8,8 @@
 > 剥前缀后名字集合==CR2-8B、形状除 vocab 155697 外全同）repack 成 qwen3_vl 格式 checkpoint（CR2 config 模板改 vocab_size
 > + Qwen3-VL-8B-Instruct 公开 tokenizer，**全程免 HF token**：R1 gated=False），钉 TRTEdge **v0.10.1**（与 goat 运行时同版；
 > 补丁 A needle 须含 0.10.1 新增的 `low_cpu_mem_usage=True,` 行），export 带 `--max-kv-cache-capacity 4096`（与已部署引擎一致）。
+> v2 起不安装 TRTEdge 包本体（scikit-build-core metadata 在 Kaggle py3.13 镜像崩、`pip -q` 吞报错），直装 tools-extra 依赖 pin
+> + PYTHONPATH 源码树运行，entry point 经 `python -c` 调用；[kernel-metadata.json](kernel-metadata.json) 已入库，`kaggle kernels push -p cloud/` 即用。
 > 下面的 `kaggle_export_quant.*` / `modelscope_*` / `colab_*` 是**早期含 Alpamayo 的多平台备选**，Alpamayo 量化不被支持后收敛到 Cosmos-only（见 [../docs/FINDINGS.md](../docs/FINDINGS.md)）。HF token 走**环境变量**，勿硬编码。
 
 ## 平台选择

@@ -1,0 +1,13 @@
+{
+  "id": "mamihlapinatapai/r1-vlm-int4",
+  "title": "r1-vlm-int4",
+  "code_file": "kaggle_r1_vlm_int4.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": []
+}
