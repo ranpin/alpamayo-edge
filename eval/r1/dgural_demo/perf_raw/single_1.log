@@ -1,0 +1,82 @@
+[11:19:52.029] [INFO] [action_inference.cpp:208:parseActionInferenceArgs] args.inputFile: /home/nvidia/chenrunbin/alpamayo-edge/eval_data/dgural_1f7ef408/r1_dgural_in.json
+[11:19:52.029] [INFO] [action_inference.cpp:214:parseActionInferenceArgs] args.engineDir: /home/nvidia/chenrunbin/alpamayo-edge/engines/alpamayo_r1/llm
+[11:19:52.029] [INFO] [action_inference.cpp:225:parseActionInferenceArgs] args.multimodalEngineDir: /home/nvidia/chenrunbin/alpamayo-edge/engines/alpamayo_r1
+[11:19:52.029] [INFO] [action_inference.cpp:232:parseActionInferenceArgs] args.outputFile: /home/nvidia/chenrunbin/alpamayo-edge/perf/single_1.json
+[11:19:52.029] [INFO] [action_inference.cpp:241:parseActionInferenceArgs] args.profileOutputFile: /home/nvidia/chenrunbin/alpamayo-edge/perf/profile_single_1.json
+[11:19:52.029] [INFO] [action_inference.cpp:246:parseActionInferenceArgs] Profile dumping to console is enabled
+[11:19:52.029] [INFO] [action_inference.cpp:251:parseActionInferenceArgs] Warmup runs: 1
+[11:19:52.333] [INFO] [memoryMonitor.cpp:267:start] Memory Monitor Started - metric: cuda_free_memory_delta
+[11:19:52.333] [INFO] [trtUtils.h:71:loadEdgellmPluginLib] EDGELLM_PLUGIN_PATH: /home/nvidia/chenrunbin/alpamayo-edge/trtedge-0.10.1/build_orin/libNvInfer_edgellm_plugin.so
+[11:19:55.410] [INFO] [action_inference.cpp:577:main] Successfully parsed 0 LoRA weights from input file.
+[11:19:55.410] [INFO] [action_inference.cpp:578:main] Successfully parsed 1 batches of requests from input file.
+[11:19:57.144] [INFO] [llmRuntimeUtils.cpp:715:loadEmbeddingTable] Loaded FP16 embedding: [155697, 4096]
+[11:19:57.145] [INFO] [llmEngineConfig.cpp:672:parseEngineConfig] reading /home/nvidia/chenrunbin/alpamayo-edge/engines/alpamayo_r1/llm/config.json
+[11:19:57.146] [INFO] [llmRuntimeUtils.cpp:422:collectRopeConfig] Collected rope config: RopeConfig:  type: MRope  rotaryScale: 1  rotaryTheta: 5e+06  partialRotaryFactor: 1  maxPositionEmbeddings: 262144
+[11:19:57.146] [INFO] [llmEngineConfig.cpp:887:parseEngineConfig] LLMEngineConfig{ hiddenSize=4096 vocabSize=155697 outputVocabSize=155697 numDecoderLayers=36 numAttentionLayers=36 numKVHeads=8 headDim=128 rotaryDim=128 maxBatch=1 maxInputLen=3424 maxKVCapacity=4096 kvPoolPages=32 pleEnabled=false numPleInputs=0 pleHiddenSize=0 isSpecDecodeBase=false specDecodeType=0 loraRank=0 }
+[11:19:57.146] [INFO] [engineExecutor.cpp:135:TrtEngineExecutor] loading engine file: /home/nvidia/chenrunbin/alpamayo-edge/engines/alpamayo_r1/llm/llm.engine
+[11:20:21.867] [INFO] [TensorRT] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +0, now: CPU 0, GPU 14465 (MiB)
+[11:20:21.869] [INFO] [engineExecutor.cpp:166:TrtEngineExecutor] engine loaded successfully (83 I/O tensors)
+[11:20:21.869] [INFO] [modelArtifacts.cpp:213:loadFromEngineDir] Base EngineExecutor successfully loaded from /home/nvidia/chenrunbin/alpamayo-edge/engines/alpamayo_r1/llm/llm.engine.
+[11:20:21.869] [INFO] [modelArtifacts.cpp:144:loadTokenizer] Start loading tokenizer from model directory: /home/nvidia/chenrunbin/alpamayo-edge/engines/alpamayo_r1/llm
+[11:20:24.889] [INFO] [tokenizer.cpp:603:loadVocabulary] Loaded 151643 vocabulary tokens
+[11:20:25.243] [INFO] [tokenizer.cpp:135:loadFromHF] Loaded 4054 special tokens
+[11:20:25.405] [INFO] [tokenizer.cpp:1090:loadChatTemplate] Successfully loaded chat template from /home/nvidia/chenrunbin/alpamayo-edge/engines/alpamayo_r1/llm/processed_chat_template.json (for model: /home/nvidia/chenrunbin/alpamayo-edge/models/Alpamayo-R1-10B)
+[11:20:25.405] [INFO] [tokenizer.cpp:167:loadFromHF] Successfully loaded tokenizer from /home/nvidia/chenrunbin/alpamayo-edge/engines/alpamayo_r1/llm (vocab_size=155697)
+[11:20:25.456] [INFO] [modelArtifacts.cpp:147:loadTokenizer] Tokenizer successfully loaded from model directory: /home/nvidia/chenrunbin/alpamayo-edge/engines/alpamayo_r1/llm
+[11:20:25.456] [INFO] [runtimeCoordinator.cpp:70:RuntimeCoordinator] RuntimeCoordinator running single-device inline (no worker thread).
+[11:20:25.458] [INFO] [llmRankRuntime.cpp:364:initializeCommon] Runtime batch size set to: 1 (from engine bundle)
+[11:20:25.934] [INFO] [pipelineIO.cpp:452:createForLLM] Allocated 3 deepstack embeds tensors with shape [1, 3424, 4096]
+[11:20:25.989] [INFO] [llmRankRuntime.cpp:533:initializeCommon] Runtime tensors successfully allocated.
+[11:20:27.927] [INFO] [TensorRT] [MS] Running engine with multi stream info
+[11:20:27.927] [INFO] [TensorRT] [MS] Number of aux streams is 3
+[11:20:27.927] [INFO] [TensorRT] [MS] Number of total worker streams is 4
+[11:20:27.927] [INFO] [TensorRT] [MS] The main stream provided by execute/enqueue calls is the first worker stream
+[11:20:28.222] [INFO] [TensorRT] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +0, now: CPU 0, GPU 15570 (MiB)
+[11:20:28.222] [INFO] [trtUtils.cpp:374:setNonBlockingAuxStreams] configured 3 non-blocking auxiliary stream(s) for execution context
+[11:20:28.840] [INFO] [llmRankRuntime.cpp:571:operator()] Visual runner successfully initialized
+[11:20:28.840] [INFO] [llmRankRuntime.cpp:589:initializeCommon] Attempting to load Action runner from /home/nvidia/chenrunbin/alpamayo-edge/engines/alpamayo_r1/action
+[11:20:37.568] [INFO] [TensorRT] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +0, now: CPU 0, GPU 19919 (MiB)
+[11:20:37.904] [INFO] [llmRankRuntime.cpp:597:initializeCommon] Alpamayo 1 action expert loaded.
+[11:20:43.640] [INFO] [llmRankRuntime.cpp:676:initializeCommon] Setup shared execution context memory: 3740115456 bytes (base requires: 406719488, strategy requires: 0, vision requires: 3740115456, audio requires: 0, action requires: 158074880)
+[11:20:43.641] [INFO] [llmRankRuntime.cpp:689:initializeCommon] Encoder embedding cache initialized with 256 MiB budget.
+[11:20:43.642] [INFO] [runtimeCoordinator.cpp:299:operator()] [parallel rank 0/1] Runtime initialized.
+[11:20:43.655] [INFO] [TensorRT] Switching optimization profile from: 0 to 1. Please ensure there are no enqueued operations pending in this context prior to switching profiles
+[11:20:44.282] [INFO] [engineExecutor.cpp:360:captureGraph] captured graph (hash=0x21b2f384f4fe0e20)
+[11:20:44.282] [INFO] [decoderRegistry.cpp:126:captureCudaGraphs] Successfully captured decoding CUDA graphs for active decoding strategies.
+[11:20:44.282] [INFO] [action_inference.cpp:611:main] Using noise seed 5 for action diffusion trajectory
+[11:20:44.283] [INFO] [action_inference.cpp:619:main] Starting warmup with 1 runs using the first request...
+[11:20:45.254] [INFO] [llmRankRuntime.cpp:2025:multiModalRuntimePreprocess] Processing trajectory history inputs
+[11:20:45.257] [INFO] [TensorRT] Switching optimization profile from: 1 to 0. Please ensure there are no enqueued operations pending in this context prior to switching profiles
+[11:20:47.388] [INFO] [TensorRT] Switching optimization profile from: 0 to 1. Please ensure there are no enqueued operations pending in this context prior to switching profiles
+[11:20:49.867] [INFO] [action_inference.cpp:632:main] Warmup of 1 runs completed. Starting actual benchmark runs...
+[11:20:49.867] [INFO] [action_inference.cpp:654:main] Processing 1 batched requests...
+[11:20:49.867] [INFO] [action_inference.cpp:664:main] Progress: 1/1 (100.000000%)
+[11:20:50.628] [INFO] [llmRankRuntime.cpp:1967:multiModalRuntimePreprocess] Encoder embedding cache HIT for all 16 images — skipping ViT encoder execution
+[11:20:50.663] [INFO] [llmRankRuntime.cpp:2025:multiModalRuntimePreprocess] Processing trajectory history inputs
+[11:20:50.663] [INFO] [TensorRT] Switching optimization profile from: 1 to 0. Please ensure there are no enqueued operations pending in this context prior to switching profiles
+[11:20:52.392] [INFO] [TensorRT] Switching optimization profile from: 0 to 1. Please ensure there are no enqueued operations pending in this context prior to switching profiles
+[11:20:54.812] [INFO] [action_inference.cpp:760:main] Processing complete: 1/1 batched requests successful
+[11:20:54.845] [INFO] [action_inference.cpp:785:main] 
+=== Performance Summary ===
+=== LLM Prefill ===
+Reused Tokens: 0
+Computed Tokens: 3006
+Average Tokens per Run: 3006.00
+Average Time per Run: 1727.2058 ms
+Tokens/Second: 1740.4
+Average Time per Token: 0.5746 ms
+LLM Prefill - Total Runs: 1, Total GPU Time: 1727.21 ms, Average: 1727.21 ms
+=== LLM Generation (Excluding sampling after prefill) ===
+Generated Tokens: 19
+Average Tokens per Run: 19.00
+Tokens/Second: 10.4
+Average Time per Token: 95.8548 ms
+LLM Generation - Total Runs: 18, Total GPU Time: 1821.24 ms, Average: 101.18 ms
+=== Memory Usage ===
+Peak GPU Memory: 26131.78 MB (27401158656 bytes)
+Peak CPU Memory: 1391.39 MB (1458978816 bytes)
+GPU Memory Metric: cuda_free_memory_delta
+=====================================
+
+[11:20:54.849] [INFO] [action_inference.cpp:812:main] Profile data exported to: /home/nvidia/chenrunbin/alpamayo-edge/perf/profile_single_1.json
+[11:20:54.850] [INFO] [action_inference.cpp:835:main] All responses exported to: /home/nvidia/chenrunbin/alpamayo-edge/perf/single_1.json

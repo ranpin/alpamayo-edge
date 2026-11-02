@@ -1,0 +1,7 @@
+PERF_START 11:19:51 avail_RAM=26797MB
+single1 exit=0 wall=65.4s
+single2 exit=0 wall=57.5s
+single3 exit=0 wall=53.7s
+batch6 start 11:22:48
+batch6 exit=0 wall=91.6s
+PERF_DONE 11:24:22
