@@ -43,6 +43,10 @@ timeout 600 ./build_orin/examples/multimodal/action_inference \
 输入 `r1_multi_in.json` = 6 个 request（每个 16 帧 camera-major + 16 点 ego 历史 + temperature=0）；
 三引擎（llm/visual/action）建于 Orin sm_87，action 专家用分解注意力补丁打穿 TRT≥11 算子墙（见根 README Phase R）。
 
+demo 页表 3（Orin 部署与性能）数字的**原始实测证据在 `perf_raw/`**（2026-10-30 goat 实测）：
+`run.log` 总览、`single_*.log`/`batch6.log` 逐次推理、`profile_single_*.json` 阶段分解（prefill/CoT/action）、
+`tegrastats_batch.log` 功耗、`perf_measure.sh` 完整测量命令。
+
 ## 工作目录约定
 
 脚本内联路径是本次会话的工作目录 `/tmp/cdd_poc`（静态版）/ `/tmp/r1vid/{roll,ego,calib}`（滚动版）——macOS 会定期清理——与仓库/goat 绝对路径；
