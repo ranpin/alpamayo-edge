@@ -4,7 +4,7 @@
 管线部署多代模型：Cosmos-Reason2-8B（INT4/INT8 量化五轴实测）、Cosmos3-Edge（跨代精度对比）、
 Alpamayo-R1（AV 轨迹预测）。零预算、零训练、全 Orin 实测。
 
-🛣️ **在线 Demo · Alpamayo-R1 轨迹预测**（真实帧叠加 · 真实 Orin 推理）：<https://ranpin.github.io/alpamayo-edge/r1-trajectory/>
+🛣️ **在线 Demo · Alpamayo-R1 轨迹预测**（真实帧叠加 + 滚动预测视频 · 真实 Orin 推理）：<https://ranpin.github.io/alpamayo-edge/r1-trajectory/>
 🎬 **在线 Demo · Cosmos3-Edge 2B 驾驶场景理解**：<https://ranpin.github.io/cosmos3-edge/cosmos3-demo/>（Cosmos3 部署与 policy 动作链已拆至独立仓 [cosmos3-edge](https://github.com/ranpin/cosmos3-edge)）
 
 📊 **呈现站点（论文式 · 细节首选入口）**：[CR2-8B 量化部署](https://ranpin.github.io/alpamayo-edge/) ｜ [Cosmos3 跨代对比](https://ranpin.github.io/alpamayo-edge/cosmos3.html)
