@@ -42,6 +42,7 @@ env/
 !/outputs/baseline_results.md
 !/outputs/eval_cvm_synthetic.json
 !/outputs/figures/
+!/outputs/*.sha256
 /legacy/outputs/*
 !/legacy/outputs/*.json
 checkpoints/

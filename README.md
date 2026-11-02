@@ -22,6 +22,7 @@ Alpamayo-R1（AV 轨迹预测）。零预算、零训练、全 Orin 实测。
 7. **Alpamayo-R1 全链跑通、minADE 与官方基线一致**——minADE6@6.4s = 0.804 m vs 官方 0.821 m（落在 95% CI 内）。
 8. **Cosmos3-Edge 跨代验证「缩小不免费、量化几乎免费」**——2B reasoner n=184 驾驶域 42.4%，显著输给上一代 8B 量化版（详见 [cosmos3-edge](https://github.com/ranpin/cosmos3-edge) 与[跨代对比](https://ranpin.github.io/alpamayo-edge/cosmos3.html)）。
 9. **跨代对比 R1 胜 Alpamayo-1.5、导航引导非原因**——1.5 经 repack（纯 config 改写）跑上 64GB Orin，同口径 minADE6@6.4s R1 0.804 vs 1.5 1.815 m（+126%）；oracle 导航仅 −1%（within-noise），「1.5 需要导航」假设被语义+量化两个独立测量否定（详见 [eval/r1/crossgen_a15.md](eval/r1/crossgen_a15.md)）。
+10. **R1 backbone INT4 AWQ 量化近乎免费**——同口径 minADE6@6.4s 0.800 vs FP16 0.804 m（Δ=-0.004m，比预注册阈值 0.1m 小 25 倍），decode 2.52× 快、引擎 3.11× 小；「量化几乎免费」结论从 CR2 推理轨道延伸到 VLA 轨迹轨道（详见 [eval/r1/int4_backbone.md](eval/r1/int4_backbone.md)）。
 
 ## 快速开始
 
