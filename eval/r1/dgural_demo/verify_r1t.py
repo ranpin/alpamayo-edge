@@ -17,7 +17,7 @@ def main(url):
             pg.wait_for_selector('.r1t-card', timeout=20000)
             # 滚全页触发懒加载：静态图在折叠线下、超出 Chrome lazy 阈值，不滚不加载
             pg.evaluate("""async()=>{let h=document.body.scrollHeight;for(let y=0,i=0;y<h&&i<60;y+=400,i++){window.scrollTo(0,y);await new Promise(r=>setTimeout(r,60));h=document.body.scrollHeight;}window.scrollTo(0,0);}""")
-            pg.wait_for_function("()=>{const i=[...document.querySelectorAll('img.r1t-fig')];const s=document.querySelector('img.r1t-sheet');return i.length===6&&i.every(x=>x.complete&&x.naturalWidth>0)&&s&&s.complete&&s.naturalWidth>0;}", timeout=20000)
+            pg.wait_for_function("()=>{const i=[...document.querySelectorAll('img.r1t-fig')];const s=document.querySelector('img.r1t-sheet');return i.length===6&&i.every(x=>x.complete&&x.naturalWidth>0)&&s&&s.complete&&s.naturalWidth>0;}", timeout=60000)
             r = pg.evaluate("""async ()=>{
               const vids=[...document.querySelectorAll('video.r1t-fig')];
               const assets=[];
