@@ -15,17 +15,25 @@ def main(url):
             pg.on('pageerror', lambda e: errs.append(str(e)))
             pg.goto(url, wait_until='commit')
             pg.wait_for_selector('.r1t-card', timeout=20000)
-            pg.wait_for_function("()=>{const i=[...document.querySelectorAll('img.r1t-fig')];return i.length===6&&i.every(x=>x.complete&&x.naturalWidth>0);}", timeout=20000)
+            # 滚全页触发懒加载：静态图在折叠线下、超出 Chrome lazy 阈值，不滚不加载
+            pg.evaluate("""async()=>{let h=document.body.scrollHeight;for(let y=0,i=0;y<h&&i<60;y+=400,i++){window.scrollTo(0,y);await new Promise(r=>setTimeout(r,60));h=document.body.scrollHeight;}window.scrollTo(0,0);}""")
+            pg.wait_for_function("()=>{const i=[...document.querySelectorAll('img.r1t-fig')];const s=document.querySelector('img.r1t-sheet');return i.length===6&&i.every(x=>x.complete&&x.naturalWidth>0)&&s&&s.complete&&s.naturalWidth>0;}", timeout=20000)
             r = pg.evaluate("""async ()=>{
               const vids=[...document.querySelectorAll('video.r1t-fig')];
               const assets=[];
               for(const v of vids){assets.push(v.querySelector('source').src);assets.push(new URL(v.poster,location.href).href);}
+              const sheetImg=document.querySelector('img.r1t-sheet'); if(sheetImg) assets.push(new URL(sheetImg.src,location.href).href);
               const codes={};
               for(const a of assets){try{const resp=await fetch(a,{method:'HEAD'});codes[a.split('/').pop()]=resp.status;}catch(e){codes[a.split('/').pop()]='ERR';}}
               const rollTbl=[...document.querySelectorAll('table.ds-table')].find(t=>{const c=t.querySelector('caption');return c&&/^表 2/.test(c.textContent);});
               const vcards=[...document.querySelectorAll('.r1t-card')].filter(c=>c.querySelector('video'));
               return {
                 imgCards:document.querySelectorAll('.r1t-card img.r1t-fig').length,
+                sheet:document.querySelectorAll('img.r1t-sheet').length,
+                cotLists:document.querySelectorAll('.r1t-cotlist').length,
+                cotRows:document.querySelectorAll('.r1t-cotlist div:not(.r1t-cotlabel)').length,
+                cotWarns:document.querySelectorAll('.r1t-cotwarn').length,
+                videoBeforeGrid:(document.querySelector('video.r1t-fig').compareDocumentPosition(document.getElementById('grid'))&4)>0,
                 videos:vids.length,
                 vidOk:vids.every(v=>v.controls&&v.preload==='none'&&v.poster.includes('roll_poster')&&v.querySelector('source').src.includes('.mp4')),
                 assetCodes:codes,
@@ -50,16 +58,17 @@ def main(url):
               };}""")
             ce = [e for e in errs if 'favicon' not in e.lower()]
             r['console_err'] = ce
-            print(f"[{theme}] imgs={r['imgCards']} videos={r['videos']} vidOk={r['vidOk']} rows={r['rows']} rollRows={r['rollRows']} overflow={r['overflow']} theme={r['theme']} bg={r['bg']}")
+            print(f"[{theme}] imgs={r['imgCards']} videos={r['videos']} vidOk={r['vidOk']} sheet={r['sheet']} cotLists={r['cotLists']} cotRows={r['cotRows']} cotWarns={r['cotWarns']} vidBeforeGrid={r['videoBeforeGrid']} rows={r['rows']} rollRows={r['rollRows']} overflow={r['overflow']} theme={r['theme']} bg={r['bg']}")
             print(f"   captions={r['captions']}")
             print(f"   figcaps={r['figcaps']}")
             print(f"   assets={r['assetCodes']}")
             print(f"   seq=[{r['seqTexts']}] 表序号={r['tblSeq']} 表头={r['tblHeader']} seqIntro={r['seqIntro']} rollIntro={r['rollIntro']} methodRoll={r['methodRoll']} formula={r['formula']} intro={r['intro']} tagOF={r['tagOF']} vidTops={r['vidTops']} console_err={len(ce)} {ce[:3]}")
             b.close(); return r
     l = run('light'); d = run('dark')
-    exp_fig = ['图 %d' % i for i in range(1, 12)]
+    exp_fig = ['图 %d' % i for i in range(1, 13)]
     ok = (l['imgCards'] == 6 and l['videos'] == 4 and l['vidOk'] and l['rows'] == 6 and l['rollRows'] == 12
-          and len(l['assetCodes']) == 8 and all(v == 200 for v in l['assetCodes'].values())
+          and l['sheet'] == 1 and l['cotLists'] == 4 and l['cotRows'] == 12 and l['cotWarns'] == 2 and l['videoBeforeGrid']
+          and len(l['assetCodes']) == 9 and all(v == 200 for v in l['assetCodes'].values())
           and l['captions'] == ['表 1', '表 2', '表 3'] and l['figcaps'] == exp_fig
           and l['seqBadges'] == 6 and l['seqTexts'] == '1,2,3,4,5,6' and l['tblSeq'] == 6 and l['tblHeader'] == '示例'
           and l['seqIntro'] and l['rollIntro'] and l['methodRoll'] and l['formula'] and l['intro'] and l['tagOF'] == 0
