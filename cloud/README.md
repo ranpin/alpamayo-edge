@@ -4,6 +4,10 @@
 
 > ✅ **实际采用并跑通的脚本**：[`kaggle_cosmos_only.py`](kaggle_cosmos_only.py)（Kaggle 2×T4，headless，Cosmos-Reason2-8B
 > INT4/INT8，含对 TRTEdge `quantize.py` 的三处补丁）。用 `kaggle kernels push` 提交即后台跑，产出 `edge_artifacts_*.tgz`。
+> 🆕 **R1 backbone INT4 实验（2026-11-02）**：[`kaggle_r1_vlm_int4.py`](kaggle_r1_vlm_int4.py)——把 R1 的 `vlm.*`（750 张量，
+> 剥前缀后名字集合==CR2-8B、形状除 vocab 155697 外全同）repack 成 qwen3_vl 格式 checkpoint（CR2 config 模板改 vocab_size
+> + Qwen3-VL-8B-Instruct 公开 tokenizer，**全程免 HF token**：R1 gated=False），钉 TRTEdge **v0.10.1**（与 goat 运行时同版；
+> 补丁 A needle 须含 0.10.1 新增的 `low_cpu_mem_usage=True,` 行），export 带 `--max-kv-cache-capacity 4096`（与已部署引擎一致）。
 > 下面的 `kaggle_export_quant.*` / `modelscope_*` / `colab_*` 是**早期含 Alpamayo 的多平台备选**，Alpamayo 量化不被支持后收敛到 Cosmos-only（见 [../docs/FINDINGS.md](../docs/FINDINGS.md)）。HF token 走**环境变量**，勿硬编码。
 
 ## 平台选择
