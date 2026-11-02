@@ -35,6 +35,12 @@
 #   Python API for both fetches; ENV_OK gate now also asserts CUDA compute works (torch resolved
 #   to a cu130 build on T4); except re-raises so failures surface as kernel ERROR instead of a
 #   misleading COMPLETE (v2's swallowed exit was only caught because the sentinel watched both).
+# v4 (2026-11-02): v3 passed downloads AND repack (REPACK_OK 750 tensors/4 shards/17.6GB) but
+#   died at quantize-import: Kaggle's preinstalled torchaudio is a cu128 build; transformers
+#   5.14.1 audio_utils does a module-level `import torchaudio` whose CUDA check hard-fails
+#   against torch 2.13.0+cu130. Fix: uninstall torchaudio (audio unused here; the transformers
+#   availability guard then skips the import) + ENV_OK gate now imports both entry-point chains
+#   (quantize/export) so import-class landmines detonate BEFORE the 22GB download, not after.
 import os, subprocess, glob, shutil, json, sys
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
@@ -77,6 +83,10 @@ sh("pip install --progress-bar off "
    "onnx==1.19.0 onnxscript==0.7.1 onnx-graphsurgeon==0.6.1 safetensors==0.8.0 numpy==2.2.6 "
    "nvidia-modelopt==0.45.0 datasets==5.0.0 peft==0.19.1 einops==0.8.2 tiktoken==0.13.0 "
    "librosa==0.11.0 soundfile==0.14.0 tqdm==4.69.0 backoff 'cuda-python>=12.6,<14'")
+# v4: the image's preinstalled torchaudio is a cu128 build; transformers 5.14.1 audio_utils
+# imports it at module level and its CUDA check hard-fails against torch 2.13.0+cu130.
+# Audio is unused in this flow; once uninstalled, transformers' availability guard skips it.
+sh("pip uninstall -y torchaudio")
 
 # 2) Same three patches as kaggle_cosmos_only.py (A needle updated for 0.10.1).
 #    Needles asserted unique so upstream drift can't silently skip a patch.
@@ -139,7 +149,9 @@ subprocess.run("nvidia-smi --query-gpu=index,name,memory.total --format=csv,nohe
 # v2 early gate: source tree must import and versions must match goat's export env
 # (fails fast BEFORE the 22GB download if the no-install bypass is broken)
 # v3: also assert real CUDA compute — torch resolved to a cu130 build on T4 (sm_75)
-sh("""python -c 'import tensorrt_edgellm, torch, transformers; assert torch.cuda.is_available(), "CUDA unavailable"; x = torch.randn(64, 64, device="cuda"); print("ENV_OK trtedge", tensorrt_edgellm.__version__, "torch", torch.__version__, "tfm", transformers.__version__, "cuda_matmul", float((x @ x).sum()))'""")
+# v4: also import both entry-point chains — v3's torchaudio landmine detonated only at
+# quantize-import time, after downloads+repack were done; this makes import-class fail fast
+sh("""python -c 'import tensorrt_edgellm, torch, transformers; assert torch.cuda.is_available(), "CUDA unavailable"; x = torch.randn(64, 64, device="cuda"); from tensorrt_edgellm.scripts.quantize import main as _q; from tensorrt_edgellm.scripts.export import main as _e; print("ENV_OK trtedge", tensorrt_edgellm.__version__, "torch", torch.__version__, "tfm", transformers.__version__, "cuda_matmul", float((x @ x).sum()), "entry_imports OK")'""")
 
 ok = False
 try:
