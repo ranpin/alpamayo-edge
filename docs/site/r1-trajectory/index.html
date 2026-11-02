@@ -31,15 +31,13 @@
 .r1t-metrics b{color:var(--ds-text);font-weight:700}
 .r1t-cot{font-size:13px;line-height:1.6;color:var(--ds-text);font-style:italic;border-left:3px solid var(--ds-accent);padding-left:11px}
 .r1t-note{font-size:12.5px;color:var(--ds-muted);line-height:1.6}
-.r1t-tablewrap{overflow-x:auto;margin-top:6px}
-.r1t-table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:560px}
-.r1t-table th,.r1t-table td{padding:9px 11px;text-align:center;border-bottom:1px solid var(--ds-border)}
-.r1t-table th{color:var(--ds-muted);font-weight:600;font-size:12.5px}
-.r1t-table td.l,.r1t-table th.l{text-align:left}
-.r1t-table tr:hover td{background:var(--ds-bg)}
+/* 三线表走外壳 .ds-table/.ds-tablewrap；此处只补列对齐与表宽 */
+.ds-tablewrap{margin-top:6px}
+table.ds-table{min-width:560px}
+.ds-table th,.ds-table td{text-align:center}
+.ds-table td.l,.ds-table th.l{text-align:left}
 .r1t-best{color:#16a34a;font-weight:700}.r1t-worst{color:#dc2626;font-weight:700}
 .r1t-cal{font-size:12.5px;color:var(--ds-muted);line-height:1.75;margin-top:14px;padding:12px 14px;background:var(--ds-bg);border:1px solid var(--ds-border);border-radius:8px}
-.r1t-method{font-size:14px;line-height:1.85;color:var(--ds-text)}
 .r1t-method code{background:var(--ds-bg);border:1px solid var(--ds-border);border-radius:4px;padding:1px 5px;font-size:13px}
 .r1t-method li{margin:6px 0}
 @media(max-width:680px){.r1t-grid{grid-template-columns:1fr}}
@@ -74,9 +72,9 @@
     <h2 class="ds-h2">评测结果</h2>
     <p>测试数据集：NVIDIA PhysicalAI-AV 数据集 dgural 公开 sample 的 6 个 clip——前视广角相机真实帧 + ~100Hz egomotion GT 轨迹；6 个片段均为「6.4s 预测窗内明显转弯」的困难样本（非随机抽样，见下方「口径与诚实边界」）。推理口径：Alpamayo-R1（TRTEdge FP16）Jetson Orin 实机、单噪声种子（seed=5、temperature=0）确定性推理，无训练微调。</p>
     <p>下表为 6 个片段上 R1 预测相对 GT 的逐点欧氏位移误差（ego 系，按 ADE@6.4s 升序）。<b>核心观察：R1 的思维链与其轨迹精度强相关</b>——当 CoT 正确识别出机动（如「绿灯左转」「并入右转道」）时轨迹几乎完美贴合（ADE 低至 0.84m）；当 CoT 退化为泛化的「跟前车」时，模型会漏判或欠判即将到来的转弯（最差例蓝线直冲、绿线左拐，ADE 5.90m）。</p>
-    <div class="r1t-tablewrap"><table class="r1t-table" id="tbl"></table></div>
+    <div class="ds-tablewrap"><table class="ds-table" id="tbl"></table></div>
     <div class="r1t-cal"><b>误差公式</b>：ADE@T（平均位移误差）= 预测与 GT 在前 T 秒每个 waypoint 上欧氏距离的均值 = (1/N)·Σᵢ‖predᵢ − gtᵢ‖；FDE@T（终点位移误差）= 第 T 秒末 waypoint 的欧氏距离 = ‖pred_N − gt_N‖。@3s 取前 30 点、@6.4s 取全部 64 点（10 Hz）；均在 t₀ 时刻 ego 系（自车为原点、x 前 y 左）计算，单位米。<br><b>口径与诚实边界</b>：① 单噪声种子（seed=5、temperature=0）确定性推理，<b>非</b>官方 minADE6（6 采样取最优）；② 6 个片段均为「6.4s 预测窗内明显转弯」的困难样本、非随机抽样，误差天然高于官方全集；③ 数据源 dgural 公开样本的 README 明确声明「不适合 benchmarking / 统计分析」——本页数字仅为<b>逐例行为展示</b>，不构成代表性精度结论；④ 官方 Alpamayo-R1 在 644 clip 上报告 minADE6@6.4s≈0.79m，口径不同，不可与本表直接比较。</div>
-    <div class="r1t-tablewrap" style="margin-top:20px"><table class="r1t-table" id="tbl2">
+    <div class="ds-tablewrap" style="margin-top:20px"><table class="ds-table" id="tbl2">
       <caption>表 2 · Orin 部署与性能（Alpamayo-R1 FP16 · Jetson AGX Orin 64G · TRTEdge 0.10.1）</caption>
       <thead><tr><th class="l">指标</th><th>数值</th><th class="l">口径 / 说明</th></tr></thead>
       <tbody>
@@ -106,6 +104,66 @@
       <li><b>投影叠加</b>：GT 与 R1 轨迹均用该片段实测的<b>鱼眼相机标定</b>（多项式畸变 fw_poly + 四元数外参）投影回前视图像；GT 带真实路面高程 z，R1 的 2D 输出按 GT 路面高程插值赋 z，使两者都贴合路面。</li>
       <li><b>数据来源</b>：图像帧取自 dgural 公开样本（NVIDIA PhysicalAI-AV 的公开 100-clip 子集）；GT 轨迹与相机标定取自 gated NVIDIA PhysicalAI-AV；帧↔egomotion 时间对齐用数据集自带的逐帧时间戳权威校准（非按 fps 推算）。</li>
     </ul></div>
+    <div class="ds-dgwrap">
+      <svg class="ds-dg" viewBox="0 0 980 400" role="img" aria-label="Alpamayo-R1 的 Orin 推理链：16 帧输入与 ego 历史轨迹进入 Orin 上的 visual、llm、action 三引擎，产出 CoT 文本与轨迹 token，再经自行车模型积分与鱼眼标定投影叠回前视真实帧">
+        <defs>
+          <marker id="r1t-dg-arr" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <polygon points="0 0, 9 3.5, 0 7" fill="var(--ds-faint)"/>
+          </marker>
+        </defs>
+        <!-- Orin 区域 -->
+        <rect class="dg-region" x="205" y="36" width="595" height="160" rx="12" style="stroke:var(--ds-warn)"/>
+        <text class="dg-tag" x="217" y="58" fill="var(--ds-warn)">Jetson AGX Orin · TRT-Edge-LLM 三引擎</text>
+        <!-- 连线 -->
+        <line class="dg-edge" x1="170" y1="130" x2="226" y2="130" marker-end="url(#r1t-dg-arr)"/>
+        <line class="dg-edge" x1="378" y1="130" x2="412" y2="130" marker-end="url(#r1t-dg-arr)"/>
+        <line class="dg-edge" x1="574" y1="130" x2="608" y2="130" marker-end="url(#r1t-dg-arr)"/>
+        <path class="dg-edge" d="M494,88 L494,72 L818,72" marker-end="url(#r1t-dg-arr)"/>
+        <path class="dg-edge" d="M170,220 L494,220 L494,174" marker-end="url(#r1t-dg-arr)"/>
+        <path class="dg-edge" d="M695,172 L695,254 L315,254 L315,284" marker-end="url(#r1t-dg-arr)"/>
+        <line class="dg-edge" x1="390" y1="316" x2="438" y2="316" marker-end="url(#r1t-dg-arr)"/>
+        <line class="dg-edge" x1="600" y1="316" x2="648" y2="316" marker-end="url(#r1t-dg-arr)"/>
+        <line class="dg-edge" x1="780" y1="316" x2="818" y2="316" marker-end="url(#r1t-dg-arr)"/>
+        <path class="dg-edge dg-dash" d="M100,250 L100,372 L520,372 L520,348" marker-end="url(#r1t-dg-arr)"/>
+        <text class="dg-note" x="310" y="366" text-anchor="middle">v₀ 最小二乘反解（Cholesky）</text>
+        <!-- 输入 -->
+        <rect x="30" y="100" width="140" height="60" rx="8" fill="var(--ds-accent-soft)" stroke="var(--ds-accent)" stroke-width="1.4"/>
+        <text class="dg-name" x="100" y="124" text-anchor="middle">16 帧输入</text>
+        <text class="dg-sub" x="100" y="142" text-anchor="middle">4 相机 × 4 时刻</text>
+        <rect x="30" y="190" width="140" height="60" rx="8" fill="var(--ds-accent-soft)" stroke="var(--ds-accent)" stroke-width="1.4"/>
+        <text class="dg-name" x="100" y="214" text-anchor="middle">ego 历史轨迹</text>
+        <text class="dg-sub" x="100" y="232" text-anchor="middle">16 点 · 兼作 v₀ 反解</text>
+        <!-- 三引擎 -->
+        <rect x="228" y="88" width="150" height="84" rx="8" fill="var(--ds-alt-soft)" stroke="var(--ds-alt)" stroke-width="1.4"/>
+        <text class="dg-name" x="303" y="125" text-anchor="middle">visual 引擎</text>
+        <text class="dg-sub" x="303" y="145" text-anchor="middle">1.08 GB</text>
+        <rect x="414" y="88" width="160" height="84" rx="8" fill="var(--ds-alt-soft)" stroke="var(--ds-alt)" stroke-width="1.4"/>
+        <text class="dg-name" x="494" y="125" text-anchor="middle">llm 引擎</text>
+        <text class="dg-sub" x="494" y="145" text-anchor="middle">Qwen3-VL 8B · 14.15 GB</text>
+        <rect x="610" y="88" width="170" height="84" rx="8" fill="var(--ds-alt-soft)" stroke="var(--ds-alt)" stroke-width="1.4"/>
+        <text class="dg-name" x="695" y="115" text-anchor="middle">action 引擎</text>
+        <text class="dg-sub" x="695" y="134" text-anchor="middle">2.3B 扩散动作专家 · 4.25 GB</text>
+        <text class="dg-sub" x="695" y="153" text-anchor="middle" style="fill:var(--ds-danger)">分解注意力补丁打穿算子墙</text>
+        <!-- CoT 输出 -->
+        <rect x="820" y="44" width="140" height="56" rx="8" fill="var(--ds-ok-soft)" stroke="var(--ds-ok)" stroke-width="1.4"/>
+        <text class="dg-name" x="890" y="66" text-anchor="middle">CoT 思维链文本</text>
+        <text class="dg-sub" x="890" y="84" text-anchor="middle">同次推理产出</text>
+        <!-- 轨迹后处理链 -->
+        <rect x="240" y="286" width="150" height="60" rx="8" fill="var(--ds-code-bg)" stroke="var(--ds-faint)" stroke-width="1.4"/>
+        <text class="dg-name" x="315" y="310" text-anchor="middle">轨迹 token [64,2]</text>
+        <text class="dg-sub" x="315" y="328" text-anchor="middle">归一化 accel, κ</text>
+        <rect x="440" y="286" width="160" height="60" rx="8" fill="var(--ds-code-bg)" stroke="var(--ds-faint)" stroke-width="1.4"/>
+        <text class="dg-name" x="520" y="310" text-anchor="middle">自行车模型积分</text>
+        <text class="dg-sub" x="520" y="328" text-anchor="middle">v₀ = ego 历史最小二乘反解</text>
+        <rect x="650" y="286" width="130" height="60" rx="8" fill="var(--ds-code-bg)" stroke="var(--ds-faint)" stroke-width="1.4"/>
+        <text class="dg-name" x="715" y="310" text-anchor="middle">BEV 轨迹</text>
+        <text class="dg-sub" x="715" y="328" text-anchor="middle">64 点 · 6.4s · 10Hz</text>
+        <rect x="820" y="286" width="140" height="60" rx="8" fill="var(--ds-ok-soft)" stroke="var(--ds-ok)" stroke-width="1.4"/>
+        <text class="dg-name" x="890" y="310" text-anchor="middle">鱼眼标定投影叠加</text>
+        <text class="dg-sub" x="890" y="328" text-anchor="middle">GT 与 R1 叠回前视帧</text>
+      </svg>
+    </div>
+    <p class="ds-figcap">图 7 · Alpamayo-R1 的 Orin 推理链：16 帧 + ego 历史 → visual / llm / action 三引擎（分解注意力补丁打穿 TRT≥11 算子墙）→ CoT 与轨迹 token → 自行车积分 → BEV 轨迹 → 鱼眼标定投影叠加</p>
   </section>
 
   <footer class="ds-footer">
