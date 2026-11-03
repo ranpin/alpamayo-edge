@@ -43,6 +43,14 @@ caption strong{color:var(--accentD)}
 td .sub{display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px}
 figure{margin:18px 0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px}
 figure img{width:100%;height:auto;border-radius:5px;display:block;cursor:zoom-in}
+/* 双主题插图（2026-11-03）：亮 figures/ + 暗 figures/dark/（FIG_THEME=dark 重渲染，
+   底色 #1a1a2e = 暗色 figure 卡片 --bg2）；CSS 按 data-theme 切换、暗图 lazy；
+   图注颜色走 fc-* 类、表注走 .tnote，随主题翻转（替代原内联硬编码色） */
+figure img.fig-d{display:none}
+[data-theme=dark] figure img.fig-l{display:none}
+[data-theme=dark] figure img.fig-d{display:block}
+.tnote{background:#f8fafc;font-size:12.5px;color:#475569}
+[data-theme=dark] .tnote{background:var(--bg3);color:var(--text2)}
 figcaption{font-size:13.5px;color:var(--muted);margin-top:10px;text-align:center;line-height:1.65}
 figcaption .zoom{color:var(--accent);font-weight:600}
 figcaption b{display:inline-block;min-width:3.2em;color:var(--accentD);font-weight:700}
@@ -81,7 +89,7 @@ footer a{color:var(--accent)}
 
   <h2>一、跨代对比：n=184 驾驶域（同帧同题，唯一变量 = 模型）</h2>
   <p>协议与主页 §1.11/§1.12 <strong>完全一致</strong>（同帧、同题、同标答、贪心、cap 12、6 帧 @448），唯一变量是模型。输入直接复用 <code>bench/ood_eval/ood_input_goat.json</code>（messages 格式模型无关，runtime 用引擎目录内自己的 chat template）。打分复用同一套解析 / Wilson CI / McNemar 实现，故与 CR2-8B 各档<strong>方法学逐位可比</strong>。</p>
-  <figure><img src="figures/cosmos3_crossgen.png" alt="cross-generation driving-domain accuracy"><figcaption><b>图 1 · 驾驶域 n=184 跨代对比（8 选 1，随机基线 12.5%）</b><br><b>横轴</b>：四个模型档——CR2-8B 的 FP16/INT8/INT4 与 Cosmos3-Edge 2B FP16；<b>竖轴</b>：正确率 %，误差棒 = Wilson 95%CI<br><b>结果</b>：Cosmos3-Edge 2B 42.4% [35.5,49.6]，比 CR2-8B FP16 的 51.6% 低 9.2 pts，McNemar b/c=29/12、p=0.0115 <strong>显著</strong>；而 CR2-8B 自己的 INT8/INT4 掉点（−3.8/−1.1）均不显著<br><b>分析</b>：把"代际差"与"量化差"放在同一张图上，结论一目了然——<strong>量化几乎免费（掉点 &lt; MDE≈7pts、不显著），缩小模型不免费（−9.2 pts、显著）</strong>。2B reasoner 仍是随机基线的 3.4×，有真实场景理解力，但显著输给上一代 8B 的量化版。此图数字全部由 <code>eval/cosmos3/cosmos3_viz.py</code> 从原始输出重算（Cosmos3 k=78/184、unparsed=0），非手填。</figcaption></figure>
+  <figure><img class="fig-l" src="figures/cosmos3_crossgen.png" alt="cross-generation driving-domain accuracy"><img class="fig-d" src="figures/dark/cosmos3_crossgen.png" alt="cross-generation driving-domain accuracy" loading="lazy"><figcaption><b>图 1 · 驾驶域 n=184 跨代对比（8 选 1，随机基线 12.5%）</b><br><b>横轴</b>：四个模型档——CR2-8B 的 FP16/INT8/INT4 与 Cosmos3-Edge 2B FP16；<b>竖轴</b>：正确率 %，误差棒 = Wilson 95%CI<br><b>结果</b>：Cosmos3-Edge 2B 42.4% [35.5,49.6]，比 CR2-8B FP16 的 51.6% 低 9.2 pts，McNemar b/c=29/12、p=0.0115 <strong>显著</strong>；而 CR2-8B 自己的 INT8/INT4 掉点（−3.8/−1.1）均不显著<br><b>分析</b>：把"代际差"与"量化差"放在同一张图上，结论一目了然——<strong>量化几乎免费（掉点 &lt; MDE≈7pts、不显著），缩小模型不免费（−9.2 pts、显著）</strong>。2B reasoner 仍是随机基线的 3.4×，有真实场景理解力，但显著输给上一代 8B 的量化版。此图数字全部由 <code>eval/cosmos3/cosmos3_viz.py</code> 从原始输出重算（Cosmos3 k=78/184、unparsed=0），非手填。</figcaption></figure>
   <table>
     <caption><strong>表 1</strong>　Reasoner 跨代对比（n=184，8 选 1，随机基线 12.5%；Wilson 95%CI、McNemar vs CR2-8B FP16）。</caption>
     <tr><th>模型</th><th>正确率</th><th>Wilson 95%CI</th><th>vs CR2-8B FP16</th><th>E2E/请求</th></tr>
@@ -89,7 +97,7 @@ footer a{color:var(--accent)}
     <tr><td>CR2-8B INT8（dog）</td><td>47.8%</td><td>[40.7, 55.0]</td><td>−3.8 pts（p=0.143 ns）</td><td>0.50 s</td></tr>
     <tr><td>CR2-8B INT4（dog）</td><td>50.5%</td><td>[43.4, 57.7]</td><td>−1.1 pts（p=0.815 ns）</td><td>0.68 s</td></tr>
     <tr><td><strong>Cosmos3-Edge 2B FP16（goat）</strong></td><td><strong>42.4%</strong></td><td>[35.5, 49.6]</td><td class="win">−9.2 pts（b/c=29/12，p=0.0115 显著）</td><td>0.91 s</td></tr>
-    <tr><td colspan="5" style="background:#f8fafc;font-size:12.5px;color:#475569">184/184 全 EOS、零解析失败、字母分布均衡（A17 B22 C20 D23 E29 F26 G19 H28，无坍缩）。引擎：FP16，llm 3.7G + visual 940M（分解注意力版）。</td></tr>
+    <tr><td colspan="5" class="tnote">184/184 全 EOS、零解析失败、字母分布均衡（A17 B22 C20 D23 E29 F26 G19 H28，无坍缩）。引擎：FP16，llm 3.7G + visual 940M（分解注意力版）。</td></tr>
   </table>
 
   <h2>二、思考讨论</h2>
