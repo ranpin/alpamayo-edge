@@ -25,6 +25,17 @@
 #
 # Everything else (repack recipe, patches A-D, dependency pins, export flags) is
 # IDENTICAL to v5 so the only experimental variable is the calibration image domain.
+#
+# v2 (2026-11-03): v1 died in the FIRST calibration forward (0/128, ~10min in — after every
+#   AV-specific step had succeeded: AVFRAMES_OK 128, "Image calibration dataset: av_frames",
+#   patch D cap 1920x1080->844x475, 1484 quantizers inserted). Cause: F.conv3d in the vision
+#   tower's patch_embed raised CUDNN_STATUS_SUBLIBRARY_VERSION_MISMATCH — Kaggle's preinstalled
+#   nvidia-cudnn-cu12 coexists with torch cu130's nvidia-cudnn-cu13 in the SAME nvidia/cudnn/lib
+#   directory and the mixed-version sublibraries got loaded (v5/MMMU arm survived the same recipe
+#   => the mixed state is node/order dependent). Fix: uninstall nvidia-cudnn-cu12 + a conv3d
+#   probe in the ENV_OK gate replicating the exact patch_embed op (fails at ~4min, before the
+#   22GB download, if the env is still broken). Note: v1's script actually ran only 615s; the
+#   ~2h RUNNING status was Kaggle status lag — logs are ground truth.
 import os, subprocess, glob, shutil, json, sys
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
@@ -84,6 +95,10 @@ sh("pip install --progress-bar off "
    "nvidia-modelopt==0.45.0 datasets==5.0.0 peft==0.19.1 einops==0.8.2 tiktoken==0.13.0 "
    "librosa==0.11.0 soundfile==0.14.0 tqdm==4.69.0 backoff 'cuda-python>=12.6,<14'")
 sh("pip uninstall -y torchaudio")
+# v2: drop the stale cu12 cudnn — it coexists with torch cu130's nvidia-cudnn-cu13 in the
+# SAME nvidia/cudnn/lib/ dir; mixed-version sublibraries killed v1's first conv3d
+# (CUDNN_STATUS_SUBLIBRARY_VERSION_MISMATCH). "|| true": absent is fine.
+sh("pip uninstall -y nvidia-cudnn-cu12 || true")
 if subprocess.run("which ffmpeg", shell=True).returncode != 0:
     sh("apt-get update -qq && apt-get install -y -qq ffmpeg")
 sh("ffmpeg -version | head -1")
@@ -212,6 +227,11 @@ subprocess.run("nvidia-smi --query-gpu=index,name,memory.total --format=csv,nohe
 # Early gate: source tree + both entry chains + patch E's dataset import must all load
 # (fails fast BEFORE the 22GB download if anything is broken)
 sh("""python -c 'import tensorrt_edgellm, torch, transformers; assert torch.cuda.is_available(), "CUDA unavailable"; x = torch.randn(64, 64, device="cuda"); from tensorrt_edgellm.scripts.quantize import main as _q; from tensorrt_edgellm.scripts.export import main as _e; from tensorrt_edgellm.quantization.datasets import get_dataset; assert get_dataset("image", "av_frames").calib_name == "av_frames"; print("ENV_OK trtedge", tensorrt_edgellm.__version__, "torch", torch.__version__, "tfm", transformers.__version__, "cuda_matmul", float((x @ x).sum()), "entry_imports OK", "av_frames registered")'""")
+# v2: cuDNN conv3d probe — replicates the vision tower's patch_embed op exactly where v1 died
+# (CUDNN_STATUS_SUBLIBRARY_VERSION_MISMATCH from stale cu12 cudnn mixing with torch cu13's);
+# lists the cudnn lib dir so the mixed state is visible; fails at ~4min, before the 22GB
+# download, if the env is still broken.
+sh("""python -c 'import torch, os, glob; libs = sorted(glob.glob("/usr/local/lib/python3.13/dist-packages/nvidia/cudnn*/lib/libcudnn*.so*")); print("cudnn libs:", [os.path.basename(l) for l in libs][:10]); w = torch.randn(1152, 3, 2, 16, 16, device="cuda", dtype=torch.float16); x = torch.randn(1, 3, 2, 480, 832, device="cuda", dtype=torch.float16); y = torch.nn.functional.conv3d(x, w, stride=(2, 16, 16)); torch.cuda.synchronize(); print("CUDNN_CONV3D_OK", tuple(y.shape), "cudnn", torch.backends.cudnn.version())'""")
 
 ok = False
 try:
