@@ -36,6 +36,14 @@
 #   probe in the ENV_OK gate replicating the exact patch_embed op (fails at ~4min, before the
 #   22GB download, if the env is still broken). Note: v1's script actually ran only 615s; the
 #   ~2h RUNNING status was Kaggle status lag — logs are ground truth.
+# v3 (2026-11-03): v2's cu12 uninstall did NOT clear the mismatch — the conv3d probe died at
+#   ~5min (before the 22GB download, exactly as designed; TRTEdge left in output => the crash
+#   was pre-try). v3: (1) force-reinstall the exact nvidia-cudnn-cu13 torch declares + put its
+#   lib dir first on LD_LIBRARY_PATH (consistent cu13 sublibrary set); (2) probe is now
+#   NON-FATAL and adaptive — if cuDNN conv is still broken, quantize/export run with
+#   torch.backends.cudnn.enabled=False (native conv3d; ulp-level numeric difference vs the
+#   MMMU arm's cuDNN path — documented caveat, far below AWQ/INT4 granularity); (3) atexit
+#   guarantees TRTEdge cleanup even for pre-try crashes (fast CLI log retrieval).
 import os, subprocess, glob, shutil, json, sys
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
@@ -78,17 +86,24 @@ def df(tag):
     subprocess.run("df -h /kaggle/working /tmp 2>/dev/null | sort -u", shell=True)
 
 
-def entry(ep, argv):
+def entry(ep, argv, no_cudnn=False):
     # Run console-script entry point "mod:fn" from the source tree (package not installed).
+    # v3: no_cudnn disables cuDNN in the subprocess (native conv3d) when the probe found the
+    # cuDNN sublibrary set still broken.
     mod, fn = ep.split(":")
-    code = f"import sys; sys.argv = {argv!r}; from {mod} import {fn} as _m; _m()"
-    print("+", ep, " ".join(argv[1:]), flush=True)
+    pre = "import torch; torch.backends.cudnn.enabled = False; " if no_cudnn else ""
+    code = f"import sys; sys.argv = {argv!r}; {pre}from {mod} import {fn} as _m; _m()"
+    print("+", ep, " ".join(argv[1:]), f"(cudnn={'off' if no_cudnn else 'on'})", flush=True)
     subprocess.run([sys.executable, "-c", code], check=True)
 
 
 # 1) TRTEdge pinned to goat's runtime version + exact dependency pins (identical to v5)
 df("start")
 sh("git clone --depth 1 --branch v0.10.1 https://github.com/NVIDIA/TensorRT-Edge-LLM.git /kaggle/working/TRTEdge")
+# v3: guarantee TRTEdge cleanup even for pre-try crashes (v2 died before the try block and
+# left the clone in kernel output — CLI log retrieval then crawls ~2k files)
+import atexit
+atexit.register(lambda: shutil.rmtree("/kaggle/working/TRTEdge", ignore_errors=True))
 sh("pip install --progress-bar off "
    "torch==2.13.0 torchvision==0.28.0 transformers==5.14.1 accelerate huggingface-hub "
    "onnx==1.19.0 onnxscript==0.7.1 onnx-graphsurgeon==0.6.1 safetensors==0.8.0 numpy==2.2.6 "
@@ -99,6 +114,11 @@ sh("pip uninstall -y torchaudio")
 # SAME nvidia/cudnn/lib/ dir; mixed-version sublibraries killed v1's first conv3d
 # (CUDNN_STATUS_SUBLIBRARY_VERSION_MISMATCH). "|| true": absent is fine.
 sh("pip uninstall -y nvidia-cudnn-cu12 || true")
+# v3: v2 proved the cu12 uninstall alone doesn't clear the mismatch — force a consistent cu13
+# sublibrary set (reinstall exactly what torch declares) and put it first on the loader path.
+sh("""python3 -c "import importlib.metadata as m; rs=[r for r in (m.requires('torch') or []) if 'nvidia-cudnn' in r]; print(rs[0].split(';')[0].strip().replace(' ', '') if rs else '')" > /tmp/cudnn_req.txt; cat /tmp/cudnn_req.txt""")
+sh('REQ=$(cat /tmp/cudnn_req.txt); if [ -n "$REQ" ]; then pip install --force-reinstall --no-deps "$REQ"; else pip install --force-reinstall --no-deps nvidia-cudnn-cu13; fi')
+os.environ["LD_LIBRARY_PATH"] = "/usr/local/lib/python3.13/dist-packages/nvidia/cudnn/lib:" + os.environ.get("LD_LIBRARY_PATH", "")
 if subprocess.run("which ffmpeg", shell=True).returncode != 0:
     sh("apt-get update -qq && apt-get install -y -qq ffmpeg")
 sh("ffmpeg -version | head -1")
@@ -227,11 +247,22 @@ subprocess.run("nvidia-smi --query-gpu=index,name,memory.total --format=csv,nohe
 # Early gate: source tree + both entry chains + patch E's dataset import must all load
 # (fails fast BEFORE the 22GB download if anything is broken)
 sh("""python -c 'import tensorrt_edgellm, torch, transformers; assert torch.cuda.is_available(), "CUDA unavailable"; x = torch.randn(64, 64, device="cuda"); from tensorrt_edgellm.scripts.quantize import main as _q; from tensorrt_edgellm.scripts.export import main as _e; from tensorrt_edgellm.quantization.datasets import get_dataset; assert get_dataset("image", "av_frames").calib_name == "av_frames"; print("ENV_OK trtedge", tensorrt_edgellm.__version__, "torch", torch.__version__, "tfm", transformers.__version__, "cuda_matmul", float((x @ x).sum()), "entry_imports OK", "av_frames registered")'""")
-# v2: cuDNN conv3d probe — replicates the vision tower's patch_embed op exactly where v1 died
-# (CUDNN_STATUS_SUBLIBRARY_VERSION_MISMATCH from stale cu12 cudnn mixing with torch cu13's);
-# lists the cudnn lib dir so the mixed state is visible; fails at ~4min, before the 22GB
-# download, if the env is still broken.
-sh("""python -c 'import torch, os, glob; libs = sorted(glob.glob("/usr/local/lib/python3.13/dist-packages/nvidia/cudnn*/lib/libcudnn*.so*")); print("cudnn libs:", [os.path.basename(l) for l in libs][:10]); w = torch.randn(1152, 3, 2, 16, 16, device="cuda", dtype=torch.float16); x = torch.randn(1, 3, 2, 480, 832, device="cuda", dtype=torch.float16); y = torch.nn.functional.conv3d(x, w, stride=(2, 16, 16)); torch.cuda.synchronize(); print("CUDNN_CONV3D_OK", tuple(y.shape), "cudnn", torch.backends.cudnn.version())'""")
+# v3: cuDNN conv3d probe — NON-FATAL and adaptive. If the cu13 reinstall + LD_LIBRARY_PATH
+# didn't clear the mismatch, quantize/export run with cudnn disabled (native conv3d; ulp-level
+# numeric difference vs the MMMU arm's cuDNN path — documented caveat, far below INT4 granularity).
+_PROBE = ('import torch, os, glob; '
+          'libs = sorted(glob.glob("/usr/local/lib/python3.13/dist-packages/nvidia/cudnn*/lib/libcudnn*.so*")); '
+          'print("cudnn libs:", [os.path.basename(l) for l in libs][:10]); '
+          'w = torch.randn(1152, 3, 2, 16, 16, device="cuda", dtype=torch.float16); '
+          'x = torch.randn(1, 3, 2, 480, 832, device="cuda", dtype=torch.float16); '
+          'y = torch.nn.functional.conv3d(x, w, stride=(2, 16, 16)); torch.cuda.synchronize(); '
+          'print("CUDNN_CONV3D_OK", tuple(y.shape), "cudnn", torch.backends.cudnn.version())')
+_p = subprocess.run([sys.executable, "-c", _PROBE], capture_output=True, text=True)
+CUDNN_OK = (_p.returncode == 0)
+print("CUDNN_PROBE:", "OK" if CUDNN_OK else "BROKEN -> quantize/export disable cudnn", flush=True)
+print((_p.stdout or "").strip()[-800:], flush=True)
+if not CUDNN_OK:
+    print((_p.stderr or "").strip()[-1500:], flush=True)
 
 ok = False
 try:
@@ -340,14 +371,16 @@ try:
     entry("tensorrt_edgellm.scripts.quantize:main",
           ["tensorrt-edgellm-quantize", "llm", "--model_dir", REPACK,
            "--output_dir", QCKPT, "--quantization", "int4_awq",
-           "--image_dataset", "av_frames"])
+           "--image_dataset", "av_frames"],
+          no_cudnn=not CUDNN_OK)
     print("QUANTIZE_OK", flush=True)
     df("after-quantize")
     shutil.rmtree(REPACK, ignore_errors=True)
 
     # 6) Export ONNX (identical to v5)
     entry("tensorrt_edgellm.scripts.export:main",
-          ["tensorrt-edgellm-export", QCKPT, f"{QCKPT}/onnx", "--max-kv-cache-capacity", "4096"])
+          ["tensorrt-edgellm-export", QCKPT, f"{QCKPT}/onnx", "--max-kv-cache-capacity", "4096"],
+          no_cudnn=not CUDNN_OK)
     print("EXPORT_OK", flush=True)
     df("after-export")
     dest = f"{ART}/R1-vlm-int4_awq_av-onnx"
