@@ -13,14 +13,14 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from paper_style import apply, C4, C8, INK, ANNOT, LEGEND, TICK, TITLE, LABEL, WIDTH_FULL
+from paper_style import (apply, C, out_dir, C4, C8, INK, ANNOT, LEGEND, TICK,
+                         TITLE, LABEL, WIDTH_FULL)
 
 apply()
 import matplotlib.pyplot as plt  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "..", "..", "docs", "figures")
-os.makedirs(OUT, exist_ok=True)
+OUT = out_dir(HERE)
 
 rows = list(csv.DictReader(open(os.path.join(HERE, "len4096_sweep.csv"))))
 
@@ -61,7 +61,7 @@ for n_in, ls, al, lw in ((512, "-", 0.42, 1.2), (4096, "-", 1.0, 1.8)):
     a1.plot(outs, [(pre8[n_in] + m * tpot8) / 1000 for m in outs], ls, color=C8, lw=lw,
             alpha=al, label=f"INT8, {n_in} in")
     xb = BREAK[n_in]
-    a1.plot([xb], [(pre4[n_in] + xb * tpot4) / 1000], "o", ms=5, mfc="white",
+    a1.plot([xb], [(pre4[n_in] + xb * tpot4) / 1000], "o", ms=5, mfc=C("white"),
             mec=INK, mew=1.2, zorder=5)
     a1.annotate(f"交叉 {xb:.0f} tok", xy=(xb, (pre4[n_in] + xb * tpot4) / 1000),
                 xytext=(xb + 8, (pre4[n_in] + xb * tpot4) / 1000 - 0.55),
@@ -83,8 +83,8 @@ a2.fill_between([100, 6000], [0.8, 0.8], [100 / RATIO, 6000 / RATIO],
                 color=C8, alpha=0.13, zorder=1)
 a2.fill_between([100, 6000], [100 / RATIO, 6000 / RATIO], [400, 400],
                 color=C4, alpha=0.13, zorder=1)
-a2.text(3400, 1.35, "INT8 更快", fontsize=ANNOT + 0.5, color="#a16207", ha="center")
-a2.text(300, 150, "INT4 更快", fontsize=ANNOT + 0.5, color="#1d4ed8", ha="center")
+a2.text(3400, 1.35, "INT8 更快", fontsize=ANNOT + 0.5, color=C("#a16207"), ha="center")
+a2.text(300, 150, "INT4 更快", fontsize=ANNOT + 0.5, color=C("#1d4ed8"), ha="center")
 a2.text(5200, 5200 / RATIO * 1.35, f"$n_{{out}}=n_{{in}}/{RATIO:.0f}$",
         fontsize=ANNOT, color=INK, ha="right", rotation=17)
 
@@ -111,5 +111,5 @@ a2.grid(True, which="major", axis="both", ls=":", lw=0.5, alpha=0.5)
 
 fig.tight_layout()
 p = os.path.join(OUT, "precision_crossover.png")
-fig.savefig(p, bbox_inches="tight", facecolor="white")
+fig.savefig(p, bbox_inches="tight")
 print("wrote", p)

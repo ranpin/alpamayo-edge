@@ -15,14 +15,14 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from paper_style import (apply, bar_kw, fig_legend, ANNOT, C4, C8, CF,
-                         WIDTH_FULL)
+from paper_style import (apply, bar_kw, fig_legend, C, out_dir, ANNOT, C4,
+                         C8, CF, WIDTH_FULL)
 
 apply()
 import matplotlib.pyplot as plt  # noqa: E402  (after apply(), style is set)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "..", "docs", "figures")
+OUT = out_dir(HERE)
 RES = os.path.join(HERE, "accuracy", "driving", "RESULTS.json")
 
 SHORT = {
@@ -72,7 +72,7 @@ for off, tag, c, lab in [(-w, "fp16", CF, "FP16 (ref)"),
     vals = series[tag]
     err = np.array([wilson_ci(v, n) for v, n in zip(vals, NS)]).T
     bars = ax.bar(x + off, vals, w, color=c, label=lab, yerr=err, capsize=2.5,
-                  error_kw=dict(elinewidth=0.8, capthick=0.8, ecolor="#333333"),
+                  error_kw=dict(elinewidth=0.8, capthick=0.8, ecolor=C("#333333")),
                   **bar_kw())
     for r_, v, up in zip(bars, vals, err[1]):
         ax.annotate(f"{v:.1f}", (r_.get_x() + r_.get_width() / 2, v + up),
@@ -82,8 +82,8 @@ for off, tag, c, lab in [(-w, "fp16", CF, "FP16 (ref)"),
 ax.axhline(runs["fp16"]["overall"], color=CF, lw=1.0, ls="--", zorder=1)
 ax.text(3.5, runs["fp16"]["overall"], f"FP16 overall {runs['fp16']['overall']:.1f}%",
         color=CF, fontsize=ANNOT, ha="center", va="bottom")
-ax.axhline(chance, color="#94a3b8", lw=1.0, ls=":", zorder=1)
-ax.text(7.6, chance, f"chance {chance}%", color="#64748b", fontsize=ANNOT,
+ax.axhline(chance, color=C("#94a3b8"), lw=1.0, ls=":", zorder=1)
+ax.text(7.6, chance, f"chance {chance}%", color=C("#64748b"), fontsize=ANNOT,
         ha="center", va="bottom")
 ax.set_xticks(x); ax.set_xticklabels(groups)
 ax.set_ylabel("8-way multiple-choice accuracy (%)")

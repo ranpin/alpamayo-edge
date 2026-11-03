@@ -30,13 +30,14 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from paper_style import apply, bar_kw, ANNOT, BASE, C4, C8, INK, RULE, TITLE
+from paper_style import (apply, bar_kw, C, out_dir, ANNOT, BASE, C4, C8, INK,
+                         RULE, TITLE)
 
 apply()
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import FancyBboxPatch  # noqa: E402
 
-OUT = os.path.join(os.path.dirname(__file__), "..", "docs", "figures")
+OUT = out_dir(os.path.dirname(os.path.abspath(__file__)))
 
 WIDE, TALL = C4, C8          # 448x252 (16:9) and 448x358 colours
 SMALL = ANNOT - 0.5
@@ -53,11 +54,11 @@ ax.grid(False)
 
 STAGES = [
     ("① benchmark 视频", [("robovqa 110 段", INK), ("robofail 100 段", INK),
-                          ("（仓库自带 mp4）", "#64748b")]),
+                          ("（仓库自带 mp4）", C("#64748b"))]),
     ("② 我们做的采样", [("均匀取 6 帧", INK), ("长边缩到 448 px", INK),
-                        ("共 1260 张 jpg", "#64748b")]),
+                        ("共 1260 张 jpg", C("#64748b"))]),
     ("③ 实测帧尺寸", [("448×252（170 段）", WIDE), ("448×358（40 段）", TALL),
-                      ("保持原长宽比", "#64748b")]),
+                      ("保持原长宽比", C("#64748b"))]),
     ("④ processor 缩放", [("bicubic → 32 的整数倍", INK),
                           ("448×256", WIDE), ("448×352", TALL)]),
     ("⑤ 归一化 + 切 patch", [("/255 → 均值=标准差=0.5", INK),
@@ -71,15 +72,15 @@ for i, (head, lines) in enumerate(STAGES):
     x = i * (W + GAP)
     ax.add_patch(FancyBboxPatch((x, 8.0), W, 74.0,
                  boxstyle="round,pad=0,rounding_size=1.4", mutation_aspect=0.30,
-                 linewidth=0.9, edgecolor="#94a3b8", facecolor="#f8fafc"))
+                 linewidth=0.9, edgecolor=C("#94a3b8"), facecolor=C("#f8fafc")))
     ax.text(x + W / 2, 74.0, head, ha="center", va="center", fontsize=ANNOT,
-            fontweight="bold", color="#334155")
+            fontweight="bold", color=C("#334155"))
     for j, (txt, col) in enumerate(lines):
         ax.text(x + W / 2, 56.0 - j * 17.0, txt, ha="center", va="center",
                 fontsize=SMALL, color=col)
     if i:
         ax.annotate("", xy=(x - 0.4, 45.0), xytext=(x - GAP + 0.4, 45.0),
-                    arrowprops=dict(arrowstyle="-|>", lw=1.0, color="#94a3b8",
+                    arrowprops=dict(arrowstyle="-|>", lw=1.0, color=C("#94a3b8"),
                                     shrinkA=0, shrinkB=0))
 ax.text(50, 91.0,
         "真正进入网络的不是 448×252，而是缩到 32 的整数倍后的 448×256（每帧 112 token）"
@@ -87,7 +88,7 @@ ax.text(50, 91.0,
         ha="center", va="center", fontsize=ANNOT, color=INK)
 ax.text(50, 0.5, "视觉编码器 = Qwen3-VL 的 ViT（qwen3_vl_vision，27 层，fp16 未量化）"
                  "；预处理全部在主机侧 CPU 完成，不在任何 TRT 引擎里",
-        ha="center", va="center", fontsize=SMALL, color="#64748b")
+        ha="center", va="center", fontsize=SMALL, color=C("#64748b"))
 
 # ---------------- (b) prompt-length budget --------------------------------
 ax2 = fig.add_subplot(gs[1])
@@ -99,7 +100,7 @@ CASES = [
 y = np.arange(len(CASES))[::-1]
 for (lab, img, txt, col), yy in zip(CASES, y):
     ax2.barh(yy, img, color=col, height=0.52, **bar_kw())
-    ax2.barh(yy, txt, left=img, color="#cbd5e1", height=0.52, **bar_kw())
+    ax2.barh(yy, txt, left=img, color=C("#cbd5e1"), height=0.52, **bar_kw())
     ax2.text(1150, yy, f"{img} + {txt} = {img + txt}", va="center",
              fontsize=ANNOT, color=INK)
 ax2.axvline(1024, color=RULE, ls="--", lw=1.1)
@@ -119,8 +120,7 @@ ax2.set_title("Prompt length against the engine's hard input limit "
 fig.suptitle("From a benchmark video to image tokens: measured preprocessing "
              "chain and the resulting prompt budget", y=0.995, fontsize=TITLE)
 fig.tight_layout(rect=(0, 0, 1, 0.965))
-fig.savefig(os.path.join(OUT, "preprocess_chain.png"), bbox_inches="tight",
-            facecolor="white")
+fig.savefig(os.path.join(OUT, "preprocess_chain.png"), bbox_inches="tight")
 plt.close(fig)
 
 print("448x252 -> 448x256 :", (448 // 32), "x", (256 // 32), "=", (448 // 32) * (256 // 32), "tokens")

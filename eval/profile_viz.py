@@ -25,12 +25,13 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from paper_style import apply, bar_kw, ANNOT, C4, C8, CF, RULE
+from paper_style import apply, bar_kw, out_dir, ANNOT, C4, C8, CF, RULE
 
 apply()
 import matplotlib.pyplot as plt  # noqa: E402
 
-OUT = os.path.join(os.path.dirname(__file__), "..", "docs", "figures")
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = out_dir(HERE)
 
 ITERS = 24                 # 3 warmup + 1 capture + 20 timed, all traced as nodes
 TPOT_MS = 33.1313          # measured E2E decode latency per token

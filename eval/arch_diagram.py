@@ -8,31 +8,31 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from paper_style import apply, TITLE, BASE, INK
+from paper_style import apply, TITLE, BASE, INK, C, FACE, out_dir
 
 apply()  # shared conference-paper typography (serif, one type scale, 300 dpi)
 import matplotlib.pyplot as plt  # noqa: E402  (after apply(), style is set)
 from matplotlib.patches import FancyBboxPatch  # noqa: E402
 
-OUT = os.path.join(os.path.dirname(__file__), "..", "docs", "figures")
-os.makedirs(OUT, exist_ok=True)
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = out_dir(HERE)
 
 # color roles
-SRC = "#e9ecef"      # source weights (gray)
-CLOUD = "#dbeafe"    # cloud step (blue)
-CLOUD_E = "#3b82f6"
-ART = "#fef3c7"      # artifact (amber-ish)
-EDGE = "#dcfce7"     # edge step (green)
-EDGE_E = "#22c55e"
-EVAL = "#ede9fe"     # eval (purple)
-EVAL_E = "#8b5cf6"
+SRC = C("#e9ecef")      # source weights (gray)
+CLOUD = C("#dbeafe")    # cloud step (blue)
+CLOUD_E = C("#3b82f6")
+ART = C("#fef3c7")      # artifact (amber-ish)
+EDGE = C("#dcfce7")     # edge step (green)
+EDGE_E = C("#22c55e")
+EVAL = C("#ede9fe")     # eval (purple)
+EVAL_E = C("#8b5cf6")
 
 fig, ax = plt.subplots(figsize=(6.7, 8.0))
 ax.set_xlim(0, 10); ax.set_ylim(0, 10); ax.axis("off")
 ax.grid(False)
 
 
-def box(y, text, face, edge="#94a3b8", x=5.0, w=8.6, h=1.0, fs=BASE, bold=False):
+def box(y, text, face, edge=C("#94a3b8"), x=5.0, w=8.6, h=1.0, fs=BASE, bold=False):
     ax.add_patch(FancyBboxPatch((x - w / 2, y - h / 2), w, h,
                  boxstyle="round,pad=0.04,rounding_size=0.12",
                  linewidth=1.0, edgecolor=edge, facecolor=face))
@@ -42,10 +42,10 @@ def box(y, text, face, edge="#94a3b8", x=5.0, w=8.6, h=1.0, fs=BASE, bold=False)
 
 def arrow(y1, y2, label=None, x=5.0):
     ax.annotate("", xy=(x, y2 + 0.02), xytext=(x, y1 - 0.02),
-                arrowprops=dict(arrowstyle="-|>", lw=1.1, color="#475569"))
+                arrowprops=dict(arrowstyle="-|>", lw=1.1, color=C("#475569")))
     if label:
         ax.text(x + 0.15, (y1 + y2) / 2, label, ha="left", va="center",
-                fontsize=BASE - 1, color="#475569")
+                fontsize=BASE - 1, color=C("#475569"))
 
 
 box(9.2, "nvidia/Cosmos-Reason2-8B\nHuggingFace 门控 · fp16 预训练权重（我们只量化、不训练）",
@@ -54,12 +54,12 @@ arrow(8.7, 8.05, "下载")
 box(7.55, "云端 Kaggle T4×2  —  NVIDIA ModelOpt 训练后量化(PTQ)\nAWQ (W4A16)  /  SmoothQuant (W8A8)   ·   校准集: cnn_dailymail 512 篇",
     CLOUD, CLOUD_E, w=9.0, h=1.15, fs=BASE)
 arrow(6.97, 6.3, "导出 ONNX")
-box(5.85, "边缘 ONNX 产物   (LLM + fp16 视觉编码器)", ART, "#d97706", w=6.6, h=0.85)
+box(5.85, "边缘 ONNX 产物   (LLM + fp16 视觉编码器)", ART, C("#d97706"), w=6.6, h=0.85)
 arrow(5.42, 4.75, "scp  (Orin 无外网：云 → 本地 → Orin)")
 box(4.3, "Jetson AGX Orin (sm_87)  —  TensorRT-Edge-LLM v0.9.0  ·  llm_build",
     EDGE, EDGE_E, w=9.0, h=0.95, fs=BASE)
 arrow(3.82, 3.2, "建引擎")
-box(2.75, "TensorRT 引擎    INT4 / INT8 / FP16   (设备专用)", ART, "#d97706", w=7.2, h=0.85)
+box(2.75, "TensorRT 引擎    INT4 / INT8 / FP16   (设备专用)", ART, C("#d97706"), w=7.2, h=0.85)
 arrow(2.32, 1.7)
 box(1.25, "边缘推理 llm_inference / llm_bench   +   tegrastats 采功耗", EDGE, EDGE_E, w=8.6, h=0.85)
 arrow(0.82, 0.2)
@@ -73,5 +73,5 @@ ax.text(5, 9.86, "Alpamayo-Edge 端到端流程：云端量化 → 边缘部署 
 
 fig.tight_layout()
 fig.savefig(os.path.join(OUT, "pipeline.png"), bbox_inches="tight",
-            facecolor="white")
+            facecolor=FACE)
 print("wrote", os.path.join(OUT, "pipeline.png"))

@@ -15,12 +15,13 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, ".."))
-from paper_style import apply, bar_kw, ANNOT, C4, C8, CF, RULE, WIDTH_FULL
+from paper_style import (apply, bar_kw, C, out_dir, ANNOT, C4, C8, CF, RULE,
+                         DARK, INK, ONACC, WIDTH_FULL)
 
 apply()
 import matplotlib.pyplot as plt  # noqa: E402
 
-OUT = os.path.join(HERE, "..", "..", "docs", "figures")
+OUT = out_dir(HERE)
 D = json.load(open(os.path.join(HERE, "RESULTS.json")))
 MAX_INPUT_LEN = D["constraints"]["llm_maxInputLen"]
 TOK_PER_FRAME = D["per_frame_image_tokens"]
@@ -40,7 +41,10 @@ for i in range(len(f)):
     a1.annotate(f"{ttft[i]:.0f} ms", (x[i], ttft[i]), ha="center", va="bottom",
                 fontsize=ANNOT, xytext=(0, 2), textcoords="offset points")
     a1.annotate(f"{100*vis[i]/ttft[i]:.0f}%", (x[i], vis[i] / 2), ha="center",
-                va="center", fontsize=ANNOT, color="#1a1a2e")
+                va="center", fontsize=ANNOT,
+                # text ON the saturated C8 bar: light keeps the original dark
+                # ink (= INK light); dark bars are bright so text goes ONACC
+                color=ONACC if DARK else INK)
 a1.set_xticks(x); a1.set_xticklabels([f"{int(n)}" for n in f])
 a1.set_xlabel("input frames")
 a1.set_ylabel("time to first token (ms)")
@@ -50,7 +54,7 @@ a1.set_ylim(0, ttft.max() * 1.18)
 # ---- right: vision cost scaling + AV camera-count extrapolation ----
 slope, icept = np.polyfit(f, vis, 1)
 xs = np.linspace(0.5, 9.2, 100)
-a2.plot(xs, icept + slope * xs, "-", color="#888888", lw=1.0,
+a2.plot(xs, icept + slope * xs, "-", color=C("#888888"), lw=1.0,
         label=f"fit: {icept:.1f} + {slope:.1f} ms x frames")
 a2.plot(f, vis, "o", color=C8, ms=6, label="measured")
 for xi, yi in zip(f, vis):

@@ -17,12 +17,12 @@ import matplotlib.image as mpimg
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, ".."))
-from paper_style import apply, ANNOT, BASE, C4, C8, CF, INK
+from paper_style import apply, C, out_dir, ANNOT, BASE, C4, C8, CF, INK
 
 apply()
 import matplotlib.pyplot as plt  # noqa: E402
 
-OUT = os.path.join(HERE, "..", "..", "docs", "figures")
+OUT = out_dir(HERE)
 
 FRAMES = [os.path.join(HERE, f"robovqa_0_{i}.jpg") for i in range(6)]
 GEN = json.load(open(os.path.join(HERE, "freeform_out.json")))["responses"][0]["output_text"]
@@ -39,7 +39,7 @@ for i, f in enumerate(FRAMES):
     ax.imshow(mpimg.imread(f))
     ax.set_xticks([]); ax.set_yticks([]); ax.grid(False)
     for sp in ax.spines.values():
-        sp.set_visible(True); sp.set_linewidth(0.6); sp.set_color("#888888")
+        sp.set_visible(True); sp.set_linewidth(0.6); sp.set_color(C("#888888"))
     ax.set_title(f"frame {i+1}", fontsize=ANNOT, pad=2)
 fig.text(0.5, 0.995, "INPUT 1 of 2 — vision:  6 video frames, resized to <=448 px  "
                      "->  vision encoder  ->  112 image tokens per frame = 672 tokens",
@@ -50,22 +50,22 @@ ax = fig.add_subplot(gs[1, :]); ax.axis("off"); ax.grid(False)
 ax.text(0, 1.0, "INPUT 2 of 2 — text:  the question, verbatim (87 tokens)",
         fontsize=BASE, va="top", color=INK)
 ax.text(0, 0.66, "\n".join(textwrap.wrap(PROMPT, 118)), fontsize=ANNOT, va="top",
-        family="monospace", color="#333333",
-        bbox=dict(boxstyle="round,pad=0.5", facecolor="#f2f6ff", edgecolor=C4, linewidth=0.8))
+        family="monospace", color=C("#333333"),
+        bbox=dict(boxstyle="round,pad=0.5", facecolor=C("#f2f6ff"), edgecolor=C4, linewidth=0.8))
 ax.text(0, -0.05, "total prompt = 672 image + 87 text = 759 tokens  ->  prefill",
-        fontsize=ANNOT, va="bottom", color="#666666")
+        fontsize=ANNOT, va="bottom", color=C("#666666"))
 
 # ---- row 3: the actual output ----
 ax = fig.add_subplot(gs[2, :]); ax.axis("off"); ax.grid(False)
 ax.text(0, 1.0, "OUTPUT — generated text, verbatim from the INT4 engine on orin-dog",
         fontsize=BASE, va="top", color=INK)
 ax.text(0, 0.80, "\n".join(textwrap.wrap(GEN, 118)), fontsize=ANNOT, va="top",
-        family="monospace", color="#333333",
-        bbox=dict(boxstyle="round,pad=0.5", facecolor="#f1fbf4", edgecolor=CF, linewidth=0.8))
+        family="monospace", color=C("#333333"),
+        bbox=dict(boxstyle="round,pad=0.5", facecolor=C("#f1fbf4"), edgecolor=CF, linewidth=0.8))
 ax.text(0, -0.30, "Same engine, benchmark mode: the question ends with "
                   "\"Answer with ONLY the single letter\" -> output is one token, e.g. \"A\", "
                   "which is what the n=210 accuracy is scored on.",
-        fontsize=ANNOT, va="bottom", color="#666666")
+        fontsize=ANNOT, va="bottom", color=C("#666666"))
 
 fig.suptitle("", y=0.99)
 fig.savefig(os.path.join(OUT, "io_example.png"), bbox_inches="tight")

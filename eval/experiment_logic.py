@@ -18,22 +18,22 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from paper_style import apply, ANNOT, BASE, INK, TITLE
+from paper_style import apply, ANNOT, BASE, INK, TITLE, C, FACE, out_dir
 
 apply()
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import FancyBboxPatch  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 
-OUT = os.path.join(os.path.dirname(__file__), "..", "docs", "figures")
-os.makedirs(OUT, exist_ok=True)
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = out_dir(HERE)
 
 # outcome palette
-OK_F, OK_E = "#dcfce7", "#16a34a"      # answered / confirmed
-NEG_F, NEG_E = "#e8eaf6", "#5c6bc0"    # negative result: headroom proven absent
-NO_F, NO_E = "#fef3c7", "#d97706"      # attempted, not achieved -> prediction
-Q_F, Q_E = "#f8fafc", "#64748b"        # the question
-E_F, E_E = "#dbeafe", "#2563eb"        # the experiment
+OK_F, OK_E = C("#dcfce7"), C("#16a34a")      # answered / confirmed
+NEG_F, NEG_E = C("#e8eaf6"), C("#5c6bc0")    # negative result: headroom proven absent
+NO_F, NO_E = C("#fef3c7"), C("#d97706")      # attempted, not achieved -> prediction
+Q_F, Q_E = C("#f8fafc"), C("#64748b")        # the question
+E_F, E_E = C("#dbeafe"), C("#2563eb")        # the experiment
 
 fig, ax = plt.subplots(figsize=(10.4, 9.3))
 ax.set_xlim(0, 100)
@@ -67,11 +67,11 @@ def band(ybot, num, q, sec, exp, chead, ctext, cface, cedge):
     panel(CX, ybot, CW, H, ctext, cface, cedge, head=chead, hcol=cedge)
     for x0, x1 in ((QX + QW, EX), (EX + EW, CX)):
         ax.annotate("", xy=(x1 - 0.15, ybot + H / 2), xytext=(x0 + 0.15, ybot + H / 2),
-                    arrowprops=dict(arrowstyle="-|>", lw=1.0, color="#94a3b8",
+                    arrowprops=dict(arrowstyle="-|>", lw=1.0, color=C("#94a3b8"),
                                     shrinkA=0, shrinkB=0))
 
 
-def link(y, text, color="#475569"):
+def link(y, text, color=C("#475569")):
     """The logical transition: what the previous conclusion made us ask next."""
     ax.annotate("", xy=(QX + 5.0, y - 1.35), xytext=(QX + 5.0, y + 1.5),
                 arrowprops=dict(arrowstyle="-|>", lw=1.0, color=color,
@@ -84,7 +84,7 @@ def link(y, text, color="#475569"):
 for x, w, t in ((QX, QW, "提出的问题"), (EX, EW, "做的实验（对应章节）"),
                 (CX, CW, "得到的结论（全部为实测）")):
     ax.text(x + w / 2, 97.6, t, ha="center", va="center", fontsize=BASE,
-            fontweight="bold", color="#334155")
+            fontweight="bold", color=C("#334155"))
 
 # ---- rounds --------------------------------------------------------------
 band(88.0, "①",
@@ -130,7 +130,7 @@ band(55.6, "④",
      OK_F, OK_E)
 
 link(53.2, "于是出现两条互斥的提速路线 —— 提高带宽效率 还是 继续压字节？两条都验证：",
-     "#b45309")
+     C("#b45309"))
 
 band(44.8, "⑤A",
      "路线 B：自己写 kernel，把\nGEMV 的带宽效率提上去？",
@@ -143,10 +143,10 @@ band(44.8, "⑤A",
 
 # fork: rounds 5A and 5B are two parallel routes out of round 4's conclusion
 FKX = 1.1
-ax.plot([QX + 5.0, FKX], [52.3, 52.3], "-", color="#b45309", lw=1.0, zorder=1)
-ax.plot([FKX, FKX], [52.3, 37.9], "-", color="#b45309", lw=1.0, zorder=1)
+ax.plot([QX + 5.0, FKX], [52.3, 52.3], "-", color=C("#b45309"), lw=1.0, zorder=1)
+ax.plot([FKX, FKX], [52.3, 37.9], "-", color=C("#b45309"), lw=1.0, zorder=1)
 ax.annotate("", xy=(QX - 0.15, 37.9), xytext=(FKX, 37.9),
-            arrowprops=dict(arrowstyle="-|>", lw=1.0, color="#b45309",
+            arrowprops=dict(arrowstyle="-|>", lw=1.0, color=C("#b45309"),
                             shrinkA=0, shrinkB=0))
 
 band(34.0, "⑤B",
@@ -183,14 +183,14 @@ band(12.4, "⑦",
 
 # ---- closing strip -------------------------------------------------------
 ax.annotate("", xy=(QX + 5.0, 8.4), xytext=(QX + 5.0, 11.0),
-            arrowprops=dict(arrowstyle="-|>", lw=1.0, color="#475569",
+            arrowprops=dict(arrowstyle="-|>", lw=1.0, color=C("#475569"),
                             shrinkA=0, shrinkB=0))
 panel(QX, 0.6, 96.9, 7.6,
       "① 交互式 / 长输出选 INT4（vs FP16：decode 2.66×、能效 3.1×）；批量 / 长 prompt 选 INT8"
       "（vs FP16：prefill 1.87×、能效 2.1×）；② 32 GB 机上 FP16 不可行 ⇒ 量化是可部署性的前提；\n"
       "③ lm_head 量化已兑现（+19.6%，代价 −1.4 pts）⇒ **decode 这一条**已达可达带宽上限；已证死的只有 W4A8（工具里不存在）与手写 kernel（实测无余量）。\n"
       "**ViT / vocab reduction / 投机解码三条仍未探明**——此前把「工具开关只给 fp8」误当成「不可行」。",
-      "#f8fafc", "#94a3b8",
+      C("#f8fafc"), C("#94a3b8"),
       head="⇒ 以上各轮实验合起来给出的部署决策（§三 思考讨论）", hcol=INK)
 
 handles = [
@@ -205,6 +205,6 @@ fig.suptitle("Experiment chain: each round's conclusion is the next round's "
              "question", y=0.996, fontsize=TITLE)
 fig.tight_layout(rect=(0, 0.022, 1, 0.978))
 fig.savefig(os.path.join(OUT, "experiment_logic.png"), bbox_inches="tight",
-            facecolor="white")
+            facecolor=FACE)
 plt.close(fig)
 print("wrote", os.path.join(OUT, "experiment_logic.png"))

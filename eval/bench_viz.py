@@ -20,13 +20,14 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from paper_style import (apply, bar_kw, fig_legend, label_bars, ANNOT, C4, C8,
-                         CF, RULE, WIDTH_FULL, WIDTH_HALF)
+from paper_style import (apply, bar_kw, fig_legend, label_bars, C, out_dir,
+                         ANNOT, C4, C8, CF, RULE, WIDTH_FULL, WIDTH_HALF)
 
 apply()
 import matplotlib.pyplot as plt  # noqa: E402  (after apply(), style is set)
 
-OUT = os.path.join(os.path.dirname(__file__), "..", "docs", "figures")
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = out_dir(HERE)
 os.makedirs(OUT, exist_ok=True)
 
 COND_GOAT = "orin-goat, MAXN, batch = 1"
@@ -157,7 +158,7 @@ for off, vals, c, lab in [(-w, fp16, CF, "FP16 (ref)"),
                           (w, int4, C4, "INT4 (AWQ)")]:
     err = np.array([wilson_ci(v, n) for v, n in zip(vals, NS)]).T
     bars = ax.bar(x + off, vals, w, color=c, label=lab, yerr=err, capsize=2.5,
-                  error_kw=dict(elinewidth=0.8, capthick=0.8, ecolor="#333333"),
+                  error_kw=dict(elinewidth=0.8, capthick=0.8, ecolor=C("#333333")),
                   **bar_kw())
     # value labels sit above the upper CI cap, not on top of it
     for r, v, up in zip(bars, vals, err[1]):

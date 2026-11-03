@@ -39,12 +39,13 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from paper_style import (apply, ANNOT, C4, C8, CF, WIDTH_FULL)
+from paper_style import (apply, C, out_dir, ANNOT, C4, C8, CF, WIDTH_FULL)
 
 apply()
 import matplotlib.pyplot as plt  # noqa: E402
 
-OUT = os.path.join(os.path.dirname(__file__), "..", "docs", "figures")
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = out_dir(HERE)
 os.makedirs(OUT, exist_ok=True)
 
 # ---- hardware ceilings (AGX Orin, sm_87, MAXN) ---------------------------
@@ -94,11 +95,11 @@ fig, (a1, a2) = plt.subplots(1, 2, figsize=(WIDTH_FULL, 4.25))
 ai = np.logspace(-1, 4, 400)
 for ax in (a1, a2):
     # memory roofs (slanted) and compute roofs (flat)
-    ax.plot(ai, np.minimum(BW_PEAK * ai, PEAK_INT8) / 1e12, "-", color="#555555",
+    ax.plot(ai, np.minimum(BW_PEAK * ai, PEAK_INT8) / 1e12, "-", color=C("#555555"),
             lw=1.2, label="INT8 roof (85 TOP/s, 204.8 GB/s)")
-    ax.plot(ai, np.minimum(BW_PEAK * ai, PEAK_FP16) / 1e12, "--", color="#555555",
+    ax.plot(ai, np.minimum(BW_PEAK * ai, PEAK_FP16) / 1e12, "--", color=C("#555555"),
             lw=1.0, label="FP16 roof (43 TFLOP/s, 204.8 GB/s)")
-    ax.plot(ai, np.minimum(BW_ACH * ai, PEAK_FP16) / 1e12, ":", color="#999999",
+    ax.plot(ai, np.minimum(BW_ACH * ai, PEAK_FP16) / 1e12, ":", color=C("#999999"),
             lw=1.0, label="FP16 roof at achievable BW (150 GB/s)")
     ax.set_xscale("log"); ax.set_yscale("log")
     ax.set_xlabel("arithmetic intensity (FLOP or OP per byte)")

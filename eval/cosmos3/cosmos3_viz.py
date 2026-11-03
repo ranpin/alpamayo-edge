@@ -24,14 +24,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..", "..")
 sys.path.insert(0, os.path.join(ROOT, "eval"))
 sys.path.insert(0, os.path.join(ROOT, "eval", "accuracy", "benchmark"))
-from paper_style import apply, bar_kw, label_bars, ANNOT, C4, C8, CF, WIDTH_FULL  # noqa: E402
+from paper_style import (apply, bar_kw, label_bars, C, out_dir, ANNOT, C4, C8,
+                         CF, WIDTH_FULL)  # noqa: E402
 from score_mc import load_run, mcnemar_exact, parse_choice, wilson  # noqa: E402
 
 apply()
 import matplotlib.pyplot as plt  # noqa: E402
 
-OUT = os.path.join(ROOT, "docs", "figures")
-C3 = "#7c3aed"  # Cosmos3-Edge violet (distinct from the CR2-8B trio)
+OUT = out_dir(HERE)
+C3 = C("#7c3aed")  # Cosmos3-Edge violet (distinct from the CR2-8B trio)
 
 
 def score_cosmos3():
@@ -78,11 +79,11 @@ def fig_crossgen():
     fig, ax = plt.subplots(figsize=(WIDTH_FULL * 0.62, 3.4))
     x = np.arange(len(names))
     bars = ax.bar(x, accs, width=0.62, color=cols, **bar_kw())
-    ax.errorbar(x, accs, yerr=errs, fmt="none", ecolor="#333", elinewidth=1,
+    ax.errorbar(x, accs, yerr=errs, fmt="none", ecolor=C("#333"), elinewidth=1,
                 capsize=4, capthick=1, zorder=5)
-    ax.axhline(drv["chance_pct"], color="#999", ls=":", lw=1)
+    ax.axhline(drv["chance_pct"], color=C("#999"), ls=":", lw=1)
     ax.text(len(names) - 0.42, drv["chance_pct"] + 1.0, f"随机 {drv['chance_pct']}%",
-            ha="right", fontsize=ANNOT, color="#777")
+            ha="right", fontsize=ANNOT, color=C("#777"))
     label_bars(ax, bars, fmt="{:.1f}")
     ax.set_xticks(x)
     ax.set_xticklabels(names)
@@ -92,10 +93,10 @@ def fig_crossgen():
     # cross-gen gap annotation
     gap = accs[0] - accs[3]
     ax.annotate("", xy=(3, accs[3] + errs[1][3] + 3.5), xytext=(0, accs[0] + errs[1][0] + 3.5),
-                arrowprops=dict(arrowstyle="<->", color="#555", lw=0.9))
+                arrowprops=dict(arrowstyle="<->", color=C("#555"), lw=0.9))
     ax.text(1.5, max(accs[0], accs[3]) + errs[1][0] + 5.0,
             f"跨代差 −{gap:.1f} pts\n(McNemar b/c={b}/{cc}, p={p:.4f})",
-            ha="center", fontsize=ANNOT, color="#333")
+            ha="center", fontsize=ANNOT, color=C("#333"))
     fig.tight_layout(rect=[0, 0, 1, 0.98])
     out = os.path.join(OUT, "cosmos3_crossgen.png")
     fig.savefig(out, bbox_inches="tight")
@@ -137,7 +138,7 @@ def fig_policy(acts):
     diffs = [np.abs(acts[a] - acts[b]).mean() for a, b in pairs]
     within = np.mean([np.linalg.norm(np.cumsum(acts[n][:, 0:3], axis=0)[-1]) for n in frames])
     xs = np.arange(len(pairs))
-    bars = axB.bar(xs, diffs, width=0.6, color="#94a3b8", **bar_kw())
+    bars = axB.bar(xs, diffs, width=0.6, color=C("#94a3b8"), **bar_kw())
     label_bars(axB, bars, fmt="{:.4f}")
     axB.axhline(within, color=C3, ls="--", lw=1.2)
     axB.text(len(pairs) - 0.45, within, f"帧内位移范数 ≈ {within:.2f}",

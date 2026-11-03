@@ -23,13 +23,13 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 "..", "..", ".."))
-from paper_style import apply, bar_kw, ANNOT, C4, C8, CF, WIDTH_FULL  # noqa: E402
+from paper_style import apply, bar_kw, C, out_dir, ANNOT, C4, C8, CF, WIDTH_FULL  # noqa: E402
 
 apply()
 import matplotlib.pyplot as plt  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "..", "..", "..", "..", "docs", "figures")
+OUT = out_dir(HERE)
 
 TIERS = ["448", "720p", "1080p"]
 RUNKEY = {"448": "t448", "720p": "t720", "1080p": "t1080"}
@@ -101,7 +101,7 @@ for ax, series, ylabel, title in panels:
             err = np.array([wilson_ci(v, n) for v in vv]).T
             bars = ax.bar(x[idx] + off, vv, w, color=c, label=lab, yerr=err,
                           capsize=2.5, error_kw=dict(elinewidth=0.8, capthick=0.8,
-                                                     ecolor="#333333"), **bar_kw())
+                                                     ecolor=C("#333333")), **bar_kw())
             for r, v, up in zip(bars, vv, err[1]):
                 ax.annotate(f"{v:.1f}", (r.get_x() + r.get_width() / 2, v + up),
                             ha="center", va="bottom", fontsize=ANNOT,
@@ -121,8 +121,8 @@ if fp16_448 is not None:
     a1.axhline(fp16_448, color=CF, lw=1.0, ls="--", zorder=1)
     a1.text(1.0, fp16_448, f"FP16 @448 {fp16_448:.1f}%", color=CF, fontsize=ANNOT,
             ha="center", va="bottom")
-a1.axhline(12.5, color="#94a3b8", lw=1.0, ls=":", zorder=1)
-a1.text(2.0, 12.5, "chance 12.5%", color="#64748b", fontsize=ANNOT,
+a1.axhline(12.5, color=C("#94a3b8"), lw=1.0, ls=":", zorder=1)
+a1.text(2.0, 12.5, "chance 12.5%", color=C("#64748b"), fontsize=ANNOT,
         ha="center", va="bottom")
 a1.set_ylim(0, 100)
 a1.legend(loc="upper left", fontsize=ANNOT, frameon=False)

@@ -22,16 +22,16 @@ Out:  docs/figures/model_arch.png
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from paper_style import apply, ANNOT, BASE, INK, TITLE
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+from paper_style import apply, out_dir, C, ANNOT, BASE, INK, TITLE
 
 apply()
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import FancyBboxPatch  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 
-OUT = os.path.join(os.path.dirname(__file__), "..", "docs", "figures")
-os.makedirs(OUT, exist_ok=True)
+OUT = out_dir(HERE)
 
 # ---- measured shapes ------------------------------------------------------
 L, H, FFN, KVH, HD, V, GRP = 36, 4096, 12288, 8, 128, 151936, 128
@@ -52,12 +52,14 @@ print(f"matmul params {matmul/1e9:.3f} B  = decoder attn {P_ATTN:.1f}% + "
 print(f"INT4 decode bytes/token {BY_INT4/1e9:.3f} GB  -> lm_head {B_LMH:.1f}%")
 
 # ---- palette by "what we did to it" --------------------------------------
-Q_F, Q_E = "#dbeafe", "#2563eb"     # quantized by us (INT4/INT8)
-F_F, F_E = "#fef3c7", "#d97706"     # still fp16 -> the identified headroom
-N_F, N_E = "#eef2f7", "#94a3b8"     # no weights / not in the LLM engine
-DS_E = "#7c3aed"                    # deepstack side path
-IO_F, IO_E = "#f1f5f9", "#64748b"   # I/O
-INNER = "#ffffff"
+# All fills are pale tints (never saturated), so box text stays INK and no
+# ONACC is needed anywhere in this figure.
+Q_F, Q_E = C("#dbeafe"), C("#2563eb")     # quantized by us (INT4/INT8)
+F_F, F_E = C("#fef3c7"), C("#d97706")     # still fp16 -> the identified headroom
+N_F, N_E = C("#eef2f7"), C("#94a3b8")     # no weights / not in the LLM engine
+DS_E = C("#7c3aed")                        # deepstack side path
+IO_F, IO_E = C("#f1f5f9"), C("#64748b")   # I/O
+INNER = C("#ffffff")
 
 fig, ax = plt.subplots(figsize=(10.4, 7.9))
 ax.set_xlim(0, 100)
@@ -82,13 +84,13 @@ def box(x, y, w, h, text, face, edge, fs=BASE, bold=False, ls="-", z=2,
             linespacing=lsp)
 
 
-def down(x, y1, y2, label=None, lw=1.1, color="#475569", style="-|>"):
+def down(x, y1, y2, label=None, lw=1.1, color=C("#475569"), style="-|>"):
     ax.annotate("", xy=(x, y2), xytext=(x, y1),
                 arrowprops=dict(arrowstyle=style, lw=lw, color=color,
                                 shrinkA=0, shrinkB=0))
     if label:
         ax.text(x + 0.9, (y1 + y2) / 2, label, ha="left", va="center",
-                fontsize=ANNOT, color="#475569")
+                fontsize=ANNOT, color=C("#475569"))
 
 
 def tag(x, y, letter, color):
@@ -99,7 +101,7 @@ def tag(x, y, letter, color):
     """
     ax.text(x, y, letter, ha="center", va="center", fontsize=ANNOT - 0.5,
             color=color, fontweight="bold", zorder=7,
-            bbox=dict(boxstyle="circle,pad=0.32", facecolor="white",
+            bbox=dict(boxstyle="circle,pad=0.32", facecolor=C("white"),
                       edgecolor=color, linewidth=0.9))
 
 
@@ -107,12 +109,12 @@ def note(y, letter, title, body, color):
     """Right-lane annotation keyed to a module tag."""
     ax.text(RX + 1.0, y + 1.0, letter, ha="center", va="center",
             fontsize=ANNOT - 0.5, color=color, fontweight="bold",
-            bbox=dict(boxstyle="circle,pad=0.32", facecolor="white",
+            bbox=dict(boxstyle="circle,pad=0.32", facecolor=C("white"),
                       edgecolor=color, linewidth=0.9))
     ax.text(RX + 3.4, y + 0.4, title, ha="left", va="bottom",
             fontsize=ANNOT, color=color, fontweight="bold")
     ax.text(RX + 3.4, y - 0.5, body, ha="left", va="top", fontsize=ANNOT,
-            color="#333333", linespacing=1.5)
+            color=C("#333333"), linespacing=1.5)
 
 
 # ================= input =================
@@ -163,15 +165,15 @@ ax.annotate("", xy=(LX + 6.0, DY + DH - 5.0), xytext=(LX + 6.0, 78.0),
 ax.text(LX + 6.9, 67.9, "DeepStack：ViT 第 8/16/24 层的 3 路特征\n注入 decoder 前 3 层（见图 1）",
         ha="left", va="center", fontsize=ANNOT - 0.5, color=DS_E)
 
-box(LX + 3.5, DY + 29.4, 45.5, 3.4, "RMSNorm", INNER, "#c7d2df", fs=ANNOT, z=3)
+box(LX + 3.5, DY + 29.4, 45.5, 3.4, "RMSNorm", INNER, C("#c7d2df"), fs=ANNOT, z=3)
 box(LX + 3.5, DY + 18.6, 45.5, 9.8,
     "自注意力 Attention（GQA 32 Q 头 / 8 KV 头 · headDim 128）\n"
     "q 4096×4096 · k, v 4096×1024 · o 4096×4096 　+ RoPE →  KV cache",
-    INNER, "#c7d2df", fs=ANNOT, z=3)
-box(LX + 3.5, DY + 13.6, 45.5, 3.4, "RMSNorm", INNER, "#c7d2df", fs=ANNOT, z=3)
+    INNER, C("#c7d2df"), fs=ANNOT, z=3)
+box(LX + 3.5, DY + 13.6, 45.5, 3.4, "RMSNorm", INNER, C("#c7d2df"), fs=ANNOT, z=3)
 box(LX + 3.5, DY + 4.0, 45.5, 8.6,
     "前馈网络 MLP（SwiGLU）\ngate, up 4096×12288 · down 12288×4096",
-    INNER, "#c7d2df", fs=ANNOT, z=3)
+    INNER, C("#c7d2df"), fs=ANNOT, z=3)
 ax.text(LX + 26.0, DY + 1.9,
         f"每层 7 个线性层 → 36 层共 {quant_w/1e9:.2f} B 参数 = 全部矩阵乘参数的 "
         f"{P_ATTN + P_MLP:.1f}%（注意力 {P_ATTN:.1f}% + MLP {P_MLP:.1f}%）",
@@ -184,16 +186,16 @@ note(62.5, "B", "§1.1–1.4　量化：INT4 AWQ (W4A16) / INT8 SmoothQuant (W8A
      "Roofline：decode 算术强度仅 1.0–3.2 ⇒ 纯访存墙，加速上限就是字节比 3.16×（§1.4）。",
      Q_E)
 
-tag(LX + 47.0, DY + 31.1, "C", "#64748b")
+tag(LX + 47.0, DY + 31.1, "C", C("#64748b"))
 note(53.8, "C", "§1.5　RMSNorm / RoPE / SwiGLU：已被 TensorRT 融合",
      "六个 __myl_* 融合 kernel 合计仅 3.2% 时间，且 CUDA graph 已启用\n"
      "⇒「算子融合 + 降 launch 开销」这条常规优化路线在此没有空间（诚实的负结果）。",
-     "#64748b")
+     C("#64748b"))
 
-tag(LX + 47.0, DY + 26.4, "D", "#64748b")
+tag(LX + 47.0, DY + 26.4, "D", C("#64748b"))
 note(46.6, "D", "§1.1　注意力与 KV cache：非瓶颈（实测）",
      "kernel_mha 只占 decode 时间 2.7%；上下文 128→4000（涨 31×）吞吐仅掉 9%。",
-     "#64748b")
+     C("#64748b"))
 
 tag(LX + 47.0, DY + 11.0, "E", Q_E)
 note(41.6, "E", "§1.6　手写 W4A16 GEMV 对照 —— 已证无余量",
@@ -222,16 +224,16 @@ box(LX + 1.0, 0.4, 50.5, 4.0,
     "采样 → 1 个 token → 回灌下一步（自回归），直到 EOS 或长度上限 ⇒ 输出一段文字",
     IO_F, IO_E, fs=ANNOT + 0.5)
 ax.annotate("", xy=(LX + 0.6, DY + DH / 2), xytext=(LX + 0.6, 2.4),
-            arrowprops=dict(arrowstyle="-|>", lw=0.9, color="#94a3b8",
+            arrowprops=dict(arrowstyle="-|>", lw=0.9, color=C("#94a3b8"),
                             connectionstyle="arc3,rad=0.0"))
 ax.text(LX - 0.4, DY - 6.0, "自回归回灌", ha="center", va="center",
-        fontsize=ANNOT, color="#94a3b8", rotation=90)
+        fontsize=ANNOT, color=C("#94a3b8"), rotation=90)
 
 # ---- per-token byte budget: ties the module shares back to the wall ------
 bx, by, bw, bh = RX + 1.0, 18.0, 42.0, 15.6
 ax.add_patch(FancyBboxPatch((bx, by), bw, bh,
              boxstyle="round,pad=0,rounding_size=1.0", mutation_aspect=0.55,
-             linewidth=0.8, edgecolor="#94a3b8", facecolor="#fbfcfe"))
+             linewidth=0.8, edgecolor=C("#94a3b8"), facecolor=C("#fbfcfe")))
 ax.text(bx + 1.6, by + bh - 1.9,
         "每生成 1 个 token，必须把整个引擎搬一遍（decode = 访存墙）",
         ha="left", va="center", fontsize=ANNOT, color=INK, fontweight="bold")
@@ -240,17 +242,17 @@ budget = [
     ("AWQ scales + zeros", "0.136 GB", "2.8%", "—", Q_E),
     ("lm_head · fp16（可选 INT4）", "1.245 GB", "25.6%", "22.0%", F_E),
 ]
-ax.text(bx + 1.6, by + bh - 4.6, "部件", fontsize=ANNOT, color="#64748b")
+ax.text(bx + 1.6, by + bh - 4.6, "部件", fontsize=ANNOT, color=C("#64748b"))
 for lbl, xx in (("字节/token", 21.5), ("占字节", 29.6), ("占时间", 36.4)):
-    ax.text(bx + xx, by + bh - 4.6, lbl, fontsize=ANNOT, color="#64748b",
+    ax.text(bx + xx, by + bh - 4.6, lbl, fontsize=ANNOT, color=C("#64748b"),
             ha="right")
 for i, (nm, gb, pb, pt, col) in enumerate(budget):
     y = by + bh - 6.6 - i * 2.2
     ax.text(bx + 1.6, y, nm, fontsize=ANNOT, color=col, va="center")
     for val, xx in ((gb, 21.5), (pb, 29.6), (pt, 36.4)):
-        ax.text(bx + xx, y, val, fontsize=ANNOT, color="#333333",
+        ax.text(bx + xx, y, val, fontsize=ANNOT, color=C("#333333"),
                 va="center", ha="right")
-ax.plot([bx + 1.6, bx + bw - 1.6], [by + 3.0] * 2, "-", color="#cbd5e1", lw=0.7)
+ax.plot([bx + 1.6, bx + bw - 1.6], [by + 3.0] * 2, "-", color=C("#cbd5e1"), lw=0.7)
 ax.text(bx + 1.6, by + 1.6,
         "合计 4.853 GB ÷ 实测 TPOT 33.1 ms = 146.5 GB/s = 可达带宽 152.3 的 96%",
         fontsize=ANNOT, color=INK, va="center")
@@ -269,7 +271,6 @@ fig.legend(handles=handles, loc="lower center", ncol=3, frameon=False,
 fig.suptitle("Cosmos-Reason2-8B structure (measured config) and the module each "
              "experiment targets", y=0.995, fontsize=TITLE)
 fig.tight_layout(rect=(0, 0.025, 1, 0.975))
-fig.savefig(os.path.join(OUT, "model_arch.png"), bbox_inches="tight",
-            facecolor="white")
+fig.savefig(os.path.join(OUT, "model_arch.png"), bbox_inches="tight")
 plt.close(fig)
 print("wrote", os.path.join(OUT, "model_arch.png"))

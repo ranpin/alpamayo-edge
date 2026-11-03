@@ -18,12 +18,12 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, ".."))
-from paper_style import apply, bar_kw, ANNOT, C4, C8, CF, RULE, WIDTH_FULL
+from paper_style import apply, bar_kw, C, out_dir, ANNOT, C4, C8, CF, RULE, WIDTH_FULL
 
 apply()
 import matplotlib.pyplot as plt  # noqa: E402
 
-OUT = os.path.join(HERE, "..", "..", "docs", "figures")
+OUT = out_dir(HERE)
 PEAK = 204.8          # theoretical
 TRT = 147.9           # TRT-Edge-LLM gemv_kernel, from Nsight (see eval/profile/)
 
@@ -46,7 +46,7 @@ LABEL = {"v1_scalar": "v1 scalar 32-bit loads",
          "v2_vec128": "v2 128-bit loads",
          "v3_vec128_mlp2": "v3 128-bit + 2 in flight",
          "v4_shmem_half2": "v4 + x in shared mem + half2"}
-COLS = ["#adb5bd", "#868e96", "#6c757d", C4]
+COLS = [C("#adb5bd"), C("#868e96"), C("#6c757d"), C4]
 
 fig, ax = plt.subplots(figsize=(WIDTH_FULL, 4.4))
 x = np.arange(len(shapes))
@@ -60,9 +60,9 @@ for i, v in enumerate(variants):
                     va="bottom", fontsize=ANNOT, xytext=(0, 1.5),
                     textcoords="offset points")
 
-ax.axhline(PEAK, color="#555555", ls=":", lw=1.0)
+ax.axhline(PEAK, color=C("#555555"), ls=":", lw=1.0)
 ax.annotate(f"theoretical peak {PEAK:.1f} GB/s", (0.99, PEAK), xycoords=("axes fraction", "data"),
-            ha="right", va="bottom", fontsize=ANNOT, color="#555555")
+            ha="right", va="bottom", fontsize=ANNOT, color=C("#555555"))
 ax.axhline(ceiling, color=CF, ls="-", lw=1.2)
 ax.annotate(f"measured achievable read ceiling {ceiling:.1f} GB/s ({100*ceiling/PEAK:.0f}% of peak)",
             (0.99, ceiling), xycoords=("axes fraction", "data"), ha="right", va="bottom",

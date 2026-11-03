@@ -12,13 +12,28 @@ Conventions (conference-paper style):
   * Top/right spines removed, light dotted y-grid only, frameless legend.
   * 300 dpi output (print-grade).
 
+Dual theme (2026-11-03): the report site has light/dark themes; every figure
+renders in two variants — light (docs/figures/, the canonical files; a dark
+run must NEVER overwrite them) and dark (docs/figures/dark/, background
+#1a1a2e = the site's dark figure-card --bg2, palette brightened). Scripts
+wrap hardcoded hex colors in C() for theme-aware mapping; text that sits ON
+saturated fills uses ONACC (white in light, near-black in dark because dark
+accents are bright). Render dark variant:
+    FIG_THEME=dark .venv/bin/python eval/<script>.py
+
 Import before creating any figure:
-    from paper_style import apply, C4, C8, CF, ANNOT, bar_kw, WIDTH_HALF, ...
+    from paper_style import apply, C, C4, C8, CF, ANNOT, bar_kw, out_dir, ...
 """
+import os
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as _fm
+
+# ---- theme ---------------------------------------------------------------
+THEME = os.environ.get("FIG_THEME", "light")
+DARK = THEME == "dark"
 
 # ---- type scale (points) --------------------------------------------------
 BASE = 9.0       # body / tick text
@@ -29,9 +44,98 @@ LEGEND = 8.0     # legend entries
 ANNOT = 7.5      # in-plot data labels (bar values, baseline callouts)
 
 # ---- palette (kept from the site's brand colors) -------------------------
-C4, C8, CF = "#2563eb", "#f59e0b", "#16a34a"   # INT4 blue, INT8 amber, FP16 green
-RULE = "#e74c3c"                                # memory-limit rule
-INK = "#1a1a2e"                                 # text / edges
+if DARK:
+    # brightened for the dark canvas; hues match the site's dark theme accents
+    C4, C8, CF = "#60a5fa", "#fbbf24", "#34d399"   # INT4 blue, INT8 amber, FP16 green
+    RULE = "#f87171"                                # memory-limit rule
+    INK = "#e0e0e0"                                 # text / edges
+    FACE = "#1a1a2e"                                # = site dark --bg2 (figure card)
+    EDGE = "#8a8a9e"                                # axes spines
+    TICKC = "#9a9aae"                               # tick labels
+    GRID = "#3a3a50"                                # dotted y-grid
+    BAREDGE = "#d0d0dc"                             # bar outlines
+    ONACC = "#14141f"                               # text ON saturated fills
+else:
+    C4, C8, CF = "#2563eb", "#f59e0b", "#16a34a"   # INT4 blue, INT8 amber, FP16 green
+    RULE = "#e74c3c"                                # memory-limit rule
+    INK = "#1a1a2e"                                 # text / edges
+    FACE = "white"
+    EDGE = "#444444"
+    TICKC = "#444444"
+    GRID = "#b0b0b0"
+    BAREDGE = "#333333"
+    ONACC = "#ffffff"
+
+# ---- light→dark map for hardcoded hex colors inside scripts --------------
+# Keys/values lowercase; 3-digit hexes are expanded before lookup. Anything
+# unmapped passes through unchanged (C() below).
+_DARK_MAP = {
+    # brand accents → brightened
+    "#2563eb": "#60a5fa", "#1d4ed8": "#3b82f6", "#3b82f6": "#60a5fa",
+    "#f59e0b": "#fbbf24", "#d97706": "#fbbf24", "#b45309": "#f59e0b",
+    "#c2410c": "#fb923c", "#a16207": "#eab308",
+    "#16a34a": "#34d399", "#22c55e": "#4ade80",
+    "#e74c3c": "#f87171",
+    "#7c3aed": "#a78bfa", "#8b5cf6": "#a78bfa", "#5c6bc0": "#8c9eff",
+    # pale tinted fills → dark tinted fills (same hue family)
+    "#dbeafe": "#1e3a5f", "#f2f6ff": "#1c2340", "#fbfcfe": "#1e1e32",
+    "#fef3c7": "#3a2a06", "#fff7ed": "#33240c",
+    "#dcfce7": "#06301f", "#f1fbf4": "#0a2419",
+    "#f3e8ff": "#2e1065", "#ede9fe": "#2a1a5e", "#e8eaf6": "#232347",
+    "#f8fafc": "#232338", "#f1f5f9": "#222236", "#eef2f7": "#232338",
+    "#e9ecef": "#242438",
+    # white BOX FILLS → dark neutral (text-on-fill must use ONACC, not C())
+    "#ffffff": "#26263c",
+    # ink / gray text → lightened
+    "#1a1a2e": "#e0e0e0",
+    "#333333": "#d0d0dc",
+    "#444444": "#b8b8c8",
+    "#555555": "#a8a8b8",
+    "#666666": "#9a9aaa",
+    "#888888": "#9090a0", "#999999": "#9090a0",
+    "#b0b0b0": "#4a4a60",
+    # slate family (annotations / borders)
+    "#334155": "#cbd5e1", "#475569": "#adb5bd", "#64748b": "#94a3b8",
+    "#94a3b8": "#8494ab",
+    "#cbd5e1": "#4a5568", "#c7d2df": "#3e4c63", "#adb5bd": "#5c6675",
+    "#6c757d": "#868e96", "#868e96": "#7a828c",
+    "#777777": "#9090a0",
+    "#000000": "#e8e8f0",
+}
+
+_NAMED = {"white": "#ffffff", "black": "#000000"}
+
+
+def C(color):
+    """Theme-aware color: identity in light mode; dark mode maps known hexes
+    (and the named white/black) via _DARK_MAP (3-digit expanded first),
+    unknown colors pass through."""
+    if not DARK or not isinstance(color, str):
+        return color
+    h = _NAMED.get(color.strip().lower(), color.strip().lower())
+    if not h.startswith("#"):
+        return color
+    if len(h) == 4:
+        h = "#" + "".join(ch * 2 for ch in h[1:])
+    return _DARK_MAP.get(h, color)
+
+
+def out_dir(here):
+    """Figure output dir: docs/figures (light) or docs/figures/dark (dark).
+    `here` = the script's directory at any depth under the repo (walks up to
+    the dir containing docs/figures). Creates the dark dir on demand."""
+    d = os.path.abspath(here)
+    while not os.path.isdir(os.path.join(d, "docs", "figures")):
+        parent = os.path.dirname(d)
+        if parent == d:
+            raise RuntimeError("docs/figures not found above %r" % here)
+        d = parent
+    out = os.path.join(d, "docs", "figures")
+    if DARK:
+        out = os.path.join(out, "dark")
+        os.makedirs(out, exist_ok=True)
+    return out
+
 
 # ---- canvas widths -------------------------------------------------------
 # The site renders half-slot figures at ~440 px and full-width ones at ~870 px.
@@ -75,11 +179,11 @@ def apply():
         "axes.spines.top": False,
         "axes.spines.right": False,
         "axes.linewidth": 0.8,
-        "axes.edgecolor": "#444444",
+        "axes.edgecolor": EDGE,
         "axes.labelcolor": INK,
         "text.color": INK,
-        "xtick.color": "#444444",
-        "ytick.color": "#444444",
+        "xtick.color": TICKC,
+        "ytick.color": TICKC,
         "xtick.direction": "out",
         "ytick.direction": "out",
         "xtick.major.width": 0.8,
@@ -90,7 +194,7 @@ def apply():
         "axes.grid": True,
         "axes.grid.axis": "y",
         "axes.axisbelow": True,
-        "grid.color": "#b0b0b0",
+        "grid.color": GRID,
         "grid.linestyle": ":",
         "grid.linewidth": 0.6,
         "grid.alpha": 0.7,
@@ -103,14 +207,17 @@ def apply():
         # output
         "figure.dpi": 300,
         "savefig.dpi": 300,
-        "figure.facecolor": "white",
-        "savefig.facecolor": "white",
+        "figure.facecolor": FACE,
+        "savefig.facecolor": FACE,
+        # axes patch follows the canvas (default white would leave a glaring
+        # white plot area in dark mode; "white" keeps light output identical)
+        "axes.facecolor": FACE,
     })
 
 
 def bar_kw():
-    """Thin dark bar outline — keeps bars legible in grayscale print."""
-    return dict(edgecolor="#333333", linewidth=0.5)
+    """Thin bar outline — keeps bars legible in grayscale print."""
+    return dict(edgecolor=BAREDGE, linewidth=0.5)
 
 
 def fig_legend(fig, ax, ncol=3):

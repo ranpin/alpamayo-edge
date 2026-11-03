@@ -19,12 +19,13 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from paper_style import apply, bar_kw, ANNOT, C4, C8, CF, RULE, WIDTH_FULL
+from paper_style import (apply, bar_kw, C, out_dir, ANNOT, C4, C8, CF, RULE,
+                         WIDTH_FULL)
 
 apply()
 import matplotlib.pyplot as plt  # noqa: E402
 
-OUT = os.path.join(HERE, "..", "docs", "figures")
+OUT = out_dir(HERE)
 
 # name, engine GB, decode tok/s, accuracy %, Wilson CI, McNemar p vs FP16, colour, device
 POINTS = [
@@ -51,7 +52,7 @@ for ax, xs, xlabel, title in (
                     fontsize=ANNOT, color=col, va="top")
     # connect the 8B precision sweep to show it is flat
     e8 = [(x, y) for (x, y), p in zip(zip(xs, ys), POINTS) if p[0].endswith("8B")]
-    ax.plot([x for x, _ in e8], [y for _, y in e8], "-", color="#999999", lw=0.9,
+    ax.plot([x for x, _ in e8], [y for _, y in e8], "-", color=C("#999999"), lw=0.9,
             zorder=1, label="8B precision sweep (flat)")
     ax.axhline(76.2, color=CF, ls="--", lw=0.9, zorder=1)
     ax.set_xlabel(xlabel); ax.set_title(title)

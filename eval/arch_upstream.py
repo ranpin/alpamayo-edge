@@ -34,21 +34,24 @@ Out:  docs/figures/arch_upstream.png
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from paper_style import apply, ANNOT, BASE, INK, TITLE
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+from paper_style import apply, out_dir, C, ANNOT, BASE, INK, TITLE
 
 apply()
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import FancyBboxPatch  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 
-OUT = os.path.join(os.path.dirname(__file__), "..", "docs", "figures")
+OUT = out_dir(HERE)
 
-VIS_F, VIS_E = "#fef3c7", "#d97706"    # kept fp16
-LLM_F, LLM_E = "#dbeafe", "#2563eb"    # quantized by us
-HOST_F, HOST_E = "#f1f5f9", "#64748b"  # host-side / runtime, not a TRT engine
-DS_F, DS_E = "#f3e8ff", "#7c3aed"      # deepstack path
-IO_F, IO_E = "#eef2f7", "#94a3b8"
+# All fills are pale tints (never saturated), so box text stays INK and no
+# ONACC is needed anywhere in this figure.
+VIS_F, VIS_E = C("#fef3c7"), C("#d97706")    # kept fp16
+LLM_F, LLM_E = C("#dbeafe"), C("#2563eb")    # quantized by us
+HOST_F, HOST_E = C("#f1f5f9"), C("#64748b")  # host-side / runtime, not a TRT engine
+DS_F, DS_E = C("#f3e8ff"), C("#7c3aed")      # deepstack path
+IO_F, IO_E = C("#eef2f7"), C("#94a3b8")
 
 fig, ax = plt.subplots(figsize=(10.4, 7.8))
 ax.set_xlim(0, 100)
@@ -71,7 +74,7 @@ def box(x, y, w, h, text, face, edge, fs=ANNOT, bold=False, z=3, lsp=1.5,
             fontweight="bold" if bold else "normal", linespacing=lsp)
 
 
-def arrow(pts, color="#475569", lw=1.1, ls="-"):
+def arrow(pts, color=C("#475569"), lw=1.1, ls="-"):
     """Poly-line arrow through a list of (x, y) points."""
     for a, b in zip(pts, pts[1:-1]):
         ax.plot([a[0], b[0]], [a[1], b[1]], ls=ls, color=color, lw=lw, zorder=2)
@@ -83,20 +86,20 @@ def arrow(pts, color="#475569", lw=1.1, ls="-"):
 def tag(x, y, mark, color):
     ax.text(x, y, mark, ha="center", va="center", fontsize=SMALL, color=color,
             fontweight="bold", zorder=8,
-            bbox=dict(boxstyle="circle,pad=0.3", facecolor="white",
+            bbox=dict(boxstyle="circle,pad=0.3", facecolor=C("white"),
                       edgecolor=color, linewidth=0.9))
 
 
 ax.text(LX + LW / 2, 97.6, "(a) 上游发布的模型结构", ha="center", va="center",
-        fontsize=BASE, fontweight="bold", color="#334155")
+        fontsize=BASE, fontweight="bold", color=C("#334155"))
 ax.text(LX + LW / 2, 94.6,
         "Cosmos-Reason2-8B = NVIDIA 在 Qwen3-VL-8B-Instruct 上后训练；数值全取自实测 config",
-        ha="center", va="center", fontsize=SMALL, color="#64748b")
+        ha="center", va="center", fontsize=SMALL, color=C("#64748b"))
 ax.text(RX + RW / 2, 97.6, "(b) 我们部署后的实际形态", ha="center", va="center",
-        fontsize=BASE, fontweight="bold", color="#334155")
+        fontsize=BASE, fontweight="bold", color=C("#334155"))
 ax.text(RX + RW / 2, 94.6,
         "TensorRT-Edge-LLM v0.9.0 · Jetson Orin sm_87；圈号与左图模块一一对应",
-        ha="center", va="center", fontsize=SMALL, color="#64748b")
+        ha="center", va="center", fontsize=SMALL, color=C("#64748b"))
 
 # ============================ (a) upstream ============================
 box(LX, 86.8, 23.0, 5.2, "图像 / 视频帧（H×W×3）", IO_F, IO_E)
@@ -167,7 +170,7 @@ arrow([(LX + 24.5, 20.0), (LX + 24.5, 17.8)])
 box(LX, 4.4, 49.0, 5.8,
     "参数账（自校验）：视觉 0.58 B + 解码器 6.95 B + 词嵌入 0.62 B + lm_head 0.62 B\n"
     "= 8.77 B —— 与 NVIDIA 公布的 checkpoint 规模一致",
-    "#f8fafc", "#94a3b8")
+    C("#f8fafc"), C("#94a3b8"))
 
 # ============================ (b) deployed ============================
 box(RX, 79.0, RW, 13.0,
@@ -178,7 +181,7 @@ box(RX, 79.0, RW, 13.0,
     "　（性能基准 §1.1 / §1.4–1.6 不带图，走的就是这条纯文字路径）",
     HOST_F, HOST_E, ha="left")
 ax.text(RX + 1.4, 77.2, "像素→token 的完整链条见图 2", ha="left", va="center",
-        fontsize=SMALL, color="#94a3b8")
+        fontsize=SMALL, color=C("#94a3b8"))
 
 box(RX, 68.4, 34.0, 7.4,
     "visual.engine　fp16　1.168 GB（≈0.584 B 参数）\n"
@@ -226,7 +229,7 @@ box(RX, 3.2, RW, 18.6,
     "　 里就是 index_select + masked_scatter 两句）\n"
     "③ 引擎构建时固定 maxInputLen=1024 / maxBatch=4 —— 模型\n"
     "　 本身支持 262 144 上下文，是引擎参数把它限住了",
-    "#fff7ed", "#c2410c", ha="left")
+    C("#fff7ed"), C("#c2410c"), ha="left")
 
 handles = [
     Line2D([], [], marker="s", ls="", ms=7, mfc=LLM_F, mec=LLM_E,
@@ -243,7 +246,6 @@ fig.legend(handles=handles, loc="lower center", ncol=4, frameon=False,
 fig.suptitle("Published architecture (left) vs the deployed decomposition "
              "(right); circled numbers pair the two", y=0.996, fontsize=TITLE)
 fig.tight_layout(rect=(0, 0.028, 1, 0.972))
-fig.savefig(os.path.join(OUT, "arch_upstream.png"), bbox_inches="tight",
-            facecolor="white")
+fig.savefig(os.path.join(OUT, "arch_upstream.png"), bbox_inches="tight")
 plt.close(fig)
 print("wrote", os.path.join(OUT, "arch_upstream.png"))
