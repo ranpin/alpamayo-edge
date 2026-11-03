@@ -292,7 +292,7 @@ decode 真正的杠杆只剩**减少字节数**（优化 A：量化 lm_head，�
 扩散动作专家，MoT 单塔）。它在 TRTEdge 0.10.1 官方支持矩阵里仅 **Compatible 档**（Orin 是
 JetPack 6.2 / CUDA 12.6 / TRT 10.7；Official 是 JetPack 7.2 / CUDA 13 / TRT 11）。工程记录见
 [PROBLEMS.md](PROBLEMS.md) §K/§L，方法见 [METHODOLOGY.md](METHODOLOGY.md) §6，呈现见
-[站点 Phase W 专篇](https://ranpin.github.io/alpamayo-edge/cosmos3.html)。
+[站点 Phase W 专篇](https://ranpin.github.io/cosmos3-edge/cosmos3.html)（已迁 cosmos3-edge 仓）。
 
 ### 部署：六道 JetPack 6.2 兼容墙（K1–K6）逐个打通
 

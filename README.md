@@ -7,7 +7,7 @@ Alpamayo-R1（AV 轨迹预测）。零预算、零训练、全 Orin 实测。
 🛣️ **在线 Demo · Alpamayo-R1 轨迹预测**（真实帧叠加 + 滚动预测视频 · 真实 Orin 推理）：<https://ranpin.github.io/alpamayo-edge/r1-trajectory/>
 🎬 **在线 Demo · Cosmos3-Edge 2B 驾驶场景理解**：<https://ranpin.github.io/cosmos3-edge/cosmos3-demo/>（Cosmos3 部署与 policy 动作链已拆至独立仓 [cosmos3-edge](https://github.com/ranpin/cosmos3-edge)）
 
-📊 **呈现站点（论文式 · 细节首选入口）**：[CR2-8B 量化部署](https://ranpin.github.io/alpamayo-edge/) ｜ [Cosmos3 跨代对比](https://ranpin.github.io/alpamayo-edge/cosmos3.html)
+📊 **呈现站点（论文式 · 细节首选入口）**：[CR2-8B 量化部署](https://ranpin.github.io/alpamayo-edge/) ｜ [Cosmos3 跨代对比](https://ranpin.github.io/cosmos3-edge/cosmos3.html)（cosmos3-edge 仓）
 
 ## 核心结论（一句话版）
 
@@ -20,7 +20,7 @@ Alpamayo-R1（AV 轨迹预测）。零预算、零训练、全 Orin 实测。
 5. **部署定位 = 事件级场景理解（0.1–1 Hz），非帧率级感知**；量化侧性能已到硬件天花板（decode 带宽 153 ≈ 上限 152 GB/s）。
 6. **VLA 轨道（Alpamayo-1.5-10B）在 32GB Orin 不可行**（FP16-only 22.16G、无量化路径）⇒ 受阻点明确而非判死。
 7. **Alpamayo-R1 全链跑通、minADE 与官方基线一致**——minADE6@6.4s = 0.804 m vs 官方 0.821 m（落在 95% CI 内）。
-8. **Cosmos3-Edge 跨代验证「缩小不免费、量化几乎免费」**——2B reasoner n=184 驾驶域 42.4%，显著输给上一代 8B 量化版（详见 [cosmos3-edge](https://github.com/ranpin/cosmos3-edge) 与[跨代对比](https://ranpin.github.io/alpamayo-edge/cosmos3.html)）。
+8. **Cosmos3-Edge 跨代验证「缩小不免费、量化几乎免费」**——2B reasoner n=184 驾驶域 42.4%，显著输给上一代 8B 量化版（详见 [cosmos3-edge](https://github.com/ranpin/cosmos3-edge) 与[跨代对比](https://ranpin.github.io/cosmos3-edge/cosmos3.html)）。
 9. **跨代对比 R1 胜 Alpamayo-1.5、导航引导非原因**——1.5 经 repack（纯 config 改写）跑上 64GB Orin，同口径 minADE6@6.4s R1 0.804 vs 1.5 1.815 m（+126%）；oracle 导航仅 −1%（within-noise），「1.5 需要导航」假设被语义+量化两个独立测量否定（详见 [eval/r1/crossgen_a15.md](eval/r1/crossgen_a15.md)）。
 10. **R1 backbone INT4 AWQ 量化近乎免费**——同口径 minADE6@6.4s 0.800 vs FP16 0.804 m（Δ=-0.004m，比预注册阈值 0.1m 小 25 倍），decode 2.52× 快、引擎 3.11× 小；「量化几乎免费」结论从 CR2 推理轨道延伸到 VLA 轨迹轨道（详见 [eval/r1/int4_backbone.md](eval/r1/int4_backbone.md)）。
 
@@ -35,8 +35,8 @@ Alpamayo-R1（AV 轨迹预测）。零预算、零训练、全 Orin 实测。
 ```
 ├── docs/            技术文档：结果报告 / 方法论 / 问题记录(A–M) / 构建日志 / 规划
 │   ├── figures/       图片唯一真源
-│   └── site/          呈现站点源码（index.html + cosmos3.html + r1-trajectory/；部署于 gh-pages）
-├── eval/            评测资产：n=210 / n=184 驾驶域基准、分辨率 Pareto、VLA 闸门、roofline、kernel、cosmos3 跨代、r1
+│   └── site/          呈现站点源码（index.html + r1-trajectory/；部署于 gh-pages；cosmos3.html 已迁 cosmos3-edge 仓、留重定向）
+├── eval/            评测资产：n=210 / n=184 驾驶域基准、分辨率 Pareto、VLA 闸门、roofline、kernel、r1（cosmos3 跨代已迁 cosmos3-edge）
 ├── cloud/           Kaggle 免费云量化/导出管线
 ├── scripts/orin/    设备端脚本归档（构建 / 评测 / 功耗 / 闸门）
 ├── configs/         设备环境配置（orin.env）

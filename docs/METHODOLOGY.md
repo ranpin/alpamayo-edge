@@ -337,7 +337,7 @@ llm_bench --engineDir engines/int4/llm --mode decode  --pastKVLen 512 --iteratio
 
 第二部署目标 Cosmos3-Edge 的方法细节。**结果**见 [edge_deploy_status.md](edge_deploy_status.md) 的
 Phase W 专节，**工程踩坑**见 [PROBLEMS.md](PROBLEMS.md) §K/§L，**呈现**见
-[站点 Phase W 专篇](https://ranpin.github.io/alpamayo-edge/cosmos3.html)。
+[站点 Phase W 专篇](https://ranpin.github.io/cosmos3-edge/cosmos3.html)（已迁 cosmos3-edge 仓）。
 
 ### 6.1 分解注意力 / RoPE 导出补丁（对「TRT-11-only 算子墙」的通用武器）
 
