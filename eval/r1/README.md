@@ -8,7 +8,8 @@
 > **R1 胜 1.5（0.804 vs 1.815 m，+126%）**，且「1.5 需要导航引导」假设被语义+量化两个独立测量否定——
 > 详见 [`crossgen_a15.md`](crossgen_a15.md)。
 > **INT4 backbone 量化（2026-11-03）**：R1 自身 backbone INT4 AWQ 三闸门全过——同口径 minADE6@6.4s
-> **0.800 vs FP16 0.804 m（Δ=-0.004m，近乎免费）**、decode 2.52×、引擎 3.11× 小——
+> **0.800 vs FP16 0.804 m（Δ=-0.004m，近乎免费）**、decode 2.52×、引擎 3.11× 小；**AV 域校准对照臂**
+> （dgural 公开 AV 帧重量化）亦确认近乎免费（0.825 m，两臂差 +0.024m 全在噪声内 ⇒ 校准域不敏感）——
 > 详见 [`int4_backbone.md`](int4_backbone.md)。
 > 墙的打通过程见 [`../../docs/PROBLEMS.md`](../../docs/PROBLEMS.md) **§M**。
 > ⚠️ 输入帧与 GT 来自 **gated + license:other** 数据集，**只在机上跑，帧与逐 clip 原始数据不入库**。

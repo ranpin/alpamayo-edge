@@ -1,16 +1,18 @@
 # R1 backbone INT4 AWQ 量化：干净实验（精度近乎免费 + decode 2.52×）
 
 > **状态（2026-11-03）**：把 **R1 自身 AV 训练 backbone**（不是拿 CR2 量化引擎顶替）走
-> INT4 AWQ 量化→Orin 重建→全链评测，**三闸门全过**：
+> INT4 AWQ 量化→Orin 重建→全链评测，**三闸门全过 + AV 域校准对照臂**：
 > 1. **G1** Kaggle 免费云量化（5 版内核鏖战驯服 py3.13 环境）→ INT4 ONNX（5.8GB tgz）；
 > 2. **G2** Orin 构建+smoke（四连环修复）→ **CoT 文本与 FP16 逐字相同**；
-> 3. **G3** 同口径 minADE6：**INT4 0.800 vs FP16 0.804 m（Δ=-0.004m，判据"近乎免费"）**。
+> 3. **G3** 同口径 minADE6：**INT4 0.800 vs FP16 0.804 m（Δ=-0.004m，判据"近乎免费"）**；
+> 4. **AV 域校准对照臂**（预注册后续变量，§五）：换 dgural 公开 AV 帧重量化，**minADE6 0.825 vs
+>    FP16 0.804 m（Δ=+0.021m，仍"近乎免费"）**——校准域不改变结论（差异全在噪声内）。
 >
 > 速度：**decode 2.52×**（39.8 vs 100.3 ms）、prefill 0.96×、引擎 **3.11× 小**（4.88 vs 15.19 GB）。
 > **含义**：CR2 推理轨道的「量化几乎免费」结论延伸到 **VLA 轨迹轨道**——「激进量化+保留大模型」
 > 部署策略对 Alpamayo-R1 同样成立。基线与口径见 [`README.md`](README.md) §五；
 > 跨代对比见 [`crossgen_a15.md`](crossgen_a15.md)。
-> ⚠️ 帧与 GT 同 §五：gated + license:other 数据集，只在机上跑，逐 clip 原始数据不入库。
+> ⚠️ 帧与 GT 同 README §五：gated + license:other 数据集，只在机上跑，逐 clip 原始数据不入库。
 
 ## 一、动机与实验设计
 
@@ -107,13 +109,54 @@ pluginV3Runner 断言**。逐层剥出四连环：
 
 与七月 CR2 结论同构（decode INT4 快、prefill 略亏），且 decode 加速比更大（2.52× vs CR2 的 1.61×）。
 
-## 五、诚实边界
+## 五、AV 域校准对照臂（预注册后续变量）
+
+**预注册问题**：§四的 AWQ 校准用 MMMU 通用多模态图像——**换成 AV 域图像会不会改变「近乎免费」结论**？
+
+**设计**：与 MMMU 臂**逐字孪生**，唯一实验变量 = 校准图像域。校准集 = `dgural/PhysicalAI-Autonomous-Vehicles-Sample`
+（PhysicalAI-AV 的公开 100-clip 子集，gated=false，Kaggle 直下零 gated 经手）字典序前 8 个 clip ×
+R1 的 4 路部署相机（cross_left/right_120fov + front_tele_30fov + front_wide_120fov）× 4 帧
+= **128 帧 == MMMU 臂样本数**；经 TRTEdge 自家注册表注入 `av_frames` 数据集（driver 日志验证
+`Image calibration dataset: av_frames`），补丁 D 图像封顶同样生效（1920×1080→40 万像素）。
+内核 `mamihlapinatapai/r1-vlm-int4-av`（[`cloud/av/kaggle_r1_vlm_int4_av.py`](../../cloud/av/kaggle_r1_vlm_int4_av.py)），
+评测 [`scripts/orin/int4av_g3_eval.sh`](../../scripts/orin/int4av_g3_eval.sh)。
+
+**G1'/G2'**：Kaggle 量化 v1-v3 鏖战 cudnn 子库混装（镜像预装 nvidia-cudnn-cu12 与 torch cu130 的
+nvidia-cudnn-cu13 装进同一 lib 目录文件级混装，首个 conv3d 即 SUBLIBRARY_VERSION_MISMATCH；三层防御
+= 强制重装 torch 声明的精确 cudnn + LD_LIBRARY_PATH 置顶、非致命自适应 conv3d 探针坏则关 cudnn 走原生
+conv、atexit 兜底清 working）→ COMPLETE；Orin `llm_build` 一次成功（CuTe DSL int4 组 MMMU 臂已生成，
+**插件无需重做**）→ 引擎 4.88GB；tokenizer 三件从 FP16 引擎目录覆盖（G2 教训）→ smoke CoT 与 MMMU 臂
+15/18 逐字相同、18/18 轨迹完整。
+
+**G3' 三臂对照**（同口径 chunk 3116，18 clips × 6 seeds = 108/108）：
+
+| 指标 | FP16 | INT4-MMMU | INT4-AV |
+|---|---|---|---|
+| **minADE6@6.4s** | **0.80401 m** | 0.80046 m | **0.82495 m** |
+| minADE6@3s | 0.17460 m | 0.17590 m | 0.17523 m |
+| Δ@6.4s vs FP16 | — | −0.0036 m | **+0.0209 m** |
+
+**判定：AV 臂 Δ@6.4s=+0.021m << 预注册阈值 0.1m ⇒ 仍「近乎免费」。**
+
+AV vs MMMU 的 +0.0245m 聚合差经逐 clip 解构 = **噪声，非系统性退化**：
+
+1. **单个 outlier 驱动**——`bdf1fffb`（三臂均 >1.2m 的难 clip，6-seed min 方差天然大）AV-MMMU=+0.383，
+   独占聚合差的 +0.0213/0.0245；**剔除后只剩 +0.0034m（≈0）**；
+2. **符号检验 8 优 / 10 劣**——对称无方向性；
+3. **聚合差 +0.0245m < 自身配对标准误 0.0268m**——统计上与 0 不可区分；
+4. **@3s 与 FP16 几乎逐字一致**（+0.0006m）。
+
+**结论：校准数据域（MMMU 通用多模态 vs dgural 公开 AV 帧）不改变「量化近乎免费」结论**——AV 域校准
+既没更好也没更差，差异全在 6-seed min 估计器的固有方差内；这反证 §四 MMMU 臂的 Δ≈0 不是「通用校准
+恰好适配 AV 任务」的偶然。
+
+## 六、诚实边界
 
 1. **n=18 小样本**：只能说「未检出可测退化」（Δ 比判据阈值小 25 倍、比 FP16 CI 半宽小 75 倍），
    不能声称大规模统计等价。
-2. **AWQ 校准是 MMMU 通用多模态**（128 样本、图像封顶 40 万像素、cnn_dailymail 未用于本路径），
-   **非 AV 域**——AV 域校准是预注册的后续变量；但 smoke 文本逐字相同 + minADE Δ≈0
-   是「校准域不敏感」的实证旁证。
+2. **AWQ 校准域已对照验证**（§五）：MMMU 通用多模态与 dgural 公开 AV 帧两臂 minADE6 差 +0.024m，
+   逐 clip 解构全在噪声内（单个 outlier 驱动、< 配对标准误）⇒「校准域不敏感」已由对照臂坐实，
+   不再是旁证。两臂均 128 样本、图像封顶 40 万像素、cnn_dailymail 未用于本路径。
 3. **校准 tokenizer 是 Qwen3-VL 公开版**（repack 所用）：base BPE 与 R1 完全一致
    （R1 只追加特殊 token，校准文本不含它们），激活统计实际等价；运行期 tokenizer 已修正为 R1 原版。
 4. **只量化了 backbone**：visual/action 引擎保持 FP16（实验设计如此——隔离「backbone 量化」单变量；
@@ -121,7 +164,7 @@ pluginV3Runner 断言**。逐层剥出四连环：
 5. 静态单帧评测口径（与 FP16 基线一致）；滚动/闭环场景未测。
 6. 逐 clip 数据来自 gated 数据集，不入库；本文聚合数字即全部对外呈现。
 
-## 六、文件与复现
+## 七、文件与复现
 
 | 文件 | 说明 |
 |---|---|
@@ -132,6 +175,12 @@ pluginV3Runner 断言**。逐层剥出四连环：
 | goat `engines/alpamayo_r1_int4/` | INT4 llm + FP16 visual/action 三件套（12G） |
 | goat `eval_data/minade_chunk3116_int4.csv` | 逐 clip 结果（gated 数据，只在机上） |
 | goat `logs/int4_*.log` | 生成/重编/重测/G3 全日志 |
+| [`cloud/av/kaggle_r1_vlm_int4_av.py`](../../cloud/av/kaggle_r1_vlm_int4_av.py) | AV 域校准臂 Kaggle 内核 v3（cudnn 混装三层防御 + atexit 兜底清理） |
+| [`cloud/av/kernel-metadata.json`](../../cloud/av/kernel-metadata.json) | AV 臂内核元数据（`mamihlapinatapai/r1-vlm-int4-av`） |
+| [`scripts/orin/int4av_g3_eval.sh`](../../scripts/orin/int4av_g3_eval.sh) | G3' AV 臂评测（与 int4_g3_eval.sh 逐字同构，仅换引擎/输出名） |
+| `outputs/r1_vlm_int4_av_onnx.tgz.sha256` | AV 臂产物指纹归档 |
+| goat `engines/alpamayo_r1_int4_av/` | AV 域校准 INT4 llm + FP16 visual/action 三件套（12G） |
+| goat `eval_data/minade_chunk3116_int4_av.csv` | AV 臂逐 clip 结果（gated 数据，只在机上） |
 
 CuTe DSL INT4 artifact 复现：`cutedsl_venv/bin/python kernelSrcs/build_cutedsl.py
 --kernels int4_fp16_gemm --gpu_arch sm_87`（合并模式，勿带 `--clean`）→
