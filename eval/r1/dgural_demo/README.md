@@ -1,7 +1,7 @@
 # dgural R1-only 叠 GT demo · 复现管线
 
 Alpamayo-R1 预测轨迹 + GT 真值轨迹叠回 **dgural 公开真实帧**的全链复现脚本。
-含两种形态：静态叠加图（已上线）与滚动预测视频（4 段 × 18.7s，资产已就绪、待发布）。
+含三种形态：静态叠加图、滚动预测视频（4 段 × 18.7s）与 **INT4 三线对比**（GT 绿 / FP16 蓝 / INT4 橙虚线），均已上线。
 **线上 demo**：<https://ranpin.github.io/alpamayo-edge/r1-trajectory/>（三板块：演示 / 评测结果 / 核心方法）。
 
 ## 数据源
@@ -119,6 +119,26 @@ ADE@6.4s = 同窗 64 点预测与 GT 的平均欧氏距离；FDE = 6.4s 终点�
 
 - 每锚点单样本：官方 minADE 为 6-seed 采样取最小；seed 敏感性实测（`eval/r1/r1_seed_sensitivity.py`，W4）示 seed 单独贡献的 ADE 变化为 ego 历史的 3.84×，单样本天然差于 6-seed min。
 - 开环 6.4s ≠ 闭环控制：真实驾驶靠高频重规划修正误差，R1 在 Orin 单次 ~5.7s（≈0.18Hz），在自己的预测时域内完不成一次修正——这是「事件级非实时」定位的直观证据，视频 HUD 已显著标注。
+
+## INT4 三线对比版（2026-11-04）
+
+把静态图 + 滚动视频都扩展成 **GT 绿实线 / R1 FP16 蓝实线 / R1 INT4 橙虚线**三线对比——INT4 = AWQ 量化 backbone（llm），visual/action 引擎仍 FP16，直观展示「量化近乎免费」。虚线是与两实线最强的样式区分（近重叠也能分辨）。INT4 引擎与其 AV 域校准对照臂的量化/构建/评测全流程见 [`../int4_backbone.md`](../int4_backbone.md)。
+
+### 管线（在 FP16 管线基础上的增量）
+
+| # | 脚本 | 跑在哪 | 作用 |
+|---|---|---|---|
+| 1 | goat INT4 推理 | goat | 同上 `action_inference` 命令，`--engineDir/--multimodalEngineDir` 改 `engines/alpamayo_r1_int4`、**去掉 `--checkpointDir`**（权重已烘进引擎），输入/输出改 `*_int4.json`（静态 `r1_multi_*` / 滚动 `roll_*`） |
+| 2 | `integrate_roll_int4.py` | Mac | INT4 滚动积分（`integrate_roll.py` 的输入/输出改 INT4 变体；静态同法改 `integrate_multi.py`） |
+| 3 | `gen_web_assets_int4.py` | Mac | 三线静态叠加图（GT绿/FP16蓝/INT4橙虚线带深描边，嵌套线宽保证近重叠仍全可见） |
+| 4 | `render_roll_int4.py` | Mac | 三线滚动视频 + HUD（图例三条、延迟标签 FP16/INT4 双值、逐锚点 ADE FP16/INT4 并列） |
+| 5 | `gen_contactsheet_int4.py` | Mac | 重建图 1 联络表（4 场景×4 时刻，三线帧） |
+| 6 | `perf_raw/perf_measure_int4.sh` | goat | INT4 部署性能实测（表 3 INT4 列原始证据，与 FP16 `perf_measure.sh` 逐字同构） |
+
+### 结果（单 seed、开环 6.4s）
+
+- **精度近乎免费**：静态 6 clip 平均 ADE@6.4s FP16 3.10m / INT4 3.41m；滚动 12 锚点平均 FP16 1.60m / INT4 1.89m——逐片段互有高低、整体同量级（ecafce84 滚动 INT4 2.47m 明显高于 FP16 1.31m，是该 clip 的真实个例，页面如实并列）。
+- **部署收益**（表 3 INT4 列，`perf_measure_int4.sh` 实测）：引擎总大小 10.2 vs 19.5 GB（llm 4.88 vs 14.15 GB，3.11× 小）、单请求端到端 4.17 vs 5.0 s、CoT 解码 ~3× 快（30.6 vs 10.4 tok/s）、峰值统一内存 ~10–14 vs 25.5 GB；prefill 因 W4A16 dequant 略慢（2.19 vs 1.73 s）。
 
 ## CoT–轨迹关系研究（18 锚点，2026-11-02）
 
