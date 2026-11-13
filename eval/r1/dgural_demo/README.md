@@ -4,6 +4,9 @@ Alpamayo-R1 预测轨迹 + GT 真值轨迹叠回 **dgural 公开真实帧**的�
 含三种形态：静态叠加图、滚动预测视频（4 段 × 18.7s）与 **INT4 三线对比**（GT 绿 / FP16 蓝 / INT4 橙虚线），均已上线。
 **线上 demo**：<https://ranpin.github.io/alpamayo-edge/r1-trajectory/>（三板块：演示 / 评测结果 / 核心方法）。
 
+> 📦 目录内另存历史产物 `r1vid_demo.mp4`（ecafce84 单预测成片，7.4s）：滚动视频版的前身，被其取代、从未上线。
+> 其渲染脚本 gen_vid.py 随 /tmp scratch 清理丢失、未归档（重投影逻辑由 `render_roll.py` 承接、鱼眼投影链见 `gen_web_assets.py`），成片不可再生，故留存。
+
 ## 数据源
 
 - **图像帧**：dgural 公开样本 `dgural/PhysicalAI-Autonomous-Vehicles-Sample`（NVIDIA PhysicalAI-AV 的公开 100-clip 子集，即 gated chunk 0）。
