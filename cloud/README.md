@@ -12,7 +12,7 @@
 > 精度对照，结论：两臂差全在噪声内 ⇒ 校准域不敏感）。
 
 本脚本复用的 CR2 量化管线（`kaggle_cosmos_only.py` 及三处 TRTEdge `quantize.py` 补丁）已迁至
-[cosmos-edge 仓 cloud/](https://github.com/ranpin/cosmos-edge/tree/main/cloud)。HF token 走**环境变量**，勿硬编码。
+[cosmos-edge 仓 cr2/cloud/](https://github.com/ranpin/cosmos-edge/tree/main/cr2/cloud)。HF token 走**环境变量**，勿硬编码。
 
 ## 交给 Orin
 

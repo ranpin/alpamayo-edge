@@ -2,7 +2,7 @@
 # W0b：dog 自有目录构建 TRTEdge v0.10.1（Cosmos3-Edge 官方支持的最低版本系）。
 # 原则：共享安装 /home/vision/TensorRT-Edge-LLM（0.9.0）一律不动——其他用户依赖它，
 # 且它是全部已发布数字的可复现锚点。新 build 在 chenrunbin/alpamayo-edge/trtedge-0.10.1/。
-# 配方沿用 7 月验证过的 Orin 构建（EMBEDDED_TARGET=jetson-orin，FMHA 教训见 cosmos-edge 仓 docs/orin_build_notes.md），
+# 配方沿用 7 月验证过的 Orin 构建（EMBEDDED_TARGET=jetson-orin，FMHA 教训见 cosmos-edge 仓 cr2/docs/orin_build_notes.md），
 # 新增 -DBUILD_EXPERIMENTAL_MODELS=ON（cosmos3 policy 管线所需，上游 docs 明示）。
 # 已知风险：dog cmake 3.22.1 可能低于 0.10.x 要求（configure 阶段即暴露，日志留档）。
 A=/home/vision/chenrunbin/alpamayo-edge

@@ -2,7 +2,8 @@
 
 > 2026-11-15 仓库按 NVIDIA 模型家族重组后，本文件只保留 **§M（Alpamayo-R1 action 专家）**；
 > §A–J（CR2-8B/2B 量化部署）与 §K/L（Cosmos3-Edge 部署与 policy 动作链）已随 CR2/Cosmos3 资产
-> 迁入 [cosmos-edge 仓的 PROBLEMS.md](https://github.com/ranpin/cosmos-edge/blob/main/docs/PROBLEMS.md)
+> 迁入 cosmos-edge 仓并按篇分置：[cr2/docs/PROBLEMS.md](https://github.com/ranpin/cosmos-edge/blob/main/cr2/docs/PROBLEMS.md)（§A–J）、
+> [cosmos3/docs/PROBLEMS.md](https://github.com/ranpin/cosmos-edge/blob/main/cosmos3/docs/PROBLEMS.md)（§K/L）
 > （编号保持不变，历史互引不失效）。
 > 每条：**现象 → 根因 → 解决 → 教训**。均为真实发生、可复现。
 

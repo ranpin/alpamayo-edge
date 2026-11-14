@@ -113,8 +113,8 @@ rsync -acn --itemize-changes <src>/ vision@30.245.40.99:<dst>/
 | 东西 | 只存在于 | 丢了怎么办 |
 |---|---|---|
 | **FP16 引擎** 16 G | **仅 orin-goat** `engines/fp16` | ✅ 可重建：ONNX 在 **dog `onnx/fp16`** + scm 归档（`edge_fp16_llm.tgz`，SHA256SUMS 校验通过），但**必须在 ≥64 GB 内存的机器上** build（32GB 机峰值 54.8 G 会 OOM）⇒ 只能在 goat 建 |
-| **Cosmos3 引擎** 11.6 G | **仅 orin-goat** `engines/cosmos3_*` | ✅ 可重建：ONNX 在 **dog `onnx/cosmos3_*`**（需先拉回 goat），构建脚本 cosmos-edge 仓 `scripts/orin/w1_goat_engine_build.sh` / `w2_policy_rebuild_decomposed.sh` |
-| **Cosmos3 ONNX** 5.9 G | **仅 orin-dog** `onnx/cosmos3_*` | ✅ 可重导出：权重在 goat `models/`，导出需先打分解补丁（cosmos-edge 仓 `apply_decomposed_attn_patch.py` / `apply_policy_decomposed_patch.py`） |
+| **Cosmos3 引擎** 11.6 G | **仅 orin-goat** `engines/cosmos3_*` | ✅ 可重建：ONNX 在 **dog `onnx/cosmos3_*`**（需先拉回 goat），构建脚本 cosmos-edge 仓 `cosmos3/scripts/orin/w1_goat_engine_build.sh` / `w2_policy_rebuild_decomposed.sh` |
+| **Cosmos3 ONNX** 5.9 G | **仅 orin-dog** `onnx/cosmos3_*` | ✅ 可重导出：权重在 goat `models/`，导出需先打分解补丁（cosmos-edge 仓 `cosmos3/scripts/orin/apply_decomposed_attn_patch.py` / `apply_policy_decomposed_patch.py`） |
 | **Alpamayo-R1 三引擎** 21.4 G（llm 16 G + action 4.25 G + visual 1.1 G） | **仅 orin-goat** `engines/alpamayo_r1/` | ✅ 可重建，但 **ONNX 已删**（建完即删腾盘）⇒ 需先重导出（action ~5 min、llm+visual ~7 min，权重在同机）再 build。action 侧**必须先打 `apply_alpamayo_action_decomposed_patch.py` 且对拍 16/16 全过**，否则图里会留 TRT-11-only 算子；llm/visual 走 TRTEdge 自带插件无需补丁。脚本 `scripts/orin/r1_action_minverify.sh` + `r1_full_chain_infer.sh` |
 | **Alpamayo-R1 权重** 21 G | **goat + dog 各一份** `models/Alpamayo-R1-10B` | ✅ 可重下（公开非 gated，hf-mirror + `HF_HUB_DISABLE_XET=1`，~7 分钟）；⚠️ **`action_inference` 运行期需 `--checkpointDir` 指向它**，故要跑推理的那台机上不能删 |
 | **闸门 4 权重** 21 G | **仅 orin-dog** `alpamayo_gate4/Alpamayo-1.5-10B` | ✅ 可重下（公开非 gated）；证据小件在 goat `alpamayo_gate4/`（33 M） |
