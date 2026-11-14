@@ -15,7 +15,7 @@ Alpamayo-R1（AV 轨迹预测）。零预算、零训练、全 Orin 实测。
 > 全部数字、图表与统计口径在[呈现站点](https://ranpin.github.io/alpamayo-edge/)，方法与复现在 [docs/](docs/)；此处只留结论本身。
 
 1. **量化是边缘落地的必需项，不是优化项**——FP16 在 32GB Orin build/加载双 OOM，INT4（4.6G）/ INT8（8.3G）才落地。
-2. **量化基本无精度损失**（TOST 等价检验，δ=7pts）；**缩小模型不免费**（2B 显著掉点）⇒ 部署策略 = 激进量化 + 保留大模型。
+2. **量化基本无精度损失**（TOST 等价检验，δ=7pts）；**缩小模型不免费**（2B 显著掉点，VQA 推理域；轨迹域例外见结论 11）⇒ 部署策略 = 激进量化 + 保留大模型。
 3. **选型随负载形状翻转**——长生成选 INT4（decode 快 1.61×），看图答短答案选 INT8（prefill 快 1.43×）。
 4. **分辨率买得到正确率，性价比拐点 720p**（拿到 +8.2pts 里的 +7.1，成本仅 1080p 的 1/3）。
 5. **部署定位 = 事件级场景理解（0.1–1 Hz），非帧率级感知**；量化侧性能已到硬件天花板（decode 带宽 153 ≈ 上限 152 GB/s）。
@@ -24,6 +24,7 @@ Alpamayo-R1（AV 轨迹预测）。零预算、零训练、全 Orin 实测。
 8. **Cosmos3-Edge 跨代验证「缩小不免费、量化几乎免费」**——2B reasoner n=184 驾驶域 42.4%，显著输给上一代 8B 量化版（详见 [cosmos3-edge](https://github.com/ranpin/cosmos3-edge) 与[跨代对比](https://ranpin.github.io/cosmos3-edge/cosmos3.html)）。
 9. **跨代对比 R1 胜 Alpamayo-1.5、导航引导非原因**——1.5 经 repack（纯 config 改写）跑上 64GB Orin，同口径 minADE6@6.4s R1 0.804 vs 1.5 1.815 m（+126%）；oracle 导航仅 −1%（within-noise），「1.5 需要导航」假设被语义+量化两个独立测量否定（详见 [eval/r1/crossgen_a15.md](eval/r1/crossgen_a15.md)）。
 10. **R1 backbone INT4 AWQ 量化近乎免费**——同口径 minADE6@6.4s 0.800 vs FP16 0.804 m（Δ=-0.004m，比预注册阈值 0.1m 小 25 倍），decode 2.52× 快、引擎 3.11× 小；「量化几乎免费」结论从 CR2 推理轨道延伸到 VLA 轨迹轨道（详见 [eval/r1/int4_backbone.md](eval/r1/int4_backbone.md)）。
+11. **轨迹域「缩小免费」：Alpamayo2-Edge（2.65B）与 R1（10B）统计平手、点估计略优**——同口径 minADE6@6.4s 0.734 vs 0.804 m（配对 p=0.61、10 优/8 劣）；与 VQA 推理域缩小显著输（结论 8）对照 ⇒ 缩小代价域依赖：推理域不免费、轨迹域免费（详见 [eval/r1/crossgen_a2e.md](eval/r1/crossgen_a2e.md)）。
 
 ## 快速开始
 

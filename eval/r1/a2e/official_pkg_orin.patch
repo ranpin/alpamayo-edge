@@ -1,0 +1,97 @@
+diff --git a/pyproject.toml b/pyproject.toml
+index f34c454..474a707 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -3,7 +3,7 @@ name = "alpamayo2-edge"
+ version = "0.1.0"
+ description = "PyTorch inference for Alpamayo 2 Edge"
+ readme = "README.md"
+-requires-python = ">=3.12,<3.13"
++requires-python = ">=3.10"
+ license = "Apache-2.0"
+ dependencies = [
+   "torch==2.8.0",
+diff --git a/src/alpamayo2_edge/action_space/unicycle_accel_curvature_course.py b/src/alpamayo2_edge/action_space/unicycle_accel_curvature_course.py
+index 6d5cd1e..0ec2084 100644
+--- a/src/alpamayo2_edge/action_space/unicycle_accel_curvature_course.py
++++ b/src/alpamayo2_edge/action_space/unicycle_accel_curvature_course.py
+@@ -65,7 +65,7 @@ def _course_offset(chord_xy: torch.Tensor, yaw: torch.Tensor, chord_dt: float) -
+     across = cos_yaw * chord_xy[..., 1] - sin_yaw * chord_xy[..., 0]
+     offset = torch.atan2(across * torch.sign(along), along.abs())
+     offset = torch.where(offset.abs() > _MAX_COURSE_OFFSET_RAD, torch.zeros_like(offset), offset)
+-    speed = torch.linalg.vector_norm(chord_xy, dim=-1) / chord_dt
++    speed = chord_xy.norm(dim=-1) / chord_dt  # vector_norm equivalent, avoids CUDA linalg lazy-load (JP6.2 patch)
+     fade = (speed - _COURSE_FADE_START_MPS) / (_COURSE_FADE_END_MPS - _COURSE_FADE_START_MPS)
+     return offset * fade.clamp(min=0.0, max=1.0)
+ 
+diff --git a/src/alpamayo2_edge/action_space/utils.py b/src/alpamayo2_edge/action_space/utils.py
+index d161638..bc11624 100644
+--- a/src/alpamayo2_edge/action_space/utils.py
++++ b/src/alpamayo2_edge/action_space/utils.py
+@@ -228,8 +228,10 @@ def solve_single_constraint(
+     # strip off the x_init term
+     lhs = ATA + DTD[..., 1:, 1:] + ridge_term
+ 
+-    L = torch.linalg.cholesky(lhs)
+-    x = torch.cholesky_solve(rhs.unsqueeze(-1), L).squeeze(-1)  # (..., N)
++    # JetPack 6.2 cusolver 11.6 lacks cusolverDnXsyevBatched_bufferSize needed by
++    # torch 2.8 cu126 linalg; small Tikhonov systems solve identically on CPU.
++    L = torch.linalg.cholesky(lhs.cpu())
++    x = torch.cholesky_solve(rhs.unsqueeze(-1).cpu(), L).to(lhs.device).squeeze(-1)  # (..., N)
+ 
+     x = torch.cat([x_init.unsqueeze(-1), x], dim=-1)  # (..., N+1)
+     return x
+@@ -304,13 +306,13 @@ def solve_xs_eq_y(
+             # Ensure dtype consistency for torch.compile fake tensor meta pass
+             if rhs.dtype != lhs.dtype:
+                 rhs = rhs.to(lhs.dtype)
+-            L = torch.linalg.cholesky(lhs)
++            L = torch.linalg.cholesky(lhs.cpu())  # CPU: JP6.2 cusolver patch
+         except RuntimeError as e:
+             logger.error(f"Error in cholesky decomposition: {e}", exc_info=True)
+             ridge *= 10
+             logger.warning(f"Resolving singularity using ridge {ridge}")
+ 
+-    return torch.cholesky_solve(rhs.unsqueeze(-1), L).squeeze(-1)  # (..., N)
++    return torch.cholesky_solve(rhs.unsqueeze(-1).cpu(), L).to(lhs.device).squeeze(-1)  # (..., N)
+ 
+ 
+ @torch.no_grad()
+@@ -393,8 +395,8 @@ def dxy_theta_to_v_without_v0(
+     # strip off the x_init term
+     lhs = ATA + DTD + ridge_term
+ 
+-    L = torch.linalg.cholesky(lhs)
+-    y = torch.cholesky_solve(rhs.unsqueeze(-1), L).squeeze(-1)  # (..., N+1)
++    L = torch.linalg.cholesky(lhs.cpu())  # CPU: JP6.2 cusolver patch
++    y = torch.cholesky_solve(rhs.unsqueeze(-1).cpu(), L).to(lhs.device).squeeze(-1)  # (..., N+1)
+ 
+     return y  # (..., N+1)
+ 
+@@ -479,8 +481,8 @@ def dxy_theta_to_v(
+     # strip off the x_init term
+     lhs = ATA[..., 1:, 1:] + DTD[..., 1:, 1:] + ridge_term
+ 
+-    L = torch.linalg.cholesky(lhs)
+-    y = torch.cholesky_solve(rhs.unsqueeze(-1), L).squeeze(-1)  # (..., N)
++    L = torch.linalg.cholesky(lhs.cpu())  # CPU: JP6.2 cusolver patch
++    y = torch.cholesky_solve(rhs.unsqueeze(-1).cpu(), L).to(lhs.device).squeeze(-1)  # (..., N)
+ 
+     return torch.cat([v0.unsqueeze(-1), y], dim=-1)  # (..., N+1)
+ 
+diff --git a/src/alpamayo2_edge/chat_template.py b/src/alpamayo2_edge/chat_template.py
+index ae2fdaa..6d46eda 100644
+--- a/src/alpamayo2_edge/chat_template.py
++++ b/src/alpamayo2_edge/chat_template.py
+@@ -29,7 +29,10 @@ def relative_time_labels(timestamps: torch.Tensor) -> list[str]:
+     timestamps = timestamps.reshape(-1)
+     # The z format flag canonicalizes tiny negative deltas to 0.0, matching
+     # the original template when cameras differ by only microseconds.
+-    return [f"<t={delta / 1_000_000:z.1f}s>" for delta in (timestamps - timestamps[-1]).tolist()]
++    def _z1f(v):  # py3.10 equivalent of the 3.12+ z format flag (negative zero -> 0.0)
++        s = f"{v:.1f}"
++        return "0.0" if s == "-0.0" else s
++    return [f"<t={_z1f(delta / 1_000_000)}s>" for delta in (timestamps - timestamps[-1]).tolist()]
+ 
+ 
+ def _image_content(data: dict[str, Any], include_camera_ids: bool) -> list[dict[str, Any]]:

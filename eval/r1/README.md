@@ -11,6 +11,10 @@
 > **0.800 vs FP16 0.804 m（Δ=-0.004m，近乎免费）**、decode 2.52×、引擎 3.11× 小；**AV 域校准对照臂**
 > （dgural 公开 AV 帧重量化）亦确认近乎免费（0.825 m，两臂差 +0.024m 全在噪声内 ⇒ 校准域不敏感）——
 > 详见 [`int4_backbone.md`](int4_backbone.md)。
+> **跨代臂 3（2026-11-15）**：Alpamayo2-Edge（2.65B，11-10 发布）经 PyTorch BF16 直跑上 Orin，
+> 同口径 **minADE6@6.4s 0.734 vs R1 0.804 m（配对 p=0.61，统计平手、点估计小模型略优）** ⇒
+> 「缩小免费」在轨迹域成立，与 VQA 推理域缩小显著输（cosmos3-edge 仓）形成域依赖对照——
+> 详见 [`crossgen_a2e.md`](crossgen_a2e.md)。
 > 墙的打通过程见 [`../../docs/PROBLEMS.md`](../../docs/PROBLEMS.md) **§M**。
 > ⚠️ 输入帧与 GT 来自 **gated + license:other** 数据集，**只在机上跑，帧与逐 clip 原始数据不入库**。
 
@@ -210,6 +214,9 @@ cross_left → front_wide → cross_right → front_tele（camera-major，每相
 | `seed_sensitivity/r1_seed_{det_a,det_b,s0,s1,s2,s3,h0}.json` | 7 次推理原始输出（`output_text` + `output_trajectory [64,2]`） |
 | `extract_frames.py` | §五 帧抽取脚本（用 `<clip>.<cam>.timestamps.parquet` 定位 t0−0.3/−0.2/−0.1/0 → ffmpeg 抽 4 帧/相机） |
 | [`int4_backbone.md`](int4_backbone.md) | INT4 AWQ backbone 量化干净实验（2026-11-03）：三闸门全过程 + minADE 对比 + 速度表 + 诚实边界 |
+| [`crossgen_a15.md`](crossgen_a15.md) | 跨代臂 2：R1 vs Alpamayo-1.5（repack 管线 + 导航引导假设否定，2026-10-30） |
+| [`crossgen_a2e.md`](crossgen_a2e.md) | 跨代臂 3：Alpamayo2-Edge（2.65B）vs R1（10B）同口径 minADE + Orin PyTorch 部署路径（2026-11-15） |
+| `a2e/` | 跨代臂 3 复现脚本：取数 / 环境构建 / 官方包 Orin 补丁 / 推理 / 评分（带 README） |
 
 复现全链：`scripts/orin/r1_action_minverify.sh`（下载→补丁→对拍→只导 action→算子普查→只建 action 引擎）
 + `scripts/orin/r1_full_chain_infer.sh`（llm/visual 导出与构建 → 输入构造 → 七配置对照）。

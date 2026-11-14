@@ -106,6 +106,7 @@ footer a{color:var(--accent)}
     <li><strong>选型随负载形状翻转（§1.9，本轮修正）</strong>：<strong>输出 token &lt; 输入 token / 83 时 INT8 更快</strong>，反之 INT4 更快。INT4 decode 快 1.61×/能效高 64%/显存省 42%；INT8 prefill 快 1.9×/能效高 2.3× ⇒ <strong>长文本生成选 INT4；看图答短答案（本项目基准正是这种）选 INT8 —— n=210 基准实测 INT8 快 1.43×</strong>。</li>
     <li><strong>分辨率买得到正确率，性价比拐点在 720p（§1.12，驾驶域 n=184×3 档实测）</strong>：INT8 正确率 47.8% → 54.9%（+7.1 pts）→ 56.0%（+8.2 pts vs 448，<strong>族内校正后仍显著</strong>，p_bonf=0.043）。<strong>720p 的 +7.1 裸 p=0.047 经 Bonferroni/BH-FDR 校正后不显著</strong>（q=0.094）⇒"拐点在 720p"是<strong>性价比论点</strong>（720p 拿到 +8.2 里的 +7.1、成本仅 1080p 的 1/3），非显著性结论；1080p 相对 720p 仅 +1.1（事后分析，不显著）。代价是 E2E 0.50→3.45→11.26 s、能耗 27.5→202→650 J/请求。且 INT8 在每一档都同时赢 INT4 的速度/能耗/正确率 ⇒ <strong>这类负载部署选 INT8：要吞吐选 448（2.0 Hz），要正确率选 720p（0.29 Hz）</strong>。</li>
     <li><strong>VLA 轨迹轨道同样「量化近乎免费」（§1.13，Alpamayo-R1 backbone INT4 AWQ，2026-11-03）</strong>：同口径 minADE6@6.4s <strong>0.800 vs FP16 0.804 m</strong>（Δ=−0.004 m，预注册阈值 0.1 m 的 ~1/25），decode <strong>2.52×</strong>、引擎 <strong>3.11× 小</strong>；量化对象 = R1 自身 AV 训练 backbone（repack 走 qwen3_vl 管线；visual/action 保持 FP16，隔离单变量）。「激进量化 + 保留大模型」策略从推理轨道延伸到轨迹轨道。</li>
+    <li><strong>轨迹域「缩小免费」的跨代实证（§1.14，Alpamayo2-Edge 2.65B，2026-11-15）</strong>：同口径 minADE6@6.4s <strong>0.734 vs R1(10B) 0.804 m</strong>，配对 p=0.61 统计平手、点估计小模型略优（10 优/8 劣）；与 VQA 推理域缩小显著输（§1.11 与 cosmos3-edge 跨代专篇）对照 ⇒ <strong>缩小代价域依赖：推理域不免费、轨迹域免费</strong>。2-Edge 免量化直跑 Orin（BF16 权重 5.3G、~11s/clip 含 6 候选，PyTorch 零优化）。</li>
   </ol>
   <table class="io-table">
     <caption><strong>表 1</strong>　本项目部署标的与 VLA 轨道的输入 / 输出对照。</caption>
@@ -441,6 +442,20 @@ footer a{color:var(--accent)}
     <tr><td colspan="4" class="tnote">smoke（同输入/同 seed/temp 0）：CoT 文本与 FP16 逐字相同；轨迹 mean L2 diff 0.0477（=mean|traj| 的 8.6%，低于 ego-history 轴 12.8%、远低于 seed 轴 49%——量化扰动小于模型自身 conditioning 敏感度）。</td></tr>
   </table>
   <p style="font-size:13.5px;color:var(--muted)"><strong>怎么读这组数字</strong>：① <strong>「近乎免费」的强度</strong>——Δ=−0.004 m 比预注册阈值（0.1 m）小约 25 倍、远小于 FP16 自身 95% CI 半宽（±0.32 m），方向还是负的；但 n=18 的口径只能说「未检出可测退化」，不能声称统计等价（诚实边界，非缺陷）。② <strong>真量化五重验证</strong>（防「假 INT4」）：ONNX 含 252 个 Int4GroupwiseGemmPluginV2 节点（=36 层×7 线性层，backbone 全覆盖）；INT8 打包权重 3.473 GB = FP16 当量 6.946 GB，与 backbone 线性层理论参数量 6.95B 精确吻合；lm_head [4096,155697] 保持 FP16（AWQ 默认不量化 lm_head，行为正确）；decode 2.52×/prefill 0.96× 的 W4A16 行为指纹；无 INT4 CuTe DSL kernel 时引擎根本无法运行（构建期实测反证）。③ <strong>AWQ 校准域不敏感已由对照臂坐实</strong>：主臂用 MMMU 通用多模态（128 样本、图像封顶 40 万像素——T4 上 torch 2.13 SDPA 只剩 math backend、全分辨率图像会 OOM，封顶后配方不变）；<strong>AV 域校准对照臂</strong>（dgural 公开 AV 帧重量化）minADE6@6.4s 0.825 vs FP16 0.804 m（Δ=+0.021m，仍「近乎免费」），两臂差 +0.024m 逐 clip 解构全在噪声内（单个 outlier clip 驱动、< 配对标准误）⇒「校准域不敏感」由旁证升级为对照实证。④ <strong>只量化了 backbone</strong>：visual/action 引擎保持 FP16（实验设计隔离单变量；action 专家消费量化 KV 的容忍度即由此测得=高容忍）。复现：<code>cloud/kaggle_r1_vlm_int4.py</code>（量化）+ <code>scripts/orin/int4_g3_eval.sh</code>（评测）；细节与五版内核失败链 <code>eval/r1/int4_backbone.md</code>。</p>
+
+  <h3>1.14 跨代臂 3：Alpamayo2-Edge（2.65B）——轨迹域「缩小免费」（2026-11-15）</h3>
+  <p><strong>Alpamayo2-Edge</strong>（2026-11-10 发布，非 gated，权重 OpenMDW-1.1）= Cosmos3-Edge VLM backbone 2.45B + 0.2B flow-matching 轨迹头，输入 6 相机×22 帧 + 20 点 ego 历史 + 导航文本，输出 CoT + 64 waypoints（与 R1 同动作空间谱系）。官方 edge 部署 recipe 是 <strong>Thor 专属</strong>（DRIVE OS 7.2 / CUDA 13.4 / TRT 11.3 / sm_110，FP8 全链 ~200ms/请求），TRTEdge（含 v0.12.0）无 alpamayo2 支持，Orin sm_87 无 FP8/NVFP4（硬件代差）⇒ Orin 唯一可行路 = <strong>官方 PyTorch 包 BF16 直跑</strong>（12.06GiB 峰值），三处语义等价补丁全披露（py3.10 兼容 + JetPack 6.2 cusolver 缺符号的 Cholesky CPU 回退，<code>eval/r1/a2e/official_pkg_orin.patch</code>）。输入构造镜像官方 loader（帧选「≤请求时刻最近帧」保留真实时间戳、ego slerp 插值、nav 用数据集自带真实标注 18/18 命中）。口径同 §五：chunk 3116 同 18 clips、t0=5.1s、6 候选取 min、同 GT。全过程见 <code>eval/r1/crossgen_a2e.md</code>。</p>
+  <table>
+    <caption><strong>表 15</strong>　跨代臂 3：四模型同口径 minADE（chunk 3116，18 clips；2-Edge 6 候选 = 官方默认采样设置 + num_traj_samples=6；R1/1.5 为 6 seeds；配对统计 = 2-Edge vs R1 FP16）。</caption>
+    <tr><th>指标</th><th>R1 FP16 (10B)</th><th>R1 INT4 (10B)</th><th>1.5 FP16 (10B)</th><th>2-Edge (2.65B)</th></tr>
+    <tr><td><strong>minADE6@6.4s</strong></td><td>0.80401 m</td><td>0.80046 m</td><td>1.8153 m</td><td><strong>0.73405 m</strong> [CI 0.493, 0.976]</td></tr>
+    <tr><td>median @6.4s</td><td>0.602 m</td><td>—</td><td>1.320 m</td><td>0.597 m</td></tr>
+    <tr><td>minADE6@5s</td><td>—</td><td>—</td><td>—</td><td>0.488 m（官方 0.52 m/1392 样本，clip 集不同不可直接比）</td></tr>
+    <tr><td>配对（vs R1 FP16）</td><td>—</td><td>10 优/8 劣、Δ=−0.004</td><td>5 优/13 劣、Δ=+1.011</td><td><strong>10 优/8 劣、Δ=−0.070；paired t p=0.61、Wilcoxon p=0.83、diff CI [−0.196, +0.336]</strong></td></tr>
+    <tr><td>单 clip 耗时（Orin）</td><td>~5.7 s（TRTEdge FP16，1 候选）</td><td>—</td><td>—</td><td>~11 s（PyTorch BF16 零优化，<strong>含 6 候选 + CoT</strong>）</td></tr>
+    <tr><td colspan="4" class="tnote">逐 clip 形态 = 尾部压缩：2-Edge 在 R1 的高速/大位移困难 clip 大幅领先（d1a20a67 v0=26.6m/s：1.01 vs 2.50；bdf1fffb：0.43 vs 1.42；6b7467e8：1.30 vs 1.81），容易 clip 略抬底（932ad789：2.03 vs 1.17）。均值改善由尾部驱动。</td></tr>
+  </table>
+  <p style="font-size:13.5px;color:var(--muted)"><strong>怎么读这组数字</strong>：① <strong>统计平手 ≠ 打平声明</strong>——点估计 −8.7% 偏向 2.65B，但 n=18 对 0.07m 量级差异功效不足（p=0.61），诚实口径是「未检出显著差异、点估计略优」，不构成小模型优越性声称。② <strong>域依赖对照是本节的核心信息</strong>：同一「缩小」动作，VQA 推理域显著输（§1.11 与 cosmos3-edge 跨代专篇：2B vs 8B 量化，McNemar p=0.0115）、轨迹域免费 ⇒ 「缩小不免费」精确化为「推理域不免费、轨迹域免费」——轨迹输出低维（64×2）且有强域内训练与 nav/ego 条件化，不需要大 backbone 的通用推理容量。③ <strong>输入协议差异是混杂</strong>：2-Edge 带真实 nav + 6 相机 22 帧，R1 臂无 nav + 4 相机 4 帧（R1 跨代研究测得 nav 对 R1/1.5 仅 −1%，但 2-Edge 是 nav-conditioned 训练，贡献无法剥离）。④ 与量化结论合流：R1 INT4（0.800）≈ R1 FP16（0.804）≈ 2-Edge（0.734）——轨迹任务上「10B+量化」与「2.65B 原生」是同级候选，选型轴转到速度/内存/部署形态（2-Edge 免量化、PyTorch 即跑）。复现：<code>eval/r1/a2e/</code>（取数/环境/补丁/推理/评分五件套）。</p>
 
   <h2>二、方法细节（可复现）</h2>
 
