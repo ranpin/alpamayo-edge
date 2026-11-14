@@ -44,14 +44,14 @@ R1 全链复现（下载→补丁→对拍→导出→构建→推理→评分�
 ## 仓库布局
 
 ```
-├── eval/r1/         R1 评测资产：INT4 backbone、1.5/2-Edge 跨代、dgural GT 叠放 demo、seed 敏感性（各带 README）
+├── eval/r1/         R1 / 1.5 / 2-Edge 评测资产：INT4 backbone、两条跨代对照臂、dgural demo 管线、seed 敏感性（README 导读）
 ├── eval/vla_gate4/  闸门 4：Alpamayo-1.5-10B 边缘可行性实测
-├── cloud/           Kaggle 免费云导出/量化（R1 backbone INT4 + AV 域校准对照臂；CR2 管线已迁 cosmos-edge）
-├── scripts/orin/    设备端脚本归档（R1 全链 / 1.5 repack / gate4；CR2 与 Cosmos3 脚本已迁 cosmos-edge）
-├── docs/            PROBLEMS §M / device_layout（两仓设备布局）/ phase_v_v0_recon
+├── cloud/           Kaggle 免费云量化内核（R1 INT4 主臂 + av/ AV 域校准对照臂）
+├── scripts/orin/    设备端脚本归档（R1 全链 / 1.5 repack / gate4）
+├── docs/            PROBLEMS §M / device_layout（两仓设备布局）/ phase_v_v0_recon / site 呈现站点
 ├── configs/         设备环境配置（orin.env）
-├── outputs/         R1 量化产物归档（tgz 大件 gitignore，SHA256 入 git）+ CVM 基线
-└── legacy/          前身项目：Qwen3-4B 文本轨迹预测实验（由此转向本项目）
+├── outputs/         R1 量化产物 SHA256（tgz 大件 gitignore）
+└── legacy/          历史层：前身 Qwen3-4B 文本轨迹项目 + phase_v_synth/ 早期合成数据评测脚手架（已被真实管线取代，见其 README）
 ```
 
 ## 文档导航
