@@ -1,6 +1,6 @@
 # 闸门 4：Alpamayo-1.5-10B 边缘可行性（2026-10-12，✅ 通过判据 / ❌ 20GB 预算）
 
-**判据（next_plan.md 预注册）**："Alpamayo 权重能否在 20 GB 内加载并跑通一次前向；
+**判据（next_plan.md 预注册，该文档现于 cosmos-edge 仓）**："Alpamayo 权重能否在 20 GB 内加载并跑通一次前向；
 在 goat（64 GB）上加载成功 + 单次前向。不过则 VLA 轨道判死，写成结论而非 future work。"
 
 ## 判定
@@ -8,7 +8,7 @@
 | 问题 | 答案 | 依据 |
 |---|---|---|
 | goat（64GB）加载 + 单次前向 | ✅ **通过** | 加载 5.7s（mmap），前向 3505s（CPU），轨迹 (1,1,1,64,3) + CoT 输出 |
-| "20 GB 内"加载 | ❌ **不可能** | FP16-only 权重 **22.16 GB**（5 分片字节校验）；官方单样本推理 **~24 GB VRAM**（README 硬件表，H100 实测）；无量化路径（TRTEdge 不支持 Alpamayo 架构，FINDINGS 已定案） |
+| "20 GB 内"加载 | ❌ **不可能** | FP16-only 权重 **22.16 GB**（5 分片字节校验）；官方单样本推理 **~24 GB VRAM**（README 硬件表，H100 实测）；无量化路径（TRTEdge 不支持 Alpamayo 架构，FINDINGS 已定案，该文档现于 cosmos-edge 仓） |
 | VLA 轨道（ADE/FDE 评测） | **受阻但非判死** | 三个具体受阻点见下 |
 
 **三个受阻点（写成结论）**：
@@ -52,7 +52,7 @@
 2. processor 目录补 `Qwen3-VL-8B-Instruct` 的 config.json/generation_config.json
    （`_initialize_qwenvl3_vlm` 要从该路径读 Qwen3VLConfig；架构与 CR2 实测一致：
    36 层 / hidden 4096 / vocab 151936）。
-3. **上游设计地雷（PROBLEMS J3）**：`base_model.py:211` 默认 `vlm_name_or_path="Qwen/Qwen3-VL-8B-Instruct"`
+3. **上游设计地雷（cosmos-edge 仓 PROBLEMS J3）**：`base_model.py:211` 默认 `vlm_name_or_path="Qwen/Qwen3-VL-8B-Instruct"`
    sed 为本地路径——transformers 的 `to_diff_dict` 会用**无参默认值**重构 config，而
    `ReasoningVLAConfig.__init__` 带网络副作用（`_build_processor`）⇒ 离线环境必须让默认值可解析。
 4. `HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1`：漏网远程请求快速失败。

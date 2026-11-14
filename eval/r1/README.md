@@ -13,7 +13,7 @@
 > 详见 [`int4_backbone.md`](int4_backbone.md)。
 > **跨代臂 3（2026-11-15）**：Alpamayo2-Edge（2.65B，11-10 发布）经 PyTorch BF16 直跑上 Orin，
 > 同口径 **minADE6@6.4s 0.734 vs R1 0.804 m（配对 p=0.61，统计平手、点估计小模型略优）** ⇒
-> 「缩小免费」在轨迹域成立，与 VQA 推理域缩小显著输（cosmos3-edge 仓）形成域依赖对照——
+> 「缩小免费」在轨迹域成立，与 VQA 推理域缩小显著输（cosmos-edge 仓）形成域依赖对照——
 > 详见 [`crossgen_a2e.md`](crossgen_a2e.md)。
 > 墙的打通过程见 [`../../docs/PROBLEMS.md`](../../docs/PROBLEMS.md) **§M**。
 > ⚠️ 输入帧与 GT 来自 **gated + license:other** 数据集，**只在机上跑，帧与逐 clip 原始数据不入库**。

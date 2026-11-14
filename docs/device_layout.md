@@ -65,14 +65,14 @@ rsync -acn --itemize-changes <src>/ vision@30.245.40.99:<dst>/
 `/home/vision/engines` → `chenrunbin/alpamayo-edge/engines`
 `/home/vision/bench` → `chenrunbin/alpamayo-edge/bench`
 
-原因：**已入 git 的运行记录里写死了旧绝对路径**（如
+原因：**已入 git 的运行记录里写死了旧绝对路径**（如 cosmos-edge 仓
 `eval/accuracy/benchmark/orin_int4_outputs_n210.json` 里的 `/home/vision/bench/frames/robovqa_0_0.jpg`、
 `eval/vision/io/worst_req.json`）。这些是实测记录，改写就不再忠实，所以**留软链而不改记录**，
 老命令与老记录都能原样重跑。确认无人依赖后可删软链。
 
 ### 不属于本项目、整理时未动的
 - `/home/vision/TensorRT-Edge-LLM/`（**共享框架安装 0.9.0**，`~/.bashrc` 的 `EDGELLM_PLUGIN_PATH` 指向它；
-  移动会让所有人的推理崩，见 [`PROBLEMS.md`](PROBLEMS.md) B2/F1）
+  移动会让所有人的推理崩，见 [cosmos-edge 仓 PROBLEMS.md](https://github.com/ranpin/cosmos-edge/blob/main/docs/PROBLEMS.md) B2/F1）
 - dog `~/chenrunbin/` 下的**其他个人项目**：`homebot_wm` 2.0 G（2026-10-21 归位进来）、
   `qwen-trajectory-prediction` 7.0 G、`vlm` 3.2 G、`llama.cpp` 1.4 G、`memolink` 307 M、
   `edge-agent-memory` 147 M、`deps` 37 M
@@ -84,42 +84,37 @@ rsync -acn --itemize-changes <src>/ vision@30.245.40.99:<dst>/
 
 ## 三、本地 Mac 的分类
 
-本地目录 **`~/projects/alpamayo-edge/`**（2026-10-15 由 `qwen-trajectory-prediction` 改名；
-同日仓库结构提升：原 `alpamayo-edge/` 子目录内容即仓库根，前身项目挪入 `legacy/`）：
+2026-11-15 起本地为**两仓并存**（按 NVIDIA 模型家族重组；设备目录不随仓库改名、仍叫
+`chenrunbin/alpamayo-edge/`）：
 
 ```
-~/projects/alpamayo-edge/          # 仓库根 = 项目本身
-├── cloud/        Kaggle / Colab 量化导出脚本（入 git）
-├── docs/         METHODOLOGY / PROBLEMS / 本文 / figures/（图片唯一真源）/ site/（发布站点源 → gh-pages，其 figures 为符号链接）
-├── eval/         全部评测脚本 + 整理后的结果与原始 I/O（入 git）
-│   ├── accuracy/ 精度：探针集 + n=210 基准 + 驾驶域 n=184 + 分辨率 Pareto + 校准集消融 + 统计校正
-│   ├── cosmos3/  Phase W：reasoner n=184 跨代对比 + policy 帧敏感性复测（含 repro 脚本与证据）
-│   ├── vla_gate4/ Alpamayo-1.5-10B 可行性闸门产物
-│   ├── vision/   视觉编码器扫描（含 io/ 逐字请求响应）
-│   ├── kernels/  手写 GEMV 微基准源码 + 结果
-│   ├── perf/     跨设备加速比
-│   └── profile/  Nsight 汇总 CSV
-├── scripts/orin/ 设备端脚本归档（入 git；含 Phase W 的 W0–W2 全链与两个分解补丁）
+~/projects/alpamayo-edge/          # Alpamayo 家族（R1 / 1.5 / 2-Edge 轨迹 VLA）
+├── cloud/        Kaggle R1 backbone INT4 量化 + AV 校准对照臂（入 git）
+├── docs/         PROBLEMS §M / 本文 / phase_v_v0_recon / figures（r1_int4_quant）/ site（家族总览 + r1-trajectory → gh-pages）
+├── eval/         r1/（INT4 backbone、1.5/2-Edge 跨代、dgural demo、seed 敏感性）+ vla_gate4/ + 轨迹工具脚本
+├── scripts/orin/ Phase R 全链 / 1.5 repack / gate4 / w0b（两仓共享）
 ├── legacy/       前身项目（Qwen3-4B 文本轨迹预测，冻结）
-├── .claude/      skill edge-quantize-deploy（入 git）
-└── outputs/      **大件 gitignore**，仅本地：
-    ├── *.tgz             自产量化权重 7 件 39 G —— **已归档至
-    │                     scm:/workspace/projects/alpamayo-edge-archive/ 并全量 sha256 验证，
-    │                     本地副本已删（2026-10-15）**
-    ├── *.sha256          校验和（小溯源件）
-    └── archive/          原始日志（orin_logs/ goat_logs/ orin_prof/）+ MANIFEST.md（SHA256）
+└── outputs/      r1_*.sha256 + CVM 基线（tgz 大件已归档 scm 并删除本地副本，2026-10-15）
+
+~/projects/cosmos-edge/            # Cosmos 家族（CR2 量化部署 + Cosmos3-Edge 世界模型）
+├── cloud/        CR2 Kaggle 量化脚本全套
+├── docs/         METHODOLOGY / PROBLEMS §A–L / edge_deploy_status / orin_build_notes 等 + DEPLOYMENT
+├── eval/         accuracy（n210/510 + 驾驶域 n184 + Pareto + 校准消融）/ perf / profile / kernels / vision / cosmos3 / policy
+├── scripts/orin/ CR2 引擎构建/功耗/Pareto + Cosmos3 六道墙补丁链
+├── site/         cr2.html（CR2 主报告）+ cosmos3.html + cosmos3-demo/ + 家族总览 index.html → gh-pages
+└── outputs/      CR2 产物 sha256 ×8 + archive/（原始日志 orin_logs/ goat_logs/ orin_prof/ + MANIFEST.md，本地未跟踪）
 ```
 
 **入 git 与只在本地的分界**：小而经过整理、被文档引用的 → git；原始大件与原始日志 → `outputs/`（本地 + MANIFEST）。
-设备专用可重建大件（TRT 引擎）→ 只在设备上，不拉回本地（见 [`../outputs/archive/MANIFEST.md`](../outputs/archive/MANIFEST.md)）。
+设备专用可重建大件（TRT 引擎）→ 只在设备上，不拉回本地（见 cosmos-edge 仓本地 `outputs/archive/MANIFEST.md`，未跟踪）。
 
 ## 四、单点风险与磁盘
 
 | 东西 | 只存在于 | 丢了怎么办 |
 |---|---|---|
 | **FP16 引擎** 16 G | **仅 orin-goat** `engines/fp16` | ✅ 可重建：ONNX 在 **dog `onnx/fp16`** + scm 归档（`edge_fp16_llm.tgz`，SHA256SUMS 校验通过），但**必须在 ≥64 GB 内存的机器上** build（32GB 机峰值 54.8 G 会 OOM）⇒ 只能在 goat 建 |
-| **Cosmos3 引擎** 11.6 G | **仅 orin-goat** `engines/cosmos3_*` | ✅ 可重建：ONNX 在 **dog `onnx/cosmos3_*`**（需先拉回 goat），构建脚本 `scripts/orin/w1_goat_engine_build.sh` / `w2_policy_rebuild_decomposed.sh` |
-| **Cosmos3 ONNX** 5.9 G | **仅 orin-dog** `onnx/cosmos3_*` | ✅ 可重导出：权重在 goat `models/`，导出需先打分解补丁（`apply_decomposed_attn_patch.py` / `apply_policy_decomposed_patch.py`） |
+| **Cosmos3 引擎** 11.6 G | **仅 orin-goat** `engines/cosmos3_*` | ✅ 可重建：ONNX 在 **dog `onnx/cosmos3_*`**（需先拉回 goat），构建脚本 cosmos-edge 仓 `scripts/orin/w1_goat_engine_build.sh` / `w2_policy_rebuild_decomposed.sh` |
+| **Cosmos3 ONNX** 5.9 G | **仅 orin-dog** `onnx/cosmos3_*` | ✅ 可重导出：权重在 goat `models/`，导出需先打分解补丁（cosmos-edge 仓 `apply_decomposed_attn_patch.py` / `apply_policy_decomposed_patch.py`） |
 | **Alpamayo-R1 三引擎** 21.4 G（llm 16 G + action 4.25 G + visual 1.1 G） | **仅 orin-goat** `engines/alpamayo_r1/` | ✅ 可重建，但 **ONNX 已删**（建完即删腾盘）⇒ 需先重导出（action ~5 min、llm+visual ~7 min，权重在同机）再 build。action 侧**必须先打 `apply_alpamayo_action_decomposed_patch.py` 且对拍 16/16 全过**，否则图里会留 TRT-11-only 算子；llm/visual 走 TRTEdge 自带插件无需补丁。脚本 `scripts/orin/r1_action_minverify.sh` + `r1_full_chain_infer.sh` |
 | **Alpamayo-R1 权重** 21 G | **goat + dog 各一份** `models/Alpamayo-R1-10B` | ✅ 可重下（公开非 gated，hf-mirror + `HF_HUB_DISABLE_XET=1`，~7 分钟）；⚠️ **`action_inference` 运行期需 `--checkpointDir` 指向它**，故要跑推理的那台机上不能删 |
 | **闸门 4 权重** 21 G | **仅 orin-dog** `alpamayo_gate4/Alpamayo-1.5-10B` | ✅ 可重下（公开非 gated）；证据小件在 goat `alpamayo_gate4/`（33 M） |

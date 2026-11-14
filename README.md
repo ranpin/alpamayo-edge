@@ -1,49 +1,56 @@
 # Alpamayo-Edge
 
-**NVIDIA Physical AI 模型在 Jetson AGX Orin 上的边缘量化部署与全套实测研究**——一套 TensorRT-Edge
-管线部署多代模型：Cosmos-Reason2-8B（INT4/INT8 量化五轴实测）、Cosmos3-Edge（跨代精度对比）、
-Alpamayo-R1（AV 轨迹预测）。零预算、零训练、全 Orin 实测。
+**NVIDIA Alpamayo 家族 AV 轨迹 VLA 在 Jetson AGX Orin 上的边缘部署与同口径评测**——
+**R1**（10B，主打：FP16 全链跑通 + backbone INT4 量化近乎免费）、**1.5**（repack 跨代对照，
+诚实口径：工作未完整收官、导航引导假设被否定）、**Alpamayo2-Edge**（2.65B，2026-11-10 发布，
+轨迹域「缩小免费」实证）。全部 Orin 实机实测。零预算 · 零训练。
 
-🛣️ **在线 Demo · Alpamayo-R1 轨迹预测**（真实帧叠加 + 滚动预测视频 + FP16/INT4 三线对比 · 真实 Orin 推理）：<https://ranpin.github.io/alpamayo-edge/r1-trajectory/>
+🛣️ **在线 Demo · R1 轨迹预测**（真实帧叠加 + 滚动预测视频 + FP16/INT4 三线对比 · 真实 Orin 推理）：<https://ranpin.github.io/alpamayo-edge/r1-trajectory/>
 
-🎬 **在线 Demo · Cosmos3-Edge 2B 驾驶场景理解**：<https://ranpin.github.io/cosmos3-edge/cosmos3-demo/>（Cosmos3 部署与 policy 动作链已拆至独立仓 [cosmos3-edge](https://github.com/ranpin/cosmos3-edge)）
+📊 **呈现站点（家族总览）**：<https://ranpin.github.io/alpamayo-edge/>
 
-📊 **呈现站点（论文式 · 细节首选入口）**：[CR2-8B 量化部署](https://ranpin.github.io/alpamayo-edge/) ｜ [Cosmos3 跨代对比](https://ranpin.github.io/cosmos3-edge/cosmos3.html)（cosmos3-edge 仓）
+> **仓库沿革**：本仓原为 Cosmos-Reason2-8B 边缘量化部署项目（CR2 篇）。2026-11-15 按 NVIDIA 模型
+> 家族重组——CR2/Cosmos3 全套迁入姊妹仓 [cosmos-edge](https://github.com/ranpin/cosmos-edge)，
+> 本仓聚焦 Alpamayo 家族。方法学体系（五轴评测 · roofline · 预注册闸门 · 等价检验）建立在 CR2 篇，
+> [CR2 报告页](https://ranpin.github.io/cosmos-edge/cr2.html) §1.13–1.14 按时间线收录 R1 INT4 与
+> 2-Edge 两章（资产在本仓 `eval/r1/`）。两仓共享设备资产与 TRTEdge 0.10.1 构建脚本。
 
-## 核心结论（一句话版）
+## 核心结论
 
-> 全部数字、图表与统计口径在[呈现站点](https://ranpin.github.io/alpamayo-edge/)，方法与复现在 [docs/](docs/)；此处只留结论本身。
-
-1. **量化是边缘落地的必需项，不是优化项**——FP16 在 32GB Orin build/加载双 OOM，INT4（4.6G）/ INT8（8.3G）才落地。
-2. **量化基本无精度损失**（TOST 等价检验，δ=7pts）；**缩小模型不免费**（2B 显著掉点，VQA 推理域；轨迹域例外见结论 11）⇒ 部署策略 = 激进量化 + 保留大模型。
-3. **选型随负载形状翻转**——长生成选 INT4（decode 快 1.61×），看图答短答案选 INT8（prefill 快 1.43×）。
-4. **分辨率买得到正确率，性价比拐点 720p**（拿到 +8.2pts 里的 +7.1，成本仅 1080p 的 1/3）。
-5. **部署定位 = 事件级场景理解（0.1–1 Hz），非帧率级感知**；量化侧性能已到硬件天花板（decode 带宽 153 ≈ 上限 152 GB/s）。
-6. **VLA 轨道（Alpamayo-1.5-10B）在 32GB Orin 不可行**（FP16-only 22.16G、无量化路径）⇒ 受阻点明确而非判死。
-7. **Alpamayo-R1 全链跑通、minADE 与官方基线一致**——minADE6@6.4s = 0.804 m vs 官方 0.821 m（落在 95% CI 内）。
-8. **Cosmos3-Edge 跨代验证「缩小不免费、量化几乎免费」**——2B reasoner n=184 驾驶域 42.4%，显著输给上一代 8B 量化版（详见 [cosmos3-edge](https://github.com/ranpin/cosmos3-edge) 与[跨代对比](https://ranpin.github.io/cosmos3-edge/cosmos3.html)）。
-9. **跨代对比 R1 胜 Alpamayo-1.5、导航引导非原因**——1.5 经 repack（纯 config 改写）跑上 64GB Orin，同口径 minADE6@6.4s R1 0.804 vs 1.5 1.815 m（+126%）；oracle 导航仅 −1%（within-noise），「1.5 需要导航」假设被语义+量化两个独立测量否定（详见 [eval/r1/crossgen_a15.md](eval/r1/crossgen_a15.md)）。
-10. **R1 backbone INT4 AWQ 量化近乎免费**——同口径 minADE6@6.4s 0.800 vs FP16 0.804 m（Δ=-0.004m，比预注册阈值 0.1m 小 25 倍），decode 2.52× 快、引擎 3.11× 小；「量化几乎免费」结论从 CR2 推理轨道延伸到 VLA 轨迹轨道（详见 [eval/r1/int4_backbone.md](eval/r1/int4_backbone.md)）。
-11. **轨迹域「缩小免费」：Alpamayo2-Edge（2.65B）与 R1（10B）统计平手、点估计略优**——同口径 minADE6@6.4s 0.734 vs 0.804 m（配对 p=0.61、10 优/8 劣）；与 VQA 推理域缩小显著输（结论 8）对照 ⇒ 缩小代价域依赖：推理域不免费、轨迹域免费（详见 [eval/r1/crossgen_a2e.md](eval/r1/crossgen_a2e.md)）。
+1. **R1 全链跑通、minADE 与官方基线一致**——三引擎 FP16（llm 14.15G / visual 1.08G / action 4.25G），
+   minADE6@6.4s = 0.804 m vs 官方 0.821 m（落在 95% CI 内）。
+2. **R1 backbone INT4 AWQ 量化近乎免费**——同口径 0.800 vs FP16 0.804 m（Δ=−0.004 m，比预注册阈值
+   0.1 m 小 25 倍），decode 2.52×、引擎 3.11× 小；「量化几乎免费」从 CR2 推理轨道延伸到 VLA 轨迹轨道
+   （详见 [eval/r1/int4_backbone.md](eval/r1/int4_backbone.md)）。
+3. **跨代对比 R1 胜 Alpamayo-1.5、导航引导非原因**——1.5 经 repack（纯 config 改写）跑上 64GB Orin，
+   同口径 minADE6@6.4s R1 0.804 vs 1.5 1.815 m（+126%）；oracle 导航仅 −1%（within-noise），
+   「1.5 需要导航」假设被语义 + 量化两个独立测量否定。诚实口径：1.5 侧为跨代对照，工作未完整收官
+   （详见 [eval/r1/crossgen_a15.md](eval/r1/crossgen_a15.md)）。
+4. **轨迹域「缩小免费」：Alpamayo2-Edge（2.65B）与 R1（10B）统计平手、点估计略优**——同口径
+   0.734 vs 0.804 m（配对 p=0.61、10 优/8 劣）；2-Edge 免量化直跑 Orin（BF16 权重 5.3G、PyTorch 零优化）。
+   与推理域缩小显著输（Cosmos3 2B vs CR2 8B 量化版，p=0.0115，见 cosmos-edge）对照 ⇒
+   **缩小代价域依赖：推理域不免费、轨迹域免费**（详见 [eval/r1/crossgen_a2e.md](eval/r1/crossgen_a2e.md)）。
+5. **Alpamayo-1.5-10B 在 32GB Orin 不可部署**（闸门 4 实测：FP16-only 22.16G、官方 ~24GB VRAM、
+   无量化路径）⇒ 受阻点明确而非判死（详见 [eval/vla_gate4/README.md](eval/vla_gate4/README.md)）。
+6. **action 专家撞 K6 同源墙**（TRT≥11-only 算子），分解补丁第三次打通（PROBLEMS §M，
+   前两次在 cosmos-edge 的 Cosmos3 reasoning/policy）。
 
 ## 快速开始
 
-量化构建与 Orin 复现的完整命令见 [docs/orin_build_notes.md](docs/orin_build_notes.md)；评测资产
-（n=210 / n=184 驾驶域基准、分辨率 Pareto、VLA 闸门等，各带 README）在 `eval/`。需 Jetson AGX Orin
-实机（32GB），无消费级一键入口。
+R1 全链复现（下载→补丁→对拍→导出→构建→推理→评分）见
+[scripts/orin/README.md](scripts/orin/README.md) 与 [eval/r1/README.md](eval/r1/README.md)；
+2-Edge 五件套（取数/环境/补丁/推理/评分）在 `eval/r1/a2e/`。需 Jetson AGX Orin 实机，无消费级一键入口。
 
 ## 仓库布局
 
 ```
-├── docs/            技术文档：结果报告 / 方法论 / 问题记录(A–M) / 构建日志 / 规划
-│   ├── figures/       图片唯一真源
-│   └── site/          呈现站点源码（index.html + r1-trajectory/；部署于 gh-pages；cosmos3.html 已迁 cosmos3-edge 仓、留重定向）
-├── eval/            评测资产：n=210 / n=184 驾驶域基准、分辨率 Pareto、VLA 闸门、roofline、kernel、r1（cosmos3 跨代已迁 cosmos3-edge）
-├── cloud/           Kaggle 免费云量化/导出管线
-├── scripts/orin/    设备端脚本归档（构建 / 评测 / 功耗 / 闸门）
+├── eval/r1/         R1 评测资产：INT4 backbone、1.5/2-Edge 跨代、dgural GT 叠放 demo、seed 敏感性（各带 README）
+├── eval/vla_gate4/  闸门 4：Alpamayo-1.5-10B 边缘可行性实测
+├── cloud/           Kaggle 免费云导出/量化（R1 backbone INT4 + AV 域校准对照臂；CR2 管线已迁 cosmos-edge）
+├── scripts/orin/    设备端脚本归档（R1 全链 / 1.5 repack / gate4；CR2 与 Cosmos3 脚本已迁 cosmos-edge）
+├── docs/            PROBLEMS §M / device_layout（两仓设备布局）/ phase_v_v0_recon
 ├── configs/         设备环境配置（orin.env）
-├── data/            驾驶域评测集（manifest 入 git；帧为可重建大件，gitignore）
-├── outputs/         量化产物归档（tgz 大件 gitignore，SHA256 与日志入 git）
+├── outputs/         R1 量化产物归档（tgz 大件 gitignore，SHA256 入 git）+ CVM 基线
 └── legacy/          前身项目：Qwen3-4B 文本轨迹预测实验（由此转向本项目）
 ```
 
@@ -51,17 +58,15 @@ Alpamayo-R1（AV 轨迹预测）。零预算、零训练、全 Orin 实测。
 
 | 文档 | 内容 |
 |---|---|
-| **[呈现站点](https://ranpin.github.io/alpamayo-edge/)** | **论文式呈现（细节首选入口）**：摘要 → 核心结果 → 方法细节 → 思考讨论 |
-| [docs/edge_deploy_status.md](docs/edge_deploy_status.md) | 结果报告：链路、体积、性能 / 功耗 / 精度 / Pareto / VLA 闸门全套指标 |
-| [docs/METHODOLOGY.md](docs/METHODOLOGY.md) | 方法与可复现性：模型 / 数据 / 校准集来源、指标定义与测法、评测资产 |
-| [docs/PROBLEMS.md](docs/PROBLEMS.md) | 统一问题记录（A–M）：现象 → 根因 → 解决 → 教训 |
-| [docs/orin_build_notes.md](docs/orin_build_notes.md) | 工程日志：Orin 构建配方、快速复现命令、FMHA 崩溃根因 |
-| [docs/next_plan.md](docs/next_plan.md) | 规划与决策：闸门、与 Alpamayo 家族的关系、明确不做清单 |
-| [eval/](eval/) | 评测资产（各带 README）：n=210 / n=184 基准、Pareto、VLA 闸门、cosmos3 跨代、r1 |
+| **[呈现站点](https://ranpin.github.io/alpamayo-edge/)** | 家族总览（R1 / 跨代 / 两仓地图） |
+| [eval/r1/README.md](eval/r1/README.md) | R1 评测总览：全链、INT4、跨代、demo |
+| [docs/PROBLEMS.md](docs/PROBLEMS.md) | 工程问题记录 §M（§A–L 在 [cosmos-edge](https://github.com/ranpin/cosmos-edge/blob/main/docs/PROBLEMS.md)） |
+| [docs/device_layout.md](docs/device_layout.md) | 两台 Orin 设备布局（两仓资产同一布局） |
+| [docs/phase_v_v0_recon.md](docs/phase_v_v0_recon.md) | Phase V（VLA 轨道）侦察记录 |
 
-> docs/ 下另有 device_layout / plan / FINDINGS / M0_setup / M5_report 等专项与历史文档。
+## 许可与数据来源
 
-## 许可与致谢
-
-模型与工具链：NVIDIA Cosmos-Reason2-8B / TensorRT-Edge-LLM / PhysicalAI-AV 数据集。本项目为个人研究，
-全部数字可复现（复现路径见 [docs/orin_build_notes.md](docs/orin_build_notes.md) 与各评测目录 README）。
+- 代码 **MIT**。
+- 模型：`nvidia/Alpamayo-R1-10B`、`nvidia/Alpamayo-1.5-10B`、`nvidia/Alpamayo2-Edge`（OpenMDW-1.1）。
+- demo 帧取自 dgural 公开样本（PhysicalAI-AV 公开 100-clip 子集）；minADE 评测用 chunk3116 子集
+  （18 clips × 6 seeds，逐 clip 原始数据涉 gated 仓库，不入库）。

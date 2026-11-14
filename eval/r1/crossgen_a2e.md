@@ -6,7 +6,7 @@
 > 1. **2.65B 点估计优于 10B R1**（minADE6@6.4s **0.734 vs 0.804 m**，−8.7%），配对检验
 >    **p=0.61 ⇒ 统计平手**——「缩小免费」在 VLA 轨迹域成立（n=18 分辨率内）；
 > 2. 与 **VQA 推理域对照**（Cosmos3-Edge 2B reasoner 显著输 CR2-8B 量化版，McNemar p=0.0115，
->    见 [cosmos3-edge 仓](https://github.com/ranpin/cosmos3-edge)）⇒ **缩小代价是域依赖的**；
+>    见 [cosmos-edge 仓](https://github.com/ranpin/cosmos-edge)）⇒ **缩小代价是域依赖的**；
 > 3. 逐 clip 形态：**2-Edge 压缩尾部**（高速大位移 clip 赢 0.5–1.5 m）、容易 clip 略抬底；
 > 4. 官方 edge 部署 recipe = **Thor 专属**（FP8/sm_110/TRT 11.3）；Orin 唯一可行路 = PyTorch BF16
 >    直跑，需三处本地补丁（全部披露于 [`a2e/official_pkg_orin.patch`](a2e/official_pkg_orin.patch)）。
