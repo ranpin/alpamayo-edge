@@ -44,7 +44,7 @@ R1 全链复现（下载→补丁→对拍→导出→构建→推理→评分�
 ## 仓库布局
 
 ```
-├── eval/r1/         R1 / 1.5 / 2-Edge 评测资产：INT4 backbone、两条跨代对照臂、dgural demo 管线、seed 敏感性（README 导读）
+├── eval/r1/         以 R1 为锚的评测体系：三模型同口径，README 有按模型分类导读（R1 基线+INT4 / 1.5 / 2-Edge 跨代 / dgural 四线 demo）
 ├── eval/vla_gate4/  闸门 4：Alpamayo-1.5-10B 边缘可行性实测
 ├── cloud/           Kaggle 免费云量化内核（R1 INT4 主臂 + av/ AV 域校准对照臂）
 ├── scripts/orin/    设备端脚本归档（R1 全链 / 1.5 repack / gate4）

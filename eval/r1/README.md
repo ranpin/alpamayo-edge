@@ -18,6 +18,21 @@
 > 墙的打通过程见 [`../../docs/PROBLEMS.md`](../../docs/PROBLEMS.md) **§M**。
 > ⚠️ 输入帧与 GT 来自 **gated + license:other** 数据集，**只在机上跑，帧与逐 clip 原始数据不入库**。
 
+## 按模型分类导读（资产在哪）
+
+三个模型共用**同一套评测体系**（chunk 3116 协议 / 同 18 clips / 同 t0=5.1s / 同 GT 与积分口径），按模型分类如下：
+
+| 模型 | 角色 | 实验文档 | 脚本与资产 |
+|---|---|---|---|
+| **Alpamayo-R1（10B）** | 锚点：FP16 基线 + INT4 量化臂 | 本 README §一–§七 + [`int4_backbone.md`](int4_backbone.md) | `extract_frames.py`（帧抽取）/ `r1_seed_sensitivity.py` + `seed_sensitivity/`（seed 敏感性）/ `int4_viz.py` + `paper_style.py`（图）；量化内核 [`../../cloud/`](../../cloud/)、设备脚本 [`../../scripts/orin/`](../../scripts/orin/) |
+| **Alpamayo-1.5（10B）** | 跨代对照臂 2 + 可部署性闸门 | [`crossgen_a15.md`](crossgen_a15.md) | `../../scripts/orin/repack_alpamayo15_to_r1.py` / `derive_a15_oracle_nav.py` / `a15_nav_eval.sh`；闸门 4 实测 [`../vla_gate4/`](../vla_gate4/) |
+| **Alpamayo2-Edge（2.65B）** | 跨代对照臂 3（2026-11-10 发布，PyTorch BF16 直跑） | [`crossgen_a2e.md`](crossgen_a2e.md) | [`a2e/`](a2e/) 五件套：取数 / 环境构建 / 官方包 Orin 补丁 / 推理 / 评分（带 README） |
+| **跨模型 demo** | dgural 真实帧叠加**四线对比**（GT / R1 FP16 / R1 INT4 / 2-Edge） | [`dgural_demo/README.md`](dgural_demo/README.md) | [`dgural_demo/`](dgural_demo/) 全管线脚本；2-Edge 四线增量脚本在 [`a2e/`](a2e/) |
+
+> **为什么不按模型拆目录**：`crossgen_*.md` 是「该模型 vs R1」的**对照记录**、demo 是四线同框，都不属于单一模型；
+> 目录名 `eval/r1/` 的语义是「**以 R1 为锚的评测体系**」。物理拆分会把同一实验设计的对照臂拆散，
+> 且 cosmos-edge 仓 cr2.html §1.13–1.14 与本站总览页均按现路径引用。
+
 ## 一、这是什么
 
 Alpamayo-R1-10B = **VLM 主干（`qwenvl3`，~8.8B）+ 扩散 action 专家（~2.3B，36 层）**，
