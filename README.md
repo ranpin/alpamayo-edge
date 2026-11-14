@@ -5,7 +5,7 @@
 诚实口径：工作未完整收官、导航引导假设被否定）、**Alpamayo2-Edge**（2.65B，2026-11-10 发布，
 轨迹域「缩小免费」实证）。全部 Orin 实机实测。零预算 · 零训练。
 
-🛣️ **在线 Demo · R1 轨迹预测**（真实帧叠加 + 滚动预测视频 + FP16/INT4 三线对比 · 真实 Orin 推理）：<https://ranpin.github.io/alpamayo-edge/r1-trajectory/>
+🛣️ **在线 Demo · R1 轨迹预测**（真实帧叠加 + 滚动预测视频 + FP16/INT4/2-Edge 四线对比 · 真实 Orin 推理）：<https://ranpin.github.io/alpamayo-edge/r1-trajectory/>
 
 📊 **呈现站点（家族总览）**：<https://ranpin.github.io/alpamayo-edge/>
 

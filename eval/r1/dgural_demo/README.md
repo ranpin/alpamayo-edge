@@ -1,7 +1,7 @@
 # dgural R1-only 叠 GT demo · 复现管线
 
 Alpamayo-R1 预测轨迹 + GT 真值轨迹叠回 **dgural 公开真实帧**的全链复现脚本。
-含三种形态：静态叠加图、滚动预测视频（4 段 × 18.7s）与 **INT4 三线对比**（GT 绿 / FP16 蓝 / INT4 橙虚线），均已上线。
+含四种形态：静态叠加图、滚动预测视频（4 段 × 18.7s）、**INT4 三线对比**与 **Alpamayo2-Edge 四线对比**（GT 绿 / FP16 蓝 / INT4 橙虚线 / 2-Edge 品红点线），均已上线。
 **线上 demo**：<https://ranpin.github.io/alpamayo-edge/r1-trajectory/>（三板块：演示 / 评测结果 / 核心方法）。
 
 > 📦 目录内另存历史产物 `r1vid_demo.mp4`（ecafce84 单预测成片，7.4s）：滚动视频版的前身，被其取代、从未上线。
@@ -142,6 +142,27 @@ ADE@6.4s = 同窗 64 点预测与 GT 的平均欧氏距离；FDE = 6.4s 终点�
 
 - **精度近乎免费**：静态 6 clip 平均 ADE@6.4s FP16 3.10m / INT4 3.41m；滚动 12 锚点平均 FP16 1.60m / INT4 1.89m——逐片段互有高低、整体同量级（ecafce84 滚动 INT4 2.47m 明显高于 FP16 1.31m，是该 clip 的真实个例，页面如实并列）。
 - **部署收益**（表 3 INT4 列，`perf_measure_int4.sh` 实测）：引擎总大小 10.2 vs 19.5 GB（llm 4.88 vs 14.15 GB，3.11× 小）、单请求端到端 4.17 vs 5.0 s、CoT 解码 ~3× 快（30.6 vs 10.4 tok/s）、峰值统一内存 ~10–14 vs 25.5 GB；prefill 因 W4A16 dequant 略慢（2.19 vs 1.73 s）。
+
+## Alpamayo2-Edge 四线对比版（2026-11-15）
+
+把静态图 + 滚动视频扩展成 **GT 绿实线 / R1 FP16 蓝实线 / R1 INT4 橙虚线 / Alpamayo2-Edge 品红点线**四线对比——2-Edge = 2.65B 新一代边缘 AV VLA（Cosmos3-Edge backbone 2.45B + 0.2B flow-matching 轨迹头），官方 PyTorch 包 BF16 免量化直跑 Orin。chunk3116 同口径统计对比（配对 p=0.61 平手、点估计略优）见 [`../crossgen_a2e.md`](../crossgen_a2e.md)（主站跨代章在 cosmos-edge 仓 cr2.html §1.14）。
+
+### 管线（在 INT4 三线管线基础上的增量，脚本在 [`../a2e/`](../a2e/)）
+
+| # | 脚本 | 跑在哪 | 作用 |
+|---|---|---|---|
+| 1 | `a2e/fetch_dgural_a2e.py` | Mac | HTTP Range 部分下载 6 路相机 chunk_0000 zip（含 ZIP64 解析，>2GB zip）取 8 clips mp4+timestamps → ffmpeg 抽 14 锚点 × 22 帧（front 2 路 5 帧/其余 4 路 3 帧，帧选「≤请求时刻最近帧」保留真实时间戳）；同取标定/egomotion/8 个 fw 视频/真实 nav（`navigation.parquet`） |
+| 2 | `a2e/a2e_run_dgural.py` | goat | 内存构造输入（镜像官方 loader 契约：6 相机 [0,1,2,3,5,6]、20 点 ego slerp 插值、≤t₀ 最近 nav）+ 官方 `run_data` 6 候选 + best-of-6 选择（minADE 口径；CoT 为三层嵌套列表需递归展平） |
+| 3 | `a2e/gen_web_assets_a2e.py` | Mac | 四线静态叠加图（2-Edge 品红点线带白描边） |
+| 4 | `a2e/render_roll_a2e.py` | Mac | 四线滚动视频 + HUD（图例四条、延迟标签 R1 FP16/INT4 + 2-Edge ~11s(6候选)、ADE 三值并列）；**2-Edge 需 2s 相机历史 ⇒ t₀=1.5s 锚无品红线（如实缺省）** |
+| 5 | `a2e/gen_contactsheet_a2e.py` | Mac | 重建图 1 联络表 + 4 视频海报（t=9s 帧，首刷新后四线同框） |
+
+### 结果（单次运行、开环 6.4s）
+
+- **静态 6 clip**：2-Edge 平均 ADE@6.4s **2.39m** vs FP16 3.10 / INT4 3.41——5/6 片段优于 FP16（fa83bcb8 1.06 vs 4.57、058bf960 3.13 vs 5.90）；唯一例外 46003675 崩坏 7.52m（其 CoT 退化为 `<NOMINAL>`，与「CoT 退化↔轨迹错误」模式一致）。
+- **滚动 8 锚点**（t₀=7.5/13.5s）：平均 **1.11m** vs FP16 1.60 / INT4 1.89；逐片段均值 3/4 低于 FP16（ecafce84 1.37 vs 1.31 略高）。
+- **口径差异（诚实披露）**：2-Edge = 6 候选取最优（temperature=0.6/top_p=0.98/seed=43）+ 真实 nav + 6 相机 22 帧；R1 两臂 = 单 seed + 无 nav + 4 相机 4 帧——demo 页逐片段数字是行为展示，严格对照以 crossgen_a2e.md 的 chunk3116 统计为准。
+- **部署**：权重 5.3G BF16 免量化、模型加载 10.6s、~11s/锚点（含 6 候选，PyTorch 零优化 + 三处 Orin 兼容补丁，见 `../a2e/official_pkg_orin.patch`）。
 
 ## CoT–轨迹关系研究（18 锚点，2026-11-02）
 
