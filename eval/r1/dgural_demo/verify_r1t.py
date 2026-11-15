@@ -59,9 +59,12 @@ def main(url):
                 tagOF:[...document.querySelectorAll('.r1t-tag,.r1t-metrics')].filter(t=>t.scrollWidth>t.clientWidth+1).length,
                 vidTops:vcards.map(c=>Math.round(c.getBoundingClientRect().top))
               };}""")
-            # 点击播放交互：首个海报卡 → 换成 video 并自动播放
+            # 点击播放交互：首个海报卡 → 换成 video 并自动播放（远程 mp4 需缓冲，有界等待）
             pg.click('.r1t-posterwrap')
-            pg.wait_for_timeout(1200)
+            try:
+                pg.wait_for_function("()=>{const v=document.querySelector('video');return v&&!v.paused&&v.currentTime>0;}", timeout=15000)
+            except Exception:
+                pass
             r2 = pg.evaluate("""()=>{const v=document.querySelector('video');return {
               videos:document.querySelectorAll('video').length,
               postersLeft:document.querySelectorAll('.r1t-posterwrap').length,

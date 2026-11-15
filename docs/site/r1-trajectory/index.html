@@ -441,6 +441,7 @@ document.querySelectorAll('.r1t-posterwrap').forEach(w=>{
     v.className='r1t-fig';v.controls=true;v.autoplay=true;v.muted=true;v.playsInline=true;v.preload='auto';
     v.src=w.dataset.src;
     w.replaceWith(v);
+    v.play().catch(()=>{});  // 动态插入元素的 autoplay 属性不可靠，显式 play（muted 符合自动播放策略）
   };
   w.addEventListener('click',act);
   w.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});
