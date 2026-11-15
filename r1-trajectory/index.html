@@ -78,13 +78,16 @@ table.ds-table{min-width:560px}
 .r1t-turnsm.r1t-turn-r{color:var(--ds-alt)}
 .r1t-cal{font-size:12.5px;color:var(--ds-muted);line-height:1.75;margin-top:14px;padding:12px 14px;background:var(--ds-bg);border:1px solid var(--ds-border);border-radius:8px}
 /* 正文整合：小标题 + 要点列表 + 结论速览卡 + 可折叠口径块（替代成段密排文字） */
-.r1t-subh{font-size:15px;font-weight:700;color:var(--ds-text);margin:24px 0 6px}
-.r1t-subh:first-of-type{margin-top:14px}
-.r1t-points{margin:0;padding-left:19px;font-size:13.5px;line-height:1.7;color:var(--ds-text)}
-.r1t-points li{margin:5px 0}
-.r1t-cal .r1t-points,.r1t-calbody .r1t-points{font-size:12.5px;color:var(--ds-muted);line-height:1.75}
+.r1t-subh{font-size:15px;font-weight:700;color:var(--ds-text);margin:30px 0 12px}
+.r1t-subh:first-of-type{margin-top:16px}
+.r1t-points{margin:0;padding-left:22px;font-size:13.5px;line-height:1.7;color:var(--ds-text)}
+.r1t-points li{margin:6px 0;padding-left:2px}
+/* 小标题下的要点列表整体右缩进，形成「标题 → 内容」层级；上下留白拉开节奏 */
+.r1t-subh+ul.r1t-points{margin:2px 0 14px 10px}
+.r1t-cal .r1t-points,.r1t-calbody .r1t-points{font-size:12.5px;color:var(--ds-muted);line-height:1.75;margin:5px 0 0}
+.r1t-cal .r1t-points li,.r1t-calbody .r1t-points li{margin:5px 0}
 .r1t-cal .r1t-points b,.r1t-calbody .r1t-points b{color:var(--ds-text)}
-.r1t-findings{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:12px;margin:8px 0 2px}
+.r1t-findings{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:14px;margin:6px 0 8px}
 .r1t-fcard{background:var(--ds-panel);border:1px solid var(--ds-border);border-left:3px solid var(--ds-accent);border-radius:10px;padding:12px 14px}
 .r1t-fhead{font-size:13px;font-weight:700;color:var(--ds-text);line-height:1.45;min-height:2.9em}
 .r1t-fnum{font-size:24px;font-weight:700;color:var(--ds-accent-strong);line-height:1.1;letter-spacing:-.3px;white-space:nowrap}
