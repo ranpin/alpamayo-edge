@@ -77,6 +77,29 @@ table.ds-table{min-width:560px}
 .r1t-turnsm.r1t-turn-l{color:var(--ds-accent-strong)}
 .r1t-turnsm.r1t-turn-r{color:var(--ds-alt)}
 .r1t-cal{font-size:12.5px;color:var(--ds-muted);line-height:1.75;margin-top:14px;padding:12px 14px;background:var(--ds-bg);border:1px solid var(--ds-border);border-radius:8px}
+/* 正文整合：小标题 + 要点列表 + 结论速览卡 + 可折叠口径块（替代成段密排文字） */
+.r1t-subh{font-size:15px;font-weight:700;color:var(--ds-text);margin:24px 0 6px}
+.r1t-subh:first-of-type{margin-top:14px}
+.r1t-points{margin:0;padding-left:19px;font-size:13.5px;line-height:1.7;color:var(--ds-text)}
+.r1t-points li{margin:5px 0}
+.r1t-cal .r1t-points,.r1t-calbody .r1t-points{font-size:12.5px;color:var(--ds-muted);line-height:1.75}
+.r1t-cal .r1t-points b,.r1t-calbody .r1t-points b{color:var(--ds-text)}
+.r1t-findings{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:12px;margin:8px 0 2px}
+.r1t-fcard{background:var(--ds-panel);border:1px solid var(--ds-border);border-left:3px solid var(--ds-accent);border-radius:10px;padding:12px 14px}
+.r1t-fhead{font-size:13px;font-weight:700;color:var(--ds-text);line-height:1.45;min-height:2.9em}
+.r1t-fnum{font-size:24px;font-weight:700;color:var(--ds-accent-strong);line-height:1.1;letter-spacing:-.3px;white-space:nowrap}
+.r1t-fnum em{font-style:normal;font-size:12.5px;font-weight:600;color:var(--ds-muted);margin-left:4px;letter-spacing:0}
+.r1t-fnum .r1t-fvs{font-size:12.5px;font-weight:600;color:var(--ds-muted);margin:0 5px;letter-spacing:0}
+.r1t-fsub{font-size:12px;color:var(--ds-muted);line-height:1.65;margin-top:7px}
+.r1t-fsub a{color:var(--ds-accent-strong)}
+.r1t-caldet{margin-top:10px;background:var(--ds-bg);border:1px solid var(--ds-border);border-radius:8px}
+.r1t-caldet summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--ds-accent-strong);padding:11px 14px;user-select:none;list-style:none;line-height:1.6}
+.r1t-caldet summary::-webkit-details-marker{display:none}
+.r1t-caldet summary::before{content:"▸ "}
+.r1t-caldet[open] summary::before{content:"▾ "}
+.r1t-calbody{padding:0 14px 13px;font-size:12.5px;color:var(--ds-muted);line-height:1.75}
+.r1t-calbody b{color:var(--ds-text)}
+.r1t-calbody .r1t-points{margin-top:2px}
 .r1t-method code{background:var(--ds-bg);border:1px solid var(--ds-border);border-radius:4px;padding:1px 5px;font-size:13px}
 .r1t-method li{margin:6px 0}
 @media(max-width:900px){.r1t-sgrid{grid-template-columns:1fr}}
@@ -106,7 +129,13 @@ table.ds-table{min-width:560px}
       <span><i style="background:repeating-linear-gradient(90deg,#ff4696 0 3px,transparent 3px 7px)"></i>Alpamayo2-Edge 预测（点线）</span>
       <span style="color:var(--ds-muted)">ADE / FDE 误差公式与口径见下方「评测结果」</span>
     </div>
-    <p><b>滚动预测视频（边前进边预测）</b>：每段视频里 R1 <b>每 6 秒重新预测一次</b>（= Orin 实测单次推理耗时，非人为缩短），每段 3 个锚点（t₀=1.5 / 7.5 / 13.5s）；四线<b>同锚 t₀</b>（同窗 [t₀, t₀+6.4]s，重叠=预测精度），随车前进被一起「吃掉」、到下个锚点一起刷新。<b>2-Edge 需 2s 相机历史 ⇒ 首锚 t₀=1.5s 无品红线</b>（自 t₀=7.5s 起出现，如实缺省非渲染遗漏）。<b>点击卡片播放</b>；CoT 与误差解读折叠在卡片内，逐锚点误差与口径见「评测结果」表 2。</p>
+    <p class="r1t-subh">滚动预测视频（边前进边预测）· 4 场景 × 18.7s</p>
+    <ul class="r1t-points">
+      <li><b>每 6 秒重预测一次</b> = Orin 实测单次推理耗时（非人为缩短）；每段 3 个锚点 t₀=1.5 / 7.5 / 13.5s。</li>
+      <li><b>四线同锚 t₀</b>（同窗 [t₀, t₀+6.4]s）：重叠程度 = 预测精度；轨迹随车前进被一起「吃掉」、到下个锚点一起刷新。</li>
+      <li><b>首锚 t₀=1.5s 无品红线</b>：2-Edge 需 2s 相机历史，自 t₀=7.5s 起出现（如实缺省，非渲染遗漏）。</li>
+      <li><b>点击卡片播放</b>；CoT 原文与误差解读折叠在卡片内，逐锚点误差见下方表 2。</li>
+    </ul>
     <details class="r1t-sheetdet">
       <summary>图 1 · 滚动预测总览（4 场景 × 4 个视频时刻，点击展开）</summary>
       <img class="r1t-sheet" src="assets/roll_contactsheet.jpg" alt="滚动预测总览：4 场景 × 4 个视频时刻的轨迹叠加帧" loading="lazy">
@@ -194,7 +223,13 @@ table.ds-table{min-width:560px}
         </details>
       </div>
     </div>
-    <p style="margin-top:26px"><b>单次预测静态图（6 个困难转弯片段）</b>：每图为前视相机真实帧上叠加四条 6.4 秒未来轨迹。卡片标签 <b>「6.4s 终点：前行 X m · 左/右偏 Y m」</b>是 GT 轨迹终点相对自车 t₀ 位置的<b>位移分解</b>——描述<b>终点落在哪</b>（一个位移矢量的纵/横分量），<b>不是</b>「先直行再转弯」的分段机动指令。<b>上排 3 例为左转片段、下排 3 例为右转片段</b>，组内按 R1 FP16 ADE@6.4s 好→差编排；右上角<b>序号 1–6</b> 与表 1 逐行对应；终点位移、CoT 与解读<b>折叠在卡片底部（点击展开）</b>。</p>
+    <p class="r1t-subh">单次预测静态图 · 6 个困难转弯片段</p>
+    <ul class="r1t-points">
+      <li><b>上排 3 例左转、下排 3 例右转</b>，组内按 R1 FP16 ADE@6.4s 好→差；右上角<b>序号 1–6</b> 与表 1 逐行对应。</li>
+      <li>每图为前视相机<b>真实帧</b>上叠加四条 6.4s 未来轨迹（线型见上方图例）。</li>
+      <li>卡片标签 <b>「6.4s 终点：前行 X m · 左/右偏 Y m」</b>是 GT 终点相对自车 t₀ 位置的<b>位移分解</b>——描述<b>终点落在哪</b>（一个位移矢量的纵/横分量），<b>不是</b>「先直行再转弯」的分段机动指令。</li>
+      <li>终点位移、CoT 原文与解读<b>折叠在卡片底部</b>（点击展开）。</li>
+    </ul>
     <div class="r1t-sgroup">
       <div class="r1t-sgh"><span class="r1t-turn r1t-turn-l">↰</span>左转片段 · 3 例 <span class="r1t-sghsub">组内按 R1 FP16 误差好→差</span></div>
       <div class="r1t-sgrid" id="gridL"></div>
@@ -207,8 +242,32 @@ table.ds-table{min-width:560px}
 
   <section class="ds-section">
     <h2 class="ds-h2">评测结果</h2>
-    <p>测试数据集：NVIDIA PhysicalAI-AV 数据集 dgural 公开 sample 的 6 个 clip——前视广角相机真实帧 + ~100Hz egomotion GT 轨迹；6 个片段均为「6.4s 预测窗内明显转弯」的困难样本（非随机抽样，见下方「口径与诚实边界」）。推理口径：Alpamayo-R1（TRTEdge FP16）Jetson Orin 实机、单噪声种子（seed=5、temperature=0）确定性推理，无训练微调。</p>
-    <p>下表为 6 个片段上 R1 <b>FP16 与 INT4（AWQ 量化）</b>及 <b>Alpamayo2-Edge（2.65B）</b>预测相对 GT 的逐点欧氏位移误差（ego 系，按转向分组：左转 3 例 / 右转 3 例，组内按 R1 FP16 ADE@6.4s 好→差，与上方静态图逐行对应）。<b>核心观察：R1 的思维链与其轨迹精度强相关</b>——当 CoT 正确识别出机动（如「绿灯左转」「并入右转道」）时轨迹几乎完美贴合（ADE 低至 0.84m）；当 CoT 退化为泛化的「跟前车」时，模型会漏判或欠判即将到来的转弯（最差例蓝线直冲、绿线左拐，ADE 5.90m）。<b>INT4 与 FP16 逐片段互有高低、整体同量级</b>（6 片段平均 ADE@6.4s FP16 3.10m / INT4 3.41m），印证「量化近乎免费」。<b>2-Edge 在 5/6 片段优于 FP16</b>（fa83bcb8 1.06 vs 4.57m、058bf960 3.13 vs 5.90m；平均 2.39m vs 3.10m），唯一例外 46003675 崩坏（7.52m，其 CoT 退化为 <code>&lt;NOMINAL&gt;</code>）——「CoT 退化↔轨迹错误」模式与 R1 一致。2-Edge 与 10B R1 的 chunk3116 同口径统计对比（平手、点估计略优）见<a href="../index.html">主站 §1.14</a>。</p>
+    <p><b>测试数据集</b>：NVIDIA PhysicalAI-AV 的 dgural 公开 sample，6 个「6.4s 预测窗内明显转弯」的困难 clip（非随机抽样）——前视广角相机真实帧 + ~100Hz egomotion GT 轨迹。<b>评测协议</b>：同一台 Jetson AGX Orin 实机推理、开环 6.4s、无训练微调；R1 两臂为单噪声种子（seed=5、temperature=0）确定性推理，Alpamayo2-Edge 为 6 候选取最优（官方采样设置）。逐表口径差异见表下折叠块。</p>
+    <p class="r1t-subh">四条结论（数字出处标在卡内）</p>
+    <div class="r1t-findings">
+      <div class="r1t-fcard">
+        <div class="r1t-fhead">① 量化近乎免费</div>
+        <div class="r1t-fnum">+0.31<em>m</em></div>
+        <div class="r1t-fsub">R1 INT4（AWQ 量化 backbone）相对 FP16 的 6 片段平均 ADE@6.4s 增量（3.41 vs 3.10 m，表 1 平均行），逐片段互有高低；换来引擎 19.5→10.2 GB、CoT 解码 ~3× 快（表 3）。</div>
+      </div>
+      <div class="r1t-fcard">
+        <div class="r1t-fhead">② 2.65B ≈ 10B：轨迹域缩小免费</div>
+        <div class="r1t-fnum">2.39<span class="r1t-fvs">vs</span>3.10<em>m</em></div>
+        <div class="r1t-fsub">Alpamayo2-Edge 与 R1 FP16 的 6 片段平均 ADE@6.4s，5/6 片段更优（最大增益 fa83bcb8 1.06 vs 4.57 m）；唯一例外 46003675 崩坏 7.52 m（其 CoT 退化为 <code>&lt;NOMINAL&gt;</code>）。chunk3116 同口径统计为平手（配对 p=0.61），见<a href="../index.html">主站 §1.14</a>。</div>
+      </div>
+      <div class="r1t-fcard">
+        <div class="r1t-fhead">③ CoT 退化 = 轨迹出错信号</div>
+        <div class="r1t-fnum">7×<em>差距</em></div>
+        <div class="r1t-fsub">CoT 点出机动（「绿灯左转」「并入右转道」）→ 轨迹几乎完美贴合，最佳 ADE 0.84 m；退化成泛化「跟前车」→ 漏判/欠判转弯，最差 5.90 m（蓝线直冲、绿线左拐）。2-Edge 的崩坏例同样伴随 CoT 退化 ⇒ 模式跨模型一致。</div>
+      </div>
+      <div class="r1t-fcard">
+        <div class="r1t-fhead">④ 事件级、非实时</div>
+        <div class="r1t-fnum">4.17–6.70<em>s / 请求</em></div>
+        <div class="r1t-fsub">Orin 单请求端到端（INT4 4.17 / FP16 5.0 / 2-Edge 6.70 s 含 6 候选，表 3）⇒ 约 0.15–0.24 Hz，在自己的 6.4s 预测时域内完不成一次闭环修正；视频 HUD 已标注。</div>
+      </div>
+    </div>
+    <p class="r1t-subh">表 1 · 单次预测：6 个困难转弯片段</p>
+    <p>三个模型（R1 FP16 / R1 INT4 AWQ 量化 / Alpamayo2-Edge 2.65B）对同一 GT 的逐点欧氏位移误差（ego 系）。行序 = 左转 3 例 → 右转 3 例，组内按 R1 FP16 ADE@6.4s 好→差，与上方静态图 6–11 逐一对应。</p>
     <div class="r1t-tlegend">
       <span>配色（表 1）：</span>
       <span class="r1t-sw r1t-best">绿底 = 该片段三模型中误差最小</span>
@@ -216,8 +275,31 @@ table.ds-table{min-width:560px}
       <span>标色列为 ADE@6.4s 与 FDE@6.4s（ADE@3s 不标）；末行为 6 片段平均</span>
     </div>
     <div class="ds-tablewrap"><table class="ds-table" id="tbl"></table></div>
-    <div class="r1t-cal"><b>误差公式</b>：ADE@T（平均位移误差）= 预测与 GT 在前 T 秒每个 waypoint 上欧氏距离的均值 = (1/N)·Σᵢ‖predᵢ − gtᵢ‖；FDE@T（终点位移误差）= 第 T 秒末 waypoint 的欧氏距离 = ‖pred_N − gt_N‖。@3s 取前 30 点、@6.4s 取全部 64 点（10 Hz）；均在 t₀ 时刻 ego 系（自车为原点、x 前 y 左）计算，单位米。<br><b>口径与诚实边界</b>：① R1 两臂为单噪声种子（seed=5、temperature=0）确定性推理，<b>非</b>官方 minADE6（6 采样取最优）；<b>2-Edge 为 6 候选取最优</b>（官方采样设置 temperature=0.6/top_p=0.98/seed=43，即 minADE6 口径）且带数据集自带<b>真实导航文本</b>与 6 相机×22 帧输入（R1 为 4 相机×4 帧、无导航）——输入协议差异是混杂因素，逐片段数字不构成两模型的严格对照（严格对照见主站 §1.14 的 chunk3116 同口径统计）；② 6 个片段均为「6.4s 预测窗内明显转弯」的困难样本、非随机抽样，误差天然高于官方全集；③ 数据源 dgural 公开样本的 README 明确声明「不适合 benchmarking / 统计分析」——本页数字仅为<b>逐例行为展示</b>，不构成代表性精度结论；④ 官方 Alpamayo-R1 在 644 clip 上报告 minADE6@6.4s≈0.79m、官方 Alpamayo2-Edge 在 1392 样本上报告 minADE6@5s≈0.52m，口径均不同，不可与本表直接比较。</div>
-    <p style="margin-top:22px"><b>滚动口径（表 2）</b>：表 1 回答「困难片段上的单次预测精度」，表 2 回答「滚动设定下的逐锚点精度」——4 个片段（直行跟车 0dd3eb7f / 左转·红灯起停 ecafce84 / 右转 1fcf2fef / 变道 1f7ef408，前视广角真实帧各 ~20s）× 3 锚点（t₀=1.5/7.5/13.5s）= 12 条预测，每 6s 重预测一次（=实测单次推理耗时），同一 Orin 实机、每锚点单样本（temperature=0）、开环 6.4s、无导航输入。列集与表 1 不同：滚动版补「终点纵/横差」与「误差形态」两列，用于定位「几米偏移」的构成；终点差 = pred−gt（t₀ ego 系，纵向 + = 过伸、横向 + = 偏左）。<b>2-Edge 滚动线</b>只出现在视频与卡片标题（t₀=7.5/13.5s 两锚、6 候选取最优、带真实导航；t₀=1.5s 因 2s 相机历史不满足而缺省），本表仍为 R1 FP16 单样本口径、未混排。</p>
+    <div class="r1t-cal">
+      <b>误差公式</b>
+      <ul class="r1t-points">
+        <li><b>ADE@T</b>（平均位移误差）= 预测与 GT 在前 T 秒每个 waypoint 上欧氏距离的均值 = (1/N)·Σᵢ‖predᵢ − gtᵢ‖；@3s 取前 30 点、@6.4s 取全部 64 点（10 Hz）。</li>
+        <li><b>FDE@T</b>（终点位移误差）= 第 T 秒末 waypoint 的欧氏距离 = ‖pred_N − gt_N‖。</li>
+        <li>均在 t₀ 时刻 ego 系（自车为原点、x 前 y 左）计算，单位米。</li>
+      </ul>
+    </div>
+    <details class="r1t-caldet">
+      <summary>口径与诚实边界（4 条）——最关键：本页逐片段数字不构成 R1 与 2-Edge 的严格对照（输入协议不同），严格对照见主站 §1.14</summary>
+      <div class="r1t-calbody">
+        <ol class="r1t-points">
+          <li>R1 两臂为单噪声种子（seed=5、temperature=0）确定性推理，<b>非</b>官方 minADE6（6 采样取最优）；<b>2-Edge 为 6 候选取最优</b>（官方采样设置 temperature=0.6 / top_p=0.98 / seed=43，即 minADE6 口径）且带数据集自带<b>真实导航文本</b>与 6 相机×22 帧输入（R1 为 4 相机×4 帧、无导航）——输入协议差异是混杂因素，逐片段数字不构成两模型的严格对照（严格对照见主站 §1.14 的 chunk3116 同口径统计）。</li>
+          <li>6 个片段均为「6.4s 预测窗内明显转弯」的困难样本、非随机抽样，误差天然高于官方全集。</li>
+          <li>数据源 dgural 公开样本的 README 明确声明「不适合 benchmarking / 统计分析」——本页数字仅为<b>逐例行为展示</b>，不构成代表性精度结论。</li>
+          <li>官方 Alpamayo-R1 在 644 clip 上报告 minADE6@6.4s≈0.79m、官方 Alpamayo2-Edge 在 1392 样本上报告 minADE6@5s≈0.52m，口径均不同，不可与本表直接比较。</li>
+        </ol>
+      </div>
+    </details>
+    <p class="r1t-subh">滚动口径（表 2）· 4 片段 × 3 锚点 = 12 条</p>
+    <ul class="r1t-points">
+      <li><b>表 1 回答「困难片段上的单次预测精度」，表 2 回答「滚动设定下的逐锚点精度」</b>——4 个片段（直行跟车 0dd3eb7f / 左转·红灯起停 ecafce84 / 右转 1fcf2fef / 变道 1f7ef408，前视广角真实帧各 ~20s）× 3 锚点（t₀=1.5/7.5/13.5s），每 6s 重预测一次（=实测单次推理耗时），同一 Orin 实机、每锚点单样本（temperature=0）、开环 6.4s、无导航输入。</li>
+      <li><b>列集与表 1 不同</b>：滚动版补「终点纵/横差」与「误差形态」两列，用于定位「几米偏移」的构成；终点差 = pred−gt（t₀ ego 系，纵向 + = 过伸、横向 + = 偏左）。</li>
+      <li><b>2-Edge 滚动线</b>只出现在视频与卡片标题（t₀=7.5/13.5s 两锚、6 候选取最优、带真实导航；t₀=1.5s 因 2s 相机历史不满足而缺省），本表仍为 R1 FP16 单样本口径、未混排。</li>
+    </ul>
     <div class="ds-tablewrap"><table class="ds-table">
       <caption>表 2 · 滚动预测逐锚点误差（Alpamayo-R1 FP16 · Jetson AGX Orin · 单样本 · 开环 6.4s · 按片段分组对应图 2–5）</caption>
       <thead><tr><th class="l">片段</th><th class="l">场景</th><th>t₀ (s)</th><th>v₀ (m/s)</th><th>ADE@6.4s (m)</th><th>FDE@6.4s (m)</th><th>终点纵差 (m)</th><th>终点横差 (m)</th><th class="l">误差形态</th></tr></thead>
@@ -236,8 +318,27 @@ table.ds-table{min-width:560px}
       <tr><td class="l"><code>1f7ef408</code></td><td class="l">变道</td><td>13.5</td><td>11.4</td><td>2.13</td><td>8.05</td><td>+4.3</td><td>+6.8</td><td class="l">欠转（切弯）</td></tr>
       </tbody>
     </table></div>
-    <div class="r1t-cal"><b>滚动口径与发现</b>：① 每锚点单样本——官方 minADE 为 6-seed 采样取最小，且 seed 敏感性实测（W4）为 ego 历史的 3.84×，单样本天然差于 6-seed min；② 锚点刻意压在机动段（转弯/变道/加减速），误差天然高于平缓场景；③ 开环 6.4s ≠ 闭环控制——R1 在 Orin 单次推理 ~5.7s（≈0.18Hz），在自己的预测时域内完不成一次修正，故定位「事件级非实时」（视频 HUD 已标注）；④ 已排除管线系统偏差：镜像特征 0/12、同一积分+GT 管线在 chunk-3116 复现官方基线（18 clips × 6 seeds minADE6=0.804m vs 官方 0.821m，95% CI 内）、numpy vs torch 积分对拍 1.3e-05m、渲染锚点恒等 ~1e-13px——表中几米级偏移为真实单样本模型误差；⑤ 误差三形态：欠转（切弯）3/12（均为转弯锚点，终点横差 3.3~6.9m，方向对但幅度欠估）、纵向欠伸 4/12（低估加速）、基本贴合/小幅偏差 5/12；两个最差欠转锚点的 CoT 均退化为泛化跟车，与表 1 的「CoT 识别机动↔轨迹精度强相关」叙事一致；⑥ 12 段平均 ADE@6.4s=1.60m、FDE=4.44m；⑦ <b>2-Edge 滚动 8 锚点（t₀=7.5/13.5s，6 候选取最优）平均 1.11m</b>，逐片段均值 3/4 低于 FP16 的 3 锚点均值（0dd3eb7f 1.07 vs 1.54 / 1fcf2fef 0.64 vs 1.40 / 1f7ef408 1.36 vs 2.15；ecafce84 1.37 vs 1.31 略高）——但锚点数与采样口径不同（2 vs 3 锚、best-of-6 vs 单样本），只作视频内的行为展示，不与本表混排比较。</div>
-    <div class="ds-tablewrap" style="margin-top:20px"><table class="ds-table" id="tbl2">
+    <div class="r1t-cal">
+      <b>滚动 12 锚点的四个发现</b>
+      <ul class="r1t-points">
+        <li><b>误差三形态</b>：欠转（切弯）3/12（均为转弯锚点，终点横差 3.3~6.9m，方向对但幅度欠估）、纵向欠伸 4/12（低估加速）、基本贴合/小幅偏差 5/12；两个最差欠转锚点的 CoT 均退化为泛化跟车，与表 1「CoT 识别机动↔轨迹精度强相关」一致。</li>
+        <li><b>12 段平均</b>：ADE@6.4s = 1.60 m、FDE = 4.44 m。</li>
+        <li><b>2-Edge 滚动 8 锚点（t₀=7.5/13.5s，6 候选取最优）平均 1.11 m</b>，逐片段均值 3/4 低于 FP16 的 3 锚点均值（0dd3eb7f 1.07 vs 1.54 / 1fcf2fef 0.64 vs 1.40 / 1f7ef408 1.36 vs 2.15；ecafce84 1.37 vs 1.31 略高）——但锚点数与采样口径不同（2 vs 3 锚、best-of-6 vs 单样本），只作视频内的行为展示，不与本表混排比较。</li>
+        <li><b>已排除管线系统偏差</b>：镜像特征 0/12、同一积分+GT 管线在 chunk-3116 复现官方基线（18 clips × 6 seeds minADE6=0.804m vs 官方 0.821m，95% CI 内）、numpy vs torch 积分对拍 1.3e-05m、渲染锚点恒等 ~1e-13px——表中几米级偏移为真实单样本模型误差。</li>
+      </ul>
+    </div>
+    <details class="r1t-caldet">
+      <summary>滚动口径与诚实边界（3 条）——单样本非官方 minADE、锚点压在机动段、开环 ≠ 闭环</summary>
+      <div class="r1t-calbody">
+        <ol class="r1t-points">
+          <li>每锚点单样本——官方 minADE 为 6-seed 采样取最小，且 seed 敏感性实测（W4）为 ego 历史的 3.84×，单样本天然差于 6-seed min。</li>
+          <li>锚点刻意压在机动段（转弯/变道/加减速），误差天然高于平缓场景。</li>
+          <li>开环 6.4s ≠ 闭环控制——R1 在 Orin 单次推理 ~5.7s（≈0.18Hz），在自己的预测时域内完不成一次修正，故定位「事件级非实时」（视频 HUD 已标注）。</li>
+        </ol>
+      </div>
+    </details>
+    <p class="r1t-subh">表 3 · Orin 部署与性能</p>
+    <div class="ds-tablewrap"><table class="ds-table" id="tbl2">
       <caption>表 3 · Orin 部署与性能（Alpamayo-R1 FP16 vs INT4 AWQ · TRTEdge 0.10.1；末列 Alpamayo2-Edge 为 PyTorch BF16 对照，非 TRT 路径）</caption>
       <thead><tr><th class="l">指标</th><th>R1 FP16 (10B)</th><th>R1 INT4（AWQ, 10B）</th><th>2-Edge (2.65B)</th><th class="l">口径 / 说明</th></tr></thead>
       <tbody>
@@ -253,7 +354,17 @@ table.ds-table{min-width:560px}
       <tr><td class="l">推理功耗</td><td>32.6 W</td><td>—</td><td>27.7 W</td><td class="l">R1 为 FP16 模块总功耗（GPU_SOC 31.7 + CPU_CV 0.9）；2-Edge 为 tegrastats 推理活跃段均值（GPU_SOC 26.0 + CPU_CV 1.7），低于 R1 FP16；INT4 本次未单测</td></tr>
       </tbody>
     </table></div>
-    <div class="r1t-cal"><b>性能口径</b>：FP16 于 2026-10-30、INT4 于 2026-11-03、2-Edge 于 2026-11-15 测于同一 Jetson AGX Orin 64G（JetPack 6.2；R1 两臂 TRTEdge 0.10.1，2-Edge 为官方 PyTorch 包 BF16/SDPA 零优化 + 三处 Orin 兼容补丁），同一 dgural 公开样本帧输入（R1：16 帧 + ego 历史；2-Edge：22 帧 6 相机 + 20 点 ego + 真实导航）、R1 同 seed=5 / temperature=0 确定性推理、同 warmup 后计时口径。R1 三段拆解来自 TRT profiling，与端到端之差为预处理与调度开销，其中 CoT 解码随输出 token 数线性变化。INT4 = AWQ 量化 backbone（llm），visual/action 引擎仍 FP16；其 prefill 因 W4A16 dequant 略慢、decode 因内存带宽受限大幅加速（~3×），端到端净提速 1.2×。<b>2-Edge 为 2026-11-15 专项实测</b>（warmup 后 3 次计时、torch.cuda.synchronize、tegrastats 活跃段）：单请求 6.70s = 共享 prefill 1.44 + 6 路 CoT 解码 2.20 + 扩散专家（6 候选×10 步）2.79 + 调度 ~0.11；6 候选共享 prefill、每候选边际成本 ≈0.52s（单候选对照 4.11s）；功耗 27.7W 低于 R1 FP16 的 32.6W；内存为 torch peak alloc（R1 两臂为 cuda_free_memory_delta，口径不同见列内说明）。全部为实机实测。</div>
+    <div class="r1t-cal">
+      <b>怎么读这张表</b>
+      <ul class="r1t-points">
+        <li><b>同一台 Jetson AGX Orin 64G</b>（JetPack 6.2）实机实测：FP16 2026-10-30 / INT4 2026-11-03 / 2-Edge 2026-11-15；同一 dgural 公开样本帧输入、同 warmup 后计时口径。R1 两臂走 TRTEdge 0.10.1，2-Edge 为官方 PyTorch 包 BF16/SDPA 零优化 + 三处 Orin 兼容补丁。</li>
+        <li><b>输入协议不同</b>：R1 为 16 帧 + ego 历史（seed=5 / temperature=0 确定性推理）；2-Edge 为 22 帧 6 相机 + 20 点 ego + 真实导航。</li>
+        <li><b>INT4</b> = AWQ 量化 backbone（llm），visual/action 引擎仍 FP16 ⇒ prefill 因 W4A16 dequant 略慢、decode 因内存带宽受限大幅加速（~3×），端到端净提速 1.2×。</li>
+        <li><b>2-Edge 耗时结构</b>（2026-11-15 专项实测：warmup 后 3 次计时、torch.cuda.synchronize、tegrastats 活跃段）：6.70s = 共享 prefill 1.44 + 6 路 CoT 解码 2.20 + 扩散专家（6 候选×10 步）2.79 + 调度 ~0.11；6 候选共享 prefill ⇒ 每候选边际成本 ≈0.52s（单候选对照 4.11s）；功耗 27.7W 低于 R1 FP16 的 32.6W。</li>
+        <li><b>内存列口径不同</b>：R1 两臂为 cuda_free_memory_delta、2-Edge 为 torch peak alloc，不可直接比大小（见列内说明）。</li>
+        <li><b>R1 三段拆解来自 TRT profiling</b>，与端到端之差为预处理与调度开销；其中 CoT 解码随输出 token 数线性变化。</li>
+      </ul>
+    </div>
   </section>
 
   <section class="ds-section">
