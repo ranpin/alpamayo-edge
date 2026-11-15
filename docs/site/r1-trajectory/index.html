@@ -130,7 +130,6 @@ table.ds-table{min-width:560px}
       <span><i style="background:var(--ds-accent)"></i>R1 FP16 预测（实线）</span>
       <span><i style="background:repeating-linear-gradient(90deg,#ff9628 0 6px,transparent 6px 11px)"></i>R1 INT4 预测（虚线）</span>
       <span><i style="background:repeating-linear-gradient(90deg,#ff4696 0 3px,transparent 3px 7px)"></i>Alpamayo2-Edge 预测（点线）</span>
-      <span style="color:var(--ds-muted)">ADE / FDE 误差公式与口径见下方「评测结果」</span>
     </div>
     <p class="r1t-subh">滚动预测视频（边前进边预测）· 4 场景 × 18.7s</p>
     <ul class="r1t-points">
@@ -297,7 +296,7 @@ table.ds-table{min-width:560px}
         </ol>
       </div>
     </details>
-    <p class="r1t-subh">滚动口径（表 2）· 4 片段 × 3 锚点 = 12 条</p>
+    <p class="r1t-subh">表 2 · 滚动预测：4 片段 × 3 锚点 = 12 条</p>
     <ul class="r1t-points">
       <li><b>表 1 回答「困难片段上的单次预测精度」，表 2 回答「滚动设定下的逐锚点精度」</b>——4 个片段（直行跟车 0dd3eb7f / 左转·红灯起停 ecafce84 / 右转 1fcf2fef / 变道 1f7ef408，前视广角真实帧各 ~20s）× 3 锚点（t₀=1.5/7.5/13.5s），每 6s 重预测一次（=实测单次推理耗时），同一 Orin 实机、每锚点单样本（temperature=0）、开环 6.4s、无导航输入。</li>
       <li><b>列集与表 1 不同</b>：滚动版补「终点纵/横差」与「误差形态」两列，用于定位「几米偏移」的构成；终点差 = pred−gt（t₀ ego 系，纵向 + = 过伸、横向 + = 偏左）。</li>

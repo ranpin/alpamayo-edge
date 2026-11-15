@@ -52,7 +52,7 @@ def main(url):
                 tblSeq:document.querySelectorAll('.r1t-seqsm').length,
                 tblHeader:document.querySelector('#tbl thead th').textContent,
                 seqIntro:document.body.textContent.includes('序号 1–6'),
-                rollIntro:document.body.textContent.includes('滚动口径（表 2）')&&document.body.textContent.includes('边前进边预测'),
+                rollIntro:document.body.textContent.includes('表 2 · 滚动预测')&&document.body.textContent.includes('边前进边预测'),
                 methodRoll:document.body.textContent.includes('滚动视频版'),
                 formula:document.body.textContent.includes('平均位移误差')&&document.body.textContent.includes('终点位移误差'),
                 intro:document.body.textContent.includes('位移分解'),
@@ -155,8 +155,9 @@ def main(url):
           and l['calDets'] == 2 and l['calDetOpen'] == 0 and l['points'] == 6 and l['listIndent'] >= 8
           and l['caldet_click']['open'] and l['caldet_click']['items'] >= 3 and l['caldet_click']['liVisible']
           and len(l['subheads']) == 6 and any('四条结论' in s for s in l['subheads'])
-          and any('表 1' in s for s in l['subheads']) and any('表 3' in s for s in l['subheads'])
-          and any('滚动口径（表 2）' in s for s in l['subheads']))
+          and any(s.startswith('表 1 · ') for s in l['subheads'])
+          and any(s.startswith('表 2 · ') for s in l['subheads'])
+          and any(s.startswith('表 3 · ') for s in l['subheads']))
     print('\nVERIFY', 'PASS' if ok else 'FAIL', url)
     return ok
 
