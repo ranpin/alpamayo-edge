@@ -1,5 +1,9 @@
 # Phase V · V0 侦察备忘（2026-10-15）
 
+> **历史侦察记录，非现行计划**：文中「Thor fork 移植」路径已被后续事实取代——TRTEdge 0.10.1
+> 原生支持 Alpamayo-R1（2026-10-19 静态侦察推翻闸门 4 旧判，全链现已跑通，见
+> [eval/r1/README.md](../eval/r1/README.md)）。本文保留作侦察方法与当时判断依据的记录。
+
 > 闸门 V0 的产出。结论先行：**Thor fork 路径可行，移植面有界**；D0（CPU 保底 demo）的数据依赖
 > 有 Kaggle workaround，不被 Mac 的 HF 网络问题卡死。
 
