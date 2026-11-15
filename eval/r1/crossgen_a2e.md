@@ -88,9 +88,15 @@ Wilcoxon p=0.83；差值（R1−2-Edge）mean +0.070 m，95% CI **[−0.196, +0.
 **1.30 vs 1.81**、`53a9f0d2` **0.28 vs 0.80**；代价是容易 clip 略抬底（`932ad789` 2.03 vs 1.17、
 `9e163ccb` 1.04 vs 0.35、`7451ffbe` 0.84 vs 0.28）。均值改善由尾部驱动。
 
-**速度**：18 clips 全链总 **211 s（~11 s/clip，含 6 候选 + CoT 生成）**，PyTorch BF16 零优化
-（SDPA、无 compile/CUDA graph）——对照 R1 TRTEdge FP16 单候选 ~5.7 s。2-Edge 免量化直跑
-（权重 5.3 G），无「量化必需」问题。
+**速度（2026-11-15 专项实测，ecafce84、warmup 后 3 次计时、torch.cuda.synchronize）**：单请求纯推理
+**6.70s（6 候选，方差 <0.03s）= 共享 prefill 1.44s + 6 路 CoT 解码 2.20s（~30 步共批）+ 扩散专家
+2.79s（6 候选 × 10 步 flow-matching 共批）+ 调度 ~0.11s**；6 候选共享 prefill ⇒ **每候选边际成本
+≈0.52s**（单候选对照 4.11s）。冷启动加载 7.4s（PyTorch mmap）；torch peak alloc **8.8GB**（权重 5.3G
++ KV/激活 3.5G；官方 H100 参考 12.06 GiB）；推理功耗 **27.7W**（tegrastats 活跃段 GPU_SOC 26.0 +
+CPU_CV 1.7，低于 R1 FP16 的 32.6W）。评测区间的 ~11.5s/锚点为含输入构建（22 帧 PNG 读取 + ego 插值）
+的 wall time；18 clips 全链总 211s。对照 R1 TRTEdge FP16 单候选 ~5.7s——2-Edge 以 1.34× 的单请求
+耗时产出 6 条候选，且免量化直跑（权重 5.3G），无「量化必需」问题。原始数据
+[`a2e/perf_results.json`](a2e/perf_results.json) + [`a2e/perf_tegrastats.log`](a2e/perf_tegrastats.log)。
 
 **官方数字旁证**：我们 @5s = 0.488 m vs 官方 0.52 m（1392 样本）——clip 集不同（我们是 18 条
 困难机动 clip）不可直接比，量级一致。
@@ -128,6 +134,9 @@ Wilcoxon p=0.83；差值（R1−2-Edge）mean +0.070 m，95% CI **[−0.196, +0.
 | [`a2e/official_pkg_orin.patch`](a2e/official_pkg_orin.patch) | goat | 官方包三处补丁（基于 commit `02f55a7`，`git apply` 即用） |
 | [`a2e/a2e_run.py`](a2e/a2e_run.py) | goat | 内存构造输入（镜像官方 loader 契约）+ 批量推理（官方 `run_data`，6 候选） |
 | [`a2e/a2e_score.py`](a2e/a2e_score.py) | goat | 评分：minADE6@6.4s/@5s 对照 `gt_chunk3116.json` → CSV + 聚合 |
+| [`a2e/a2e_perf.py`](a2e/a2e_perf.py) | goat | 性能专项：三段拆解埋点（`vlm.model.forward` 首调=prefill / `_generate_with_shared_prefill` / `_sample_actions`）+ 内存轮询 + 单候选对照 |
+| [`a2e/perf_results.json`](a2e/perf_results.json) | — | 性能实测结果（3 次计时 + 单候选 + 功耗汇总） |
+| [`a2e/perf_tegrastats.log`](a2e/perf_tegrastats.log) | — | 功耗原始采样（tegrastats 1s 间隔） |
 
 机上产物（goat，**不入库**）：`~/chenrunbin/a2e/`（权重 5.0G、venv、`frames_a2e/` 647M、
 `eval_a2e/out/` 18 clips 原始输出）、`eval_data/minade_chunk3116_a2e.csv`。

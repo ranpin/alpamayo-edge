@@ -214,17 +214,17 @@ table.ds-table{min-width:560px}
       <tbody>
       <tr><td class="l">引擎总大小</td><td>19.5 GB</td><td>10.2 GB</td><td class="r1t-best">5.3 GB（权重，免量化）</td><td class="l">INT4 仅 llm 量化 14.15→4.88 GB（3.11× 小）；visual 1.08 + action 4.25 仍 FP16；2-Edge BF16 直跑无引擎</td></tr>
       <tr><td class="l">引擎构建耗时</td><td>172 / 112 / 90 s</td><td>117 s（仅 llm）</td><td>—（免构建）</td><td class="l">llm / visual / action 自 ONNX 构建；INT4 只重建 llm，visual/action 复用 FP16</td></tr>
-      <tr><td class="l">冷启动加载 + 初始化</td><td>36–47 s</td><td>~18–28 s</td><td class="r1t-best">10.6 s</td><td class="l">进程启动 → 初始化（含引擎反序列化 / 2-Edge 为 PyTorch 权重加载）</td></tr>
-      <tr><td class="l">单请求端到端</td><td>5.0 s</td><td>4.17 s</td><td>~11 s（含 6 候选）</td><td class="l">R1 为 warmup 后 3 次均值（单候选）；2-Edge 为 14 锚点均值（每请求 6 条候选 + 各自 CoT，≈1.8 s/候选）</td></tr>
-      <tr><td class="l">├ VLM prefill</td><td>1.73 s</td><td>2.19 s</td><td>—</td><td class="l">3006 输入 token；INT4 W4A16 dequant 开销 → 1373 tok/s（0.79×，略慢）；2-Edge 未做分段 profiling</td></tr>
-      <tr><td class="l">├ CoT 解码</td><td>1.82 s</td><td class="r1t-best">0.59 s</td><td>—</td><td class="l">18–19 token；10.4→30.6 tok/s（~3× 快，decode 受内存带宽限制故 INT4 大幅受益）</td></tr>
-      <tr><td class="l">└ 动作专家（扩散）</td><td>0.60 s</td><td>0.59 s</td><td>—</td><td class="l">R1 扩散轨迹头仍 FP16、不变；2-Edge 为 10 步 flow-matching（未单测）</td></tr>
-      <tr><td class="l">批量（多 clip）均值</td><td>5.7 s/请求</td><td class="r1t-best">4.71 s/请求</td><td>11.5 s/请求</td><td class="l">R1 含长 CoT 片段（6 clip 批）；2-Edge 为 14 锚点批（每请求 6 候选）</td></tr>
-      <tr><td class="l">运行峰值统一内存</td><td>25.5 GB</td><td>~10–14 GB</td><td>~12 GB*</td><td class="l">cuda_free_memory_delta，含 KV cache/激活/workspace；*2-Edge 为官方 H100 实测 12.06 GiB，Orin 未单测</td></tr>
-      <tr><td class="l">推理功耗</td><td>32.6 W</td><td>—</td><td>—</td><td class="l">FP16 模块总功耗（GPU_SOC 31.7 + CPU_CV 0.9）；INT4 / 2-Edge 本次未单测</td></tr>
+      <tr><td class="l">冷启动加载 + 初始化</td><td>36–47 s</td><td>~18–28 s</td><td class="r1t-best">7.4 s</td><td class="l">进程启动 → 初始化（含引擎反序列化 / 2-Edge 为 PyTorch mmap 权重加载，实测）</td></tr>
+      <tr><td class="l">单请求端到端</td><td>5.0 s</td><td>4.17 s</td><td>6.70 s（6 候选）</td><td class="l">R1 为 warmup 后 3 次均值（单候选）；2-Edge 为纯推理 warmup 后 3 次均值（方差 &lt;0.03s）、6 候选共批，每候选边际成本 ≈0.52s（单候选对照 4.11s）；评测区间 11.5s/锚点为含输入构建的 wall time</td></tr>
+      <tr><td class="l">├ VLM prefill</td><td>1.73 s</td><td>2.19 s</td><td>1.44 s</td><td class="l">R1 为 3006 输入 token；INT4 W4A16 dequant 开销 → 1373 tok/s（0.79×，略慢）；2-Edge 为共享 prefill（batch1，22 帧视觉+文本），6 候选复用同一 KV</td></tr>
+      <tr><td class="l">├ CoT 解码</td><td>1.82 s</td><td class="r1t-best">0.59 s</td><td>2.20 s</td><td class="l">R1 为 18–19 token，10.4→30.6 tok/s（decode 受内存带宽限制故 INT4 大幅受益）；2-Edge 为 6 路 CoT 共批 ~30 步</td></tr>
+      <tr><td class="l">└ 动作专家（扩散）</td><td>0.60 s</td><td>0.59 s</td><td>2.79 s</td><td class="l">R1 扩散轨迹头仍 FP16、不变（单候选）；2-Edge 为 6 候选 × 10 步 flow-matching 共批</td></tr>
+      <tr><td class="l">批量（多 clip）均值</td><td>5.7 s/请求</td><td class="r1t-best">4.71 s/请求</td><td>—（6 候选在单请求内）</td><td class="l">R1 含长 CoT 片段（6 clip 批）；2-Edge 单请求即含全部候选，批量语义不适用</td></tr>
+      <tr><td class="l">运行峰值统一内存</td><td>25.5 GB</td><td>~10–14 GB</td><td>8.8 GB</td><td class="l">R1 为 cuda_free_memory_delta，含 KV cache/激活/workspace；2-Edge 为 torch peak alloc（权重 5.3G + KV/激活 3.5G），官方 H100 参考 12.06 GiB</td></tr>
+      <tr><td class="l">推理功耗</td><td>32.6 W</td><td>—</td><td>27.7 W</td><td class="l">R1 为 FP16 模块总功耗（GPU_SOC 31.7 + CPU_CV 0.9）；2-Edge 为 tegrastats 推理活跃段均值（GPU_SOC 26.0 + CPU_CV 1.7），低于 R1 FP16；INT4 本次未单测</td></tr>
       </tbody>
     </table></div>
-    <div class="r1t-cal"><b>性能口径</b>：FP16 于 2026-10-30、INT4 于 2026-11-03、2-Edge 于 2026-11-15 测于同一 Jetson AGX Orin 64G（JetPack 6.2；R1 两臂 TRTEdge 0.10.1，2-Edge 为官方 PyTorch 包 BF16/SDPA 零优化 + 三处 Orin 兼容补丁），同一 dgural 公开样本帧输入（R1：16 帧 + ego 历史；2-Edge：22 帧 6 相机 + 20 点 ego + 真实导航）、R1 同 seed=5 / temperature=0 确定性推理、同 warmup 后单请求计时口径。三段拆解来自 TRT profiling，与端到端之差为预处理与调度开销，其中 CoT 解码随输出 token 数线性变化。INT4 = AWQ 量化 backbone（llm），visual/action 引擎仍 FP16；其 prefill 因 W4A16 dequant 略慢、decode 因内存带宽受限大幅加速（~3×），端到端净提速 1.2×。2-Edge 单请求含 6 条候选轨迹与各自 CoT（≈1.8 s/候选），免量化直跑。功耗为 tegrastats 对 6 请求批量段的均值（INT4 / 2-Edge 本次未单测）；内存为单请求峰值。全部为实机实测。</div>
+    <div class="r1t-cal"><b>性能口径</b>：FP16 于 2026-10-30、INT4 于 2026-11-03、2-Edge 于 2026-11-15 测于同一 Jetson AGX Orin 64G（JetPack 6.2；R1 两臂 TRTEdge 0.10.1，2-Edge 为官方 PyTorch 包 BF16/SDPA 零优化 + 三处 Orin 兼容补丁），同一 dgural 公开样本帧输入（R1：16 帧 + ego 历史；2-Edge：22 帧 6 相机 + 20 点 ego + 真实导航）、R1 同 seed=5 / temperature=0 确定性推理、同 warmup 后计时口径。R1 三段拆解来自 TRT profiling，与端到端之差为预处理与调度开销，其中 CoT 解码随输出 token 数线性变化。INT4 = AWQ 量化 backbone（llm），visual/action 引擎仍 FP16；其 prefill 因 W4A16 dequant 略慢、decode 因内存带宽受限大幅加速（~3×），端到端净提速 1.2×。<b>2-Edge 为 2026-11-15 专项实测</b>（warmup 后 3 次计时、torch.cuda.synchronize、tegrastats 活跃段）：单请求 6.70s = 共享 prefill 1.44 + 6 路 CoT 解码 2.20 + 扩散专家（6 候选×10 步）2.79 + 调度 ~0.11；6 候选共享 prefill、每候选边际成本 ≈0.52s（单候选对照 4.11s）；功耗 27.7W 低于 R1 FP16 的 32.6W；内存为 torch peak alloc（R1 两臂为 cuda_free_memory_delta，口径不同见列内说明）。全部为实机实测。</div>
   </section>
 
   <section class="ds-section">

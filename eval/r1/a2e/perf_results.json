@@ -1,0 +1,19 @@
+{
+ "clip": "ecafce84",
+ "protocol": "warmup 1 run + 3 timed runs, torch.cuda.synchronize, 6 candidates (official defaults seed43/temp0.6/top_p0.98/diffusion 10 steps), Jetson AGX Orin 64G, PyTorch BF16 SDPA",
+ "avail_base_mb": 50770,
+ "load_s": 7.37,
+ "avail_loaded_mb": 50379,
+ "model_footprint_mb": 391,
+ "runs": [
+  {"e2e": 6.69, "prefill": 1.43, "cot_decode": 2.2, "decode_steps": 30, "expert": 2.79, "vlm_total": 3.88},
+  {"e2e": 6.7, "prefill": 1.44, "cot_decode": 2.2, "decode_steps": 30, "expert": 2.79, "vlm_total": 3.88},
+  {"e2e": 6.71, "prefill": 1.44, "cot_decode": 2.21, "decode_steps": 30, "expert": 2.79, "vlm_total": 3.9}
+ ],
+ "single_candidate": {"e2e": 4.11, "prefill": 1.44, "cot_decode": 1.77, "decode_steps": 29, "expert": 0.69},
+ "per_candidate_marginal_s": 0.52,
+ "peak_runtime_delta_mb": 4331,
+ "torch_max_alloc_mb": 8782,
+ "power_w": {"gpu_soc": 26.0, "cpu_cv": 1.7, "total": 27.7, "window": "tegrastats GR3D_FREQ>10% active lines, n=34"},
+ "note": "model_footprint_mb 低估权重（mmap 文件页计入 MemAvailable 可回收）；权重驻留以 torch_max_alloc 与 5.3G safetensors 为准"
+}

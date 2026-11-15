@@ -162,7 +162,7 @@ ADE@6.4s = 同窗 64 点预测与 GT 的平均欧氏距离；FDE = 6.4s 终点�
 - **静态 6 clip**：2-Edge 平均 ADE@6.4s **2.39m** vs FP16 3.10 / INT4 3.41——5/6 片段优于 FP16（fa83bcb8 1.06 vs 4.57、058bf960 3.13 vs 5.90）；唯一例外 46003675 崩坏 7.52m（其 CoT 退化为 `<NOMINAL>`，与「CoT 退化↔轨迹错误」模式一致）。
 - **滚动 8 锚点**（t₀=7.5/13.5s）：平均 **1.11m** vs FP16 1.60 / INT4 1.89；逐片段均值 3/4 低于 FP16（ecafce84 1.37 vs 1.31 略高）。
 - **口径差异（诚实披露）**：2-Edge = 6 候选取最优（temperature=0.6/top_p=0.98/seed=43）+ 真实 nav + 6 相机 22 帧；R1 两臂 = 单 seed + 无 nav + 4 相机 4 帧——demo 页逐片段数字是行为展示，严格对照以 crossgen_a2e.md 的 chunk3116 统计为准。
-- **部署**：权重 5.3G BF16 免量化、模型加载 10.6s、~11s/锚点（含 6 候选，PyTorch 零优化 + 三处 Orin 兼容补丁，见 `../a2e/official_pkg_orin.patch`）。
+- **部署**：权重 5.3G BF16 免量化、模型加载 7.4s、单请求纯推理 **6.70s**（含 6 候选：共享 prefill 1.44 / 6 路 CoT 解码 2.20 / 扩散专家 2.79；每候选边际 ≈0.52s），功耗 27.7W、torch 峰值 8.8GB（专项实测明细见 `../a2e/perf_results.json`）；评测区间 ~11.5s/锚点为含输入构建的 wall time。PyTorch 零优化 + 三处 Orin 兼容补丁见 `../a2e/official_pkg_orin.patch`。
 
 ## CoT–轨迹关系研究（18 锚点，2026-11-02）
 
