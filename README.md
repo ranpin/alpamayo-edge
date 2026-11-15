@@ -51,7 +51,7 @@ R1 全链复现（下载→补丁→对拍→导出→构建→推理→评分�
 ├── docs/            PROBLEMS §M / device_layout（两仓设备布局）/ phase_v_v0_recon / site 呈现站点
 ├── configs/         设备环境配置（orin.env）
 ├── outputs/         R1 量化产物 SHA256（tgz 大件 gitignore）
-└── legacy/          历史层：前身 Qwen3-4B 文本轨迹项目 + phase_v_synth/ 早期合成数据评测脚手架（已被真实管线取代，见其 README）
+└── legacy/          前身项目：Qwen3-4B 文本轨迹预测实验（转向起点，见 legacy/README.md）
 ```
 
 ## 文档导航
