@@ -76,7 +76,15 @@ def main(url):
                 cellBestBg:getComputedStyle(document.querySelector('#tbl td.r1t-best')).backgroundColor,
                 cellWorstBg:getComputedStyle(document.querySelector('#tbl td.r1t-worst')).backgroundColor,
                 cellBestFg:getComputedStyle(document.querySelector('#tbl td.r1t-best')).color,
-                cellWorstFg:getComputedStyle(document.querySelector('#tbl td.r1t-worst')).color
+                cellWorstFg:getComputedStyle(document.querySelector('#tbl td.r1t-worst')).color,
+                // 正文整合：结论速览卡 + 小标题 + 要点列表 + 可折叠口径块
+                findings:document.querySelectorAll('.r1t-fcard').length,
+                fnums:[...document.querySelectorAll('.r1t-fnum')].map(n=>n.textContent.trim()),
+                fnumOF:[...document.querySelectorAll('.r1t-fnum')].filter(n=>n.scrollWidth>n.clientWidth+1).length,
+                subheads:[...document.querySelectorAll('.r1t-subh')].map(s=>s.textContent.trim()),
+                calDets:document.querySelectorAll('details.r1t-caldet').length,
+                calDetOpen:document.querySelectorAll('details.r1t-caldet[open]').length,
+                points:document.querySelectorAll('ul.r1t-points').length
               };}""")
             # 点击播放交互：首个海报卡 → 换成 video 并自动播放（远程 mp4 需缓冲，有界等待）
             pg.click('.r1t-posterwrap')
@@ -93,7 +101,11 @@ def main(url):
             pg.click('details.r1t-details summary')
             pg.wait_for_timeout(300)
             r3 = pg.evaluate("()=>({open:document.querySelectorAll('details.r1t-details[open]').length,cot:!!document.querySelector('details[open] .r1t-cotlist, details[open] .r1t-cot')})")
-            r.update(click=r2, details_click=r3)
+            # 口径折叠块交互：展开首个 .r1t-caldet，确认列表项真的可见（非空壳）
+            pg.click('details.r1t-caldet summary')
+            pg.wait_for_timeout(200)
+            r4 = pg.evaluate("()=>{const d=document.querySelector('details.r1t-caldet');const li=d.querySelector('li');return {open:d.open,items:d.querySelectorAll('li').length,liVisible:li?li.getBoundingClientRect().height>0:false};}")
+            r.update(click=r2, details_click=r3, caldet_click=r4)
             ce = [e for e in errs if 'favicon' not in e.lower()]
             r['console_err'] = ce
             print(f"[{theme}] imgs={r['imgCards']} posters={r['posters']} videosInit={r['videosInitial']} posterOk={r['posterOk']} details={r['details']}/{r['detailsOpen']} sheet={r['sheet']} cotLists={r['cotLists']} cotRows={r['cotRows']} cotWarns={r['cotWarns']} posterBeforeGrid={r['posterBeforeGrid']} rows={r['rows']} rollRows={r['rollRows']} overflow={r['overflow']} theme={r['theme']} bg={r['bg']}")
@@ -105,6 +117,8 @@ def main(url):
             print(f"   静态分组 gridL={r['gridL']} gridR={r['gridR']} sTurns={r['sTurns']} sTops={r['sTops']} 表转向={r['tblTurns']} 表序={r['tblIds']}")
             print(f"   表1配色 best={r['tblBest']} worst={r['tblWorst']} 平均行={r['avgRow']}")
             print(f"   底色 图例best={r['legendBestBg']} 单元格best={r['cellBestBg']} 图例worst={r['legendWorstBg']} 单元格worst={r['cellWorstBg']} 字色={r['cellBestFg']}/{r['cellWorstFg']}")
+            print(f"   正文整合 findings={r['findings']} fnums={r['fnums']} fnumOF={r['fnumOF']} calDets={r['calDets']}/{r['calDetOpen']} points={r['points']} caldet_click={r['caldet_click']}")
+            print(f"   小标题={r['subheads']}")
             b.close(); return r
     l = run('light'); d = run('dark')
     exp_fig = ['图 %d' % i for i in range(1, 13)]
@@ -133,7 +147,14 @@ def main(url):
           and d['legendBestBg'] == d['cellBestBg'] and d['legendWorstBg'] == d['cellWorstBg']
           and l['cellBestBg'] != l['cellWorstBg'] and l['cellBestFg'] != l['cellWorstFg']
           and 'rgba(0, 0, 0, 0)' not in (l['cellBestBg'], l['cellWorstBg'], d['cellBestBg'], d['cellWorstBg'])
-          and d['cellBestBg'] != l['cellBestBg'] and d['cellWorstBg'] != l['cellWorstBg'])
+          and d['cellBestBg'] != l['cellBestBg'] and d['cellWorstBg'] != l['cellWorstBg']
+          # 正文整合：结论速览卡 + 小标题 + 要点列表 + 可折叠口径块
+          and l['findings'] == 4 and l['fnumOF'] == 0 and d['fnumOF'] == 0
+          and l['calDets'] == 2 and l['calDetOpen'] == 0 and l['points'] == 6
+          and l['caldet_click']['open'] and l['caldet_click']['items'] >= 3 and l['caldet_click']['liVisible']
+          and len(l['subheads']) == 6 and any('四条结论' in s for s in l['subheads'])
+          and any('表 1' in s for s in l['subheads']) and any('表 3' in s for s in l['subheads'])
+          and any('滚动口径（表 2）' in s for s in l['subheads']))
     print('\nVERIFY', 'PASS' if ok else 'FAIL', url)
     return ok
 
