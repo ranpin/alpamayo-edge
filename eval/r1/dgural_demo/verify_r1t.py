@@ -36,7 +36,7 @@ def main(url):
                 cotLists:document.querySelectorAll('.r1t-cotlist').length,
                 cotRows:document.querySelectorAll('.r1t-cotlist div:not(.r1t-cotlabel)').length,
                 cotWarns:document.querySelectorAll('.r1t-cotwarn').length,
-                posterBeforeGrid:(document.querySelector('.r1t-posterwrap').compareDocumentPosition(document.getElementById('grid'))&4)>0,
+                posterBeforeGrid:(document.querySelector('.r1t-posterwrap').compareDocumentPosition(document.getElementById('gridL'))&4)>0,
                 posters:wraps.length,
                 videosInitial:document.querySelectorAll('video').length,
                 posterOk:wraps.every(w=>w.dataset.src.includes('.mp4')&&w.querySelector('img').src.includes('roll_poster')&&w.querySelector('.r1t-play')&&w.getAttribute('role')==='button'&&w.tabIndex===0),
@@ -60,7 +60,23 @@ def main(url):
                 theme:document.documentElement.getAttribute('data-theme'),
                 bg:getComputedStyle(document.body).backgroundColor,
                 tagOF:[...document.querySelectorAll('.r1t-tag,.r1t-metrics')].filter(t=>t.scrollWidth>t.clientWidth+1).length,
-                vidTops:vcards.map(c=>Math.round(c.getBoundingClientRect().top))
+                vidTops:vcards.map(c=>Math.round(c.getBoundingClientRect().top)),
+                // 静态图分组：上排 3 例左转 / 下排 3 例右转，各成一行
+                gridL:document.querySelectorAll('#gridL .r1t-card').length,
+                gridR:document.querySelectorAll('#gridR .r1t-card').length,
+                sTops:[...document.querySelectorAll('#gridL .r1t-card,#gridR .r1t-card')].map(c=>Math.round(c.getBoundingClientRect().top)),
+                sTurns:[...document.querySelectorAll('#gridL .r1t-card,#gridR .r1t-card')].map(c=>c.querySelector('.r1t-figcap').textContent.includes('左转')?'L':'R').join(''),
+                tblTurns:[...document.querySelectorAll('#tbl tbody tr')].slice(0,6).map(tr=>tr.children[1].textContent.includes('左转')?'L':'R').join(''),
+                tblIds:[...document.querySelectorAll('#tbl tbody tr')].slice(0,6).map(tr=>tr.querySelector('code').textContent).join(','),
+                tblBest:document.querySelectorAll('#tbl td.r1t-best').length,
+                tblWorst:document.querySelectorAll('#tbl td.r1t-worst').length,
+                avgRow:[...document.querySelectorAll('#tbl tbody tr.r1t-avgrow td')].map(td=>td.textContent).join('|'),
+                legendBestBg:getComputedStyle(document.querySelector('.r1t-tlegend .r1t-best')).backgroundColor,
+                legendWorstBg:getComputedStyle(document.querySelector('.r1t-tlegend .r1t-worst')).backgroundColor,
+                cellBestBg:getComputedStyle(document.querySelector('#tbl td.r1t-best')).backgroundColor,
+                cellWorstBg:getComputedStyle(document.querySelector('#tbl td.r1t-worst')).backgroundColor,
+                cellBestFg:getComputedStyle(document.querySelector('#tbl td.r1t-best')).color,
+                cellWorstFg:getComputedStyle(document.querySelector('#tbl td.r1t-worst')).color
               };}""")
             # 点击播放交互：首个海报卡 → 换成 video 并自动播放（远程 mp4 需缓冲，有界等待）
             pg.click('.r1t-posterwrap')
@@ -86,6 +102,9 @@ def main(url):
             print(f"   figcaps={r['figcaps']}")
             print(f"   assets={r['assetCodes']}")
             print(f"   seq=[{r['seqTexts']}] 表序号={r['tblSeq']} 表头={r['tblHeader']} seqIntro={r['seqIntro']} rollIntro={r['rollIntro']} methodRoll={r['methodRoll']} formula={r['formula']} intro={r['intro']} tagOF={r['tagOF']} vidTops={r['vidTops']} console_err={len(ce)} {ce[:3]}")
+            print(f"   静态分组 gridL={r['gridL']} gridR={r['gridR']} sTurns={r['sTurns']} sTops={r['sTops']} 表转向={r['tblTurns']} 表序={r['tblIds']}")
+            print(f"   表1配色 best={r['tblBest']} worst={r['tblWorst']} 平均行={r['avgRow']}")
+            print(f"   底色 图例best={r['legendBestBg']} 单元格best={r['cellBestBg']} 图例worst={r['legendWorstBg']} 单元格worst={r['cellWorstBg']} 字色={r['cellBestFg']}/{r['cellWorstFg']}")
             b.close(); return r
     l = run('light'); d = run('dark')
     exp_fig = ['图 %d' % i for i in range(1, 13)]
@@ -93,7 +112,7 @@ def main(url):
           and l['details'] == 10 and l['detailsOpen'] == 0
           and l['click']['videos'] == 1 and l['click']['postersLeft'] == 3 and l['click']['srcOk'] and l['click']['playing']
           and l['details_click']['open'] == 1 and l['details_click']['cot']
-          and l['rows'] == 6 and l['rollRows'] == 12
+          and l['rows'] == 7 and l['rollRows'] == 12
           and l['sheet'] == 1 and l['sheetDet'] == 1 and l['cotLists'] == 4 and l['cotRows'] == 12 and l['cotWarns'] == 2
           and len(l['assetCodes']) == 9 and all(v == 200 for v in l['assetCodes'].values())
           and l['captions'] == ['表 1', '表 2', '表 3'] and l['figcaps'] == exp_fig
@@ -102,7 +121,19 @@ def main(url):
           and l['overflow'] <= 1 and d['overflow'] <= 1 and d['theme'] == 'dark'
           and l['bg'] == 'rgb(248, 250, 252)' and d['bg'] == 'rgb(15, 23, 42)'
           and len(l['console_err']) == 0 and len(d['console_err']) == 0
-          and len(l['vidTops']) == 4 and l['vidTops'][0] == l['vidTops'][1] and l['vidTops'][2] == l['vidTops'][3] and l['vidTops'][2] > l['vidTops'][0])
+          and len(l['vidTops']) == 4 and l['vidTops'][0] == l['vidTops'][1] and l['vidTops'][2] == l['vidTops'][3] and l['vidTops'][2] > l['vidTops'][0]
+          # 静态图按转向分组（上排 3 左转 / 下排 3 右转，各成一行）+ 表 1 同序 + 最优/最差底色
+          and l['gridL'] == 3 and l['gridR'] == 3 and l['sTurns'] == 'LLLRRR' and l['tblTurns'] == 'LLLRRR'
+          and l['tblIds'] == 'ecafce84,46003675,058bf960,76f4a312,1f7ef408,fa83bcb8'
+          and len(l['sTops']) == 6 and l['sTops'][0] == l['sTops'][1] == l['sTops'][2]
+          and l['sTops'][3] == l['sTops'][4] == l['sTops'][5] and l['sTops'][3] > l['sTops'][0]
+          and l['tblBest'] == 15 and l['tblWorst'] == 15 and d['tblBest'] == 15 and d['tblWorst'] == 15
+          and l['avgRow'] == '平均（6 片段）|—|—|0.88|3.10|9.27|0.93|3.41|10.33|0.86|2.39|8.31'
+          and l['legendBestBg'] == l['cellBestBg'] and l['legendWorstBg'] == l['cellWorstBg']
+          and d['legendBestBg'] == d['cellBestBg'] and d['legendWorstBg'] == d['cellWorstBg']
+          and l['cellBestBg'] != l['cellWorstBg'] and l['cellBestFg'] != l['cellWorstFg']
+          and 'rgba(0, 0, 0, 0)' not in (l['cellBestBg'], l['cellWorstBg'], d['cellBestBg'], d['cellWorstBg'])
+          and d['cellBestBg'] != l['cellBestBg'] and d['cellWorstBg'] != l['cellWorstBg'])
     print('\nVERIFY', 'PASS' if ok else 'FAIL', url)
     return ok
 
