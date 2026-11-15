@@ -17,7 +17,20 @@
 <style>
 .r1t-legend{display:flex;gap:20px;align-items:center;flex-wrap:wrap;font-size:13.5px;color:var(--ds-text);margin:10px 0 16px;justify-content:center}
 .r1t-legend i{display:inline-block;width:22px;height:4px;border-radius:2px;margin-right:7px;vertical-align:middle}
-.r1t-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:18px}
+.r1t-vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px;margin-top:14px}
+.r1t-sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:14px}
+.r1t-posterwrap{position:relative;cursor:pointer}
+.r1t-posterwrap img{width:100%;height:auto;display:block;background:var(--ds-bg)}
+.r1t-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,12,18,.16);transition:background .15s}
+.r1t-posterwrap:hover .r1t-play,.r1t-posterwrap:focus-visible .r1t-play{background:rgba(10,12,18,.34)}
+.r1t-play i{width:46px;height:46px;border-radius:50%;background:rgba(15,18,26,.78);border:2px solid rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center}
+.r1t-play i::after{content:"";margin-left:4px;border-left:15px solid #fff;border-top:9px solid transparent;border-bottom:9px solid transparent}
+.r1t-vmeta{padding:10px 13px 2px}
+.r1t-details{padding:0 13px 12px}
+.r1t-details summary{cursor:pointer;font-size:12.5px;color:var(--ds-accent-strong);font-weight:600;padding:8px 0 2px;user-select:none;list-style:none}
+.r1t-details summary::-webkit-details-marker{display:none}
+.r1t-details summary::before{content:"▸ "}
+.r1t-details[open] summary::before{content:"▾ "}
 .r1t-card{background:var(--ds-panel);border:1px solid var(--ds-border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
 .r1t-figwrap{position:relative}
 .r1t-fig{width:100%;height:auto;display:block;background:var(--ds-bg)}
@@ -45,7 +58,7 @@ table.ds-table{min-width:560px}
 .r1t-cal{font-size:12.5px;color:var(--ds-muted);line-height:1.75;margin-top:14px;padding:12px 14px;background:var(--ds-bg);border:1px solid var(--ds-border);border-radius:8px}
 .r1t-method code{background:var(--ds-bg);border:1px solid var(--ds-border);border-radius:4px;padding:1px 5px;font-size:13px}
 .r1t-method li{margin:6px 0}
-@media(max-width:680px){.r1t-grid{grid-template-columns:1fr}}
+@media(max-width:680px){.r1t-vgrid,.r1t-sgrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -71,69 +84,93 @@ table.ds-table{min-width:560px}
       <span><i style="background:repeating-linear-gradient(90deg,#ff4696 0 3px,transparent 3px 7px)"></i>Alpamayo2-Edge 预测（点线）</span>
       <span style="color:var(--ds-muted)">ADE / FDE 误差公式与口径见下方「评测结果」</span>
     </div>
-    <p><b>滚动预测视频（边前进边预测）</b>：以下 4 段视频里 R1 每 6 秒重新预测一次——这是它在 Orin 上的<b>实测单次推理耗时</b>（FP16 稳态 ~5.3s，非人为缩短的间隔），每段 3 个锚点（t₀=1.5 / 7.5 / 13.5s）。绿 GT、蓝 R1 FP16、橙虚线 R1 INT4、品红点线 Alpamayo2-Edge <b>同锚 t₀</b>（同窗 [t₀, t₀+6.4]s，重叠=预测精度），随车前进被一起「吃掉」、到下个锚点一起刷新；HUD 常显实时车速与「R1 FP16 ~5.7s / INT4 ~4.2s · 2-Edge ~11s(6候选) · 事件级非实时」，信息行标注本段 FP16/INT4/2-Edge 的 ADE@6.4s，刷新瞬间黄色高亮。<b>2-Edge 需 2s 相机历史，首锚 t₀=1.5s 不满足 ⇒ 该锚无品红线</b>（从 t₀=7.5s 起出现，如实缺省非渲染遗漏）。4 段总览见图 1，逐锚点误差与口径见「评测结果」表 2。</p>
+    <p><b>滚动预测视频（边前进边预测）</b>：以下 4 段视频里 R1 每 6 秒重新预测一次——这是它在 Orin 上的<b>实测单次推理耗时</b>（FP16 稳态 ~5.3s，非人为缩短的间隔），每段 3 个锚点（t₀=1.5 / 7.5 / 13.5s）。绿 GT、蓝 R1 FP16、橙虚线 R1 INT4、品红点线 Alpamayo2-Edge <b>同锚 t₀</b>（同窗 [t₀, t₀+6.4]s，重叠=预测精度），随车前进被一起「吃掉」、到下个锚点一起刷新；HUD 常显实时车速与「R1 FP16 ~5.7s / INT4 ~4.2s · 2-Edge ~11s(6候选) · 事件级非实时」，信息行标注本段 FP16/INT4/2-Edge 的 ADE@6.4s，刷新瞬间黄色高亮。<b>2-Edge 需 2s 相机历史，首锚 t₀=1.5s 不满足 ⇒ 该锚无品红线</b>（从 t₀=7.5s 起出现，如实缺省非渲染遗漏）。4 段总览见图 1；视频以紧凑卡片呈现（<b>点击卡片播放</b>，CoT 与误差解读折叠在卡片内），逐锚点误差与口径见「评测结果」表 2。</p>
     <img class="r1t-sheet" src="assets/roll_contactsheet.jpg" alt="滚动预测总览：4 场景 × 4 个视频时刻的轨迹叠加帧" loading="lazy">
     <p class="ds-figcap">图 1 · 滚动预测总览：4 场景（行）× 视频时刻 t=3/8/13/17s（列）；绿=GT 真值、蓝=R1 FP16、橙虚线=R1 INT4、品红点线=Alpamayo2-Edge（同锚 t₀；t=3s 列 2-Edge 尚未达可用锚点），t=13s 列为刷新闪烁瞬间；对应视频见图 2–5</p>
-    <div class="r1t-grid">
+    <div class="r1t-vgrid">
       <div class="r1t-card">
-        <video class="r1t-fig" controls preload="none" poster="assets/roll_poster_0dd3eb7f.jpg"><source src="assets/roll_straight_0dd3eb7f.mp4" type="video/mp4"></video>
-        <p class="ds-figcap r1t-figcap">图 2 · 片段 0dd3eb7f（直行跟车）滚动预测</p>
-        <div class="r1t-cap">
-          <div class="r1t-captop"><span class="r1t-tag">场景：直行跟车</span><span class="r1t-metrics">3 锚点 · ADE@6.4s 均值 FP16 <b>1.54</b> / INT4 <b>1.51</b> / 2-Edge <b>1.07</b>（2 锚点）m</span></div>
-          <div class="r1t-cotlist">
-            <div class="r1t-cotlabel">CoT 原文（每锚点一条，与轨迹同次推理产出）</div>
-            <div><b>t₀=1.5s</b> “Keep speed due to the lead vehicle ahead maintaining a steady pace with a stable gap.”</div>
-            <div><b>t₀=7.5s</b> “Keep distance to the lead vehicle because it is directly ahead in the same lane.”</div>
-            <div><b>t₀=13.5s</b> “Keep distance to the lead vehicle because it is directly ahead in the same lane.”</div>
-          </div>
-          <div class="r1t-note">误差以纵向欠伸为主（低估加速）；t₀=1.5s 锚欠伸 6.4m → 蓝线被车提前吃完、刷新前 ~0.5s 消失（诚实呈现预测误差，非渲染缺陷）。</div>
+        <div class="r1t-posterwrap" data-src="assets/roll_straight_0dd3eb7f.mp4" role="button" tabindex="0" aria-label="播放图 2 直行跟车滚动预测视频">
+          <img src="assets/roll_poster_0dd3eb7f.jpg" alt="图 2 直行跟车滚动预测海报" loading="lazy">
+          <span class="r1t-play" aria-hidden="true"><i></i></span>
         </div>
+        <p class="ds-figcap r1t-figcap">图 2 · 直行跟车 <code>0dd3eb7f</code>（18.7s，点击播放）</p>
+        <div class="r1t-vmeta"><span class="r1t-metrics">ADE@6.4s 均值 FP16 <b>1.54</b> / INT4 <b>1.51</b> / 2-Edge <b>1.07</b> m</span></div>
+        <details class="r1t-details">
+          <summary>CoT 原文与误差解读</summary>
+          <div class="r1t-cap">
+            <div class="r1t-cotlist">
+              <div class="r1t-cotlabel">CoT 原文（每锚点一条，与轨迹同次推理产出）</div>
+              <div><b>t₀=1.5s</b> “Keep speed due to the lead vehicle ahead maintaining a steady pace with a stable gap.”</div>
+              <div><b>t₀=7.5s</b> “Keep distance to the lead vehicle because it is directly ahead in the same lane.”</div>
+              <div><b>t₀=13.5s</b> “Keep distance to the lead vehicle because it is directly ahead in the same lane.”</div>
+            </div>
+            <div class="r1t-note">误差以纵向欠伸为主（低估加速）；t₀=1.5s 锚欠伸 6.4m → 蓝线被车提前吃完、刷新前 ~0.5s 消失（诚实呈现预测误差，非渲染缺陷）。</div>
+          </div>
+        </details>
       </div>
       <div class="r1t-card">
-        <video class="r1t-fig" controls preload="none" poster="assets/roll_poster_ecafce84.jpg"><source src="assets/roll_left_ecafce84.mp4" type="video/mp4"></video>
-        <p class="ds-figcap r1t-figcap">图 3 · 片段 ecafce84（左转·红灯起停）滚动预测</p>
-        <div class="r1t-cap">
-          <div class="r1t-captop"><span class="r1t-tag">场景：左转·红灯起停</span><span class="r1t-metrics">3 锚点 · ADE@6.4s 均值 FP16 <b>1.31</b> / INT4 <b>2.47</b> / 2-Edge <b>1.37</b>（2 锚点）m</span></div>
-          <div class="r1t-cotlist">
-            <div class="r1t-cotlabel">CoT 原文（每锚点一条，与轨迹同次推理产出）</div>
-            <div><b>t₀=1.5s</b> “Stay stopped due to the red traffic light”</div>
-            <div><b>t₀=7.5s</b> “Accelerate to proceed through the intersection since the straight traffic light turns green.”</div>
-            <div><b>t₀=13.5s</b> “Turn right at the intersection since the right-turn traffic light is green.” <span class="r1t-cotwarn">⚠️ 文本说右转，轨迹与 GT 实际均左转——文本与动作解耦</span></div>
-          </div>
-          <div class="r1t-note">红灯停住→加速过口→左转；t₀=1.5s 锚预测「停住」而 GT 已蠕行 5.5m（纵向欠伸）；t₀=7.5s 锚对左转欠估（切弯，终点横差 -3.3m）。</div>
+        <div class="r1t-posterwrap" data-src="assets/roll_left_ecafce84.mp4" role="button" tabindex="0" aria-label="播放图 3 左转·红灯起停滚动预测视频">
+          <img src="assets/roll_poster_ecafce84.jpg" alt="图 3 左转·红灯起停滚动预测海报" loading="lazy">
+          <span class="r1t-play" aria-hidden="true"><i></i></span>
         </div>
+        <p class="ds-figcap r1t-figcap">图 3 · 左转·红灯起停 <code>ecafce84</code>（18.7s，点击播放）</p>
+        <div class="r1t-vmeta"><span class="r1t-metrics">ADE@6.4s 均值 FP16 <b>1.31</b> / INT4 <b>2.47</b> / 2-Edge <b>1.37</b> m</span></div>
+        <details class="r1t-details">
+          <summary>CoT 原文与误差解读</summary>
+          <div class="r1t-cap">
+            <div class="r1t-cotlist">
+              <div class="r1t-cotlabel">CoT 原文（每锚点一条，与轨迹同次推理产出）</div>
+              <div><b>t₀=1.5s</b> “Stay stopped due to the red traffic light”</div>
+              <div><b>t₀=7.5s</b> “Accelerate to proceed through the intersection since the straight traffic light turns green.”</div>
+              <div><b>t₀=13.5s</b> “Turn right at the intersection since the right-turn traffic light is green.” <span class="r1t-cotwarn">⚠️ 文本说右转，轨迹与 GT 实际均左转——文本与动作解耦</span></div>
+            </div>
+            <div class="r1t-note">红灯停住→加速过口→左转；t₀=1.5s 锚预测「停住」而 GT 已蠕行 5.5m（纵向欠伸）；t₀=7.5s 锚对左转欠估（切弯，终点横差 -3.3m）。</div>
+          </div>
+        </details>
       </div>
       <div class="r1t-card">
-        <video class="r1t-fig" controls preload="none" poster="assets/roll_poster_1fcf2fef.jpg"><source src="assets/roll_right_1fcf2fef.mp4" type="video/mp4"></video>
-        <p class="ds-figcap r1t-figcap">图 4 · 片段 1fcf2fef（右转）滚动预测</p>
-        <div class="r1t-cap">
-          <div class="r1t-captop"><span class="r1t-tag">场景：右转</span><span class="r1t-metrics">3 锚点 · ADE@6.4s 均值 FP16 <b>1.40</b> / INT4 <b>1.43</b> / 2-Edge <b>0.64</b>（2 锚点）m</span></div>
-          <div class="r1t-cotlist">
-            <div class="r1t-cotlabel">CoT 原文（每锚点一条，与轨迹同次推理产出）</div>
-            <div><b>t₀=1.5s</b> “Turn right at the intersection since the right-turn traffic light is green.”</div>
-            <div><b>t₀=7.5s</b> “Adjust speed to keep safe distance from the vehicle ahead”</div>
-            <div><b>t₀=13.5s</b> “Nudge left to pass the slowing lead vehicle”</div>
-          </div>
-          <div class="r1t-note">t₀=1.5s 锚 CoT 点出「Turn right」→ ADE 0.60m 近乎贴合（12 锚点最佳）；t₀=7.5s 锚 CoT 退化为跟车 → 欠转，FDE 8.08m 为 12 锚点最大。</div>
+        <div class="r1t-posterwrap" data-src="assets/roll_right_1fcf2fef.mp4" role="button" tabindex="0" aria-label="播放图 4 右转滚动预测视频">
+          <img src="assets/roll_poster_1fcf2fef.jpg" alt="图 4 右转滚动预测海报" loading="lazy">
+          <span class="r1t-play" aria-hidden="true"><i></i></span>
         </div>
+        <p class="ds-figcap r1t-figcap">图 4 · 右转 <code>1fcf2fef</code>（18.7s，点击播放）</p>
+        <div class="r1t-vmeta"><span class="r1t-metrics">ADE@6.4s 均值 FP16 <b>1.40</b> / INT4 <b>1.43</b> / 2-Edge <b>0.64</b> m</span></div>
+        <details class="r1t-details">
+          <summary>CoT 原文与误差解读</summary>
+          <div class="r1t-cap">
+            <div class="r1t-cotlist">
+              <div class="r1t-cotlabel">CoT 原文（每锚点一条，与轨迹同次推理产出）</div>
+              <div><b>t₀=1.5s</b> “Turn right at the intersection since the right-turn traffic light is green.”</div>
+              <div><b>t₀=7.5s</b> “Adjust speed to keep safe distance from the vehicle ahead”</div>
+              <div><b>t₀=13.5s</b> “Nudge left to pass the slowing lead vehicle”</div>
+            </div>
+            <div class="r1t-note">t₀=1.5s 锚 CoT 点出「Turn right」→ ADE 0.60m 近乎贴合（12 锚点最佳）；t₀=7.5s 锚 CoT 退化为跟车 → 欠转，FDE 8.08m 为 12 锚点最大。</div>
+          </div>
+        </details>
       </div>
       <div class="r1t-card">
-        <video class="r1t-fig" controls preload="none" poster="assets/roll_poster_1f7ef408.jpg"><source src="assets/roll_lanechange_1f7ef408.mp4" type="video/mp4"></video>
-        <p class="ds-figcap r1t-figcap">图 5 · 片段 1f7ef408（变道）滚动预测</p>
-        <div class="r1t-cap">
-          <div class="r1t-captop"><span class="r1t-tag">场景：变道</span><span class="r1t-metrics">3 锚点 · ADE@6.4s 均值 FP16 <b>2.15</b> / INT4 <b>2.13</b> / 2-Edge <b>1.36</b>（2 锚点）m</span></div>
-          <div class="r1t-cotlist">
-            <div class="r1t-cotlabel">CoT 原文（每锚点一条，与轨迹同次推理产出）</div>
-            <div><b>t₀=1.5s</b> “Keep distance to the lead vehicle because it is ahead in the same lane.”</div>
-            <div><b>t₀=7.5s</b> “Change lanes to the right to merge behind the SUV and then follow it, because the right lane offers a suitable gap and aligns with the intended path toward the upcoming intersection.” <span class="r1t-cotwarn">⚠️ 文本说右变道，轨迹与 GT 实际近直行略偏左——文本与动作解耦</span></div>
-            <div><b>t₀=13.5s</b> “Keep distance to the lead vehicle because it is directly ahead in the same lane.”</div>
-          </div>
-          <div class="r1t-note">变道+右转混合；t₀=1.5s 锚高速（v₀=15.2m/s）时序误差放大 → ADE 2.66m 为 12 锚点最大；t₀=13.5s 锚 CoT 退化为跟车 → 欠转（终点横差 +6.8m）。</div>
+        <div class="r1t-posterwrap" data-src="assets/roll_lanechange_1f7ef408.mp4" role="button" tabindex="0" aria-label="播放图 5 变道滚动预测视频">
+          <img src="assets/roll_poster_1f7ef408.jpg" alt="图 5 变道滚动预测海报" loading="lazy">
+          <span class="r1t-play" aria-hidden="true"><i></i></span>
         </div>
+        <p class="ds-figcap r1t-figcap">图 5 · 变道 <code>1f7ef408</code>（18.7s，点击播放）</p>
+        <div class="r1t-vmeta"><span class="r1t-metrics">ADE@6.4s 均值 FP16 <b>2.15</b> / INT4 <b>2.13</b> / 2-Edge <b>1.36</b> m</span></div>
+        <details class="r1t-details">
+          <summary>CoT 原文与误差解读</summary>
+          <div class="r1t-cap">
+            <div class="r1t-cotlist">
+              <div class="r1t-cotlabel">CoT 原文（每锚点一条，与轨迹同次推理产出）</div>
+              <div><b>t₀=1.5s</b> “Keep distance to the lead vehicle because it is ahead in the same lane.”</div>
+              <div><b>t₀=7.5s</b> “Change lanes to the right to merge behind the SUV and then follow it, because the right lane offers a suitable gap and aligns with the intended path toward the upcoming intersection.” <span class="r1t-cotwarn">⚠️ 文本说右变道，轨迹与 GT 实际近直行略偏左——文本与动作解耦</span></div>
+              <div><b>t₀=13.5s</b> “Keep distance to the lead vehicle because it is directly ahead in the same lane.”</div>
+            </div>
+            <div class="r1t-note">变道+右转混合；t₀=1.5s 锚高速（v₀=15.2m/s）时序误差放大 → ADE 2.66m 为 12 锚点最大；t₀=13.5s 锚 CoT 退化为跟车 → 欠转（终点横差 +6.8m）。</div>
+          </div>
+        </details>
       </div>
     </div>
-    <p style="margin-top:26px"><b>单次预测静态图（6 个困难转弯片段）</b>：每张图为一个真实驾驶片段的前视相机原始帧，叠加四条 6.4 秒未来轨迹（GT 真值绿实线 / R1 FP16 蓝实线 / R1 INT4 橙虚线 / Alpamayo2-Edge 品红点线）。卡片标签 <b>「6.4s 终点：前行 X m · 左/右偏 Y m」</b> 是该片段 <b>GT 轨迹在 6.4 秒预测窗末端</b>、相对自车 t₀ 位置的<b>位移分解</b>——前行 X m 为纵向分量、左/右偏 Y m 为横向分量，合起来描述<b>终点落在哪</b>（一个位移矢量的两个分量），<b>不是</b>「先直行 X m 再转弯」这类分段机动指令。卡片另标初速 v₀ 与 ADE@6.4s（误差指标的公式与口径见「评测结果」），以及模型同时产出的思维链（CoT）。每张图右上角的<b>序号 1–6</b> 按 ADE@6.4s 从好到差编排，与「评测结果」表 1 逐行对应。</p>
-    <div class="r1t-grid" id="grid"></div>
+    <p style="margin-top:26px"><b>单次预测静态图（6 个困难转弯片段）</b>：每张图为一个真实驾驶片段的前视相机原始帧，叠加四条 6.4 秒未来轨迹（GT 真值绿实线 / R1 FP16 蓝实线 / R1 INT4 橙虚线 / Alpamayo2-Edge 品红点线）。卡片标签 <b>「6.4s 终点：前行 X m · 左/右偏 Y m」</b> 是该片段 <b>GT 轨迹在 6.4 秒预测窗末端</b>、相对自车 t₀ 位置的<b>位移分解</b>——前行 X m 为纵向分量、左/右偏 Y m 为横向分量，合起来描述<b>终点落在哪</b>（一个位移矢量的两个分量），<b>不是</b>「先直行 X m 再转弯」这类分段机动指令。卡片另标初速 v₀ 与 ADE@6.4s（误差指标的公式与口径见「评测结果」），以及模型同时产出的思维链（CoT）。每张图右上角的<b>序号 1–6</b> 按 ADE@6.4s 从好到差编排，与「评测结果」表 1 逐行对应。卡片默认只显示图与关键指标，<b>终点位移、CoT 与解读折叠在每张卡片底部（点击展开）</b>。</p>
+    <div class="r1t-sgrid" id="grid"></div>
   </section>
 
   <section class="ds-section">
@@ -377,13 +414,16 @@ const grid=document.getElementById('grid');
 DATA.forEach(d=>{
   const c=document.createElement('div');c.className='r1t-card';
   c.innerHTML=`<div class="r1t-figwrap"><img class="r1t-fig" src="${d.img}" alt="示例${d.seq} ${d.id} 真实帧轨迹叠加：GT / R1 FP16 / R1 INT4 / Alpamayo2-Edge 四线" loading="lazy"><span class="r1t-seq">${d.seq}</span></div>
-   <p class="ds-figcap r1t-figcap">图 ${d.seq+5} · 片段 ${d.id}（${d.turn}）前视真实帧轨迹叠加</p>
-   <div class="r1t-cap">
-    <div class="r1t-captop"><span class="r1t-tag">6.4s 终点：前行 ${d.fwd}m · ${d.turn==='右转'?'右偏':'左偏'} ${d.lat}m</span>
-      <span class="r1t-metrics">v₀=<b>${d.v0}</b> m/s · ADE@6.4s FP16=<b>${d.ade6}</b> / INT4=<b>${d.ade6i}</b> / 2-Edge=<b>${d.ade6a2}</b> m</span></div>
-    <div class="r1t-cot">“${d.cot}”</div>
-    <div class="r1t-note">${d.note}</div>
-   </div>`;
+   <p class="ds-figcap r1t-figcap">图 ${d.seq+5} · ${d.id}（${d.turn}）</p>
+   <div class="r1t-vmeta"><span class="r1t-metrics">v₀=<b>${d.v0}</b> m/s · ADE@6.4s FP16 <b>${d.ade6}</b> / INT4 <b>${d.ade6i}</b> / 2-Edge <b>${d.ade6a2}</b> m</span></div>
+   <details class="r1t-details">
+    <summary>终点位移 · CoT · 解读</summary>
+    <div class="r1t-cap">
+     <div class="r1t-captop"><span class="r1t-tag">6.4s 终点：前行 ${d.fwd}m · ${d.turn==='右转'?'右偏':'左偏'} ${d.lat}m</span></div>
+     <div class="r1t-cot">“${d.cot}”</div>
+     <div class="r1t-note">${d.note}</div>
+    </div>
+   </details>`;
   grid.appendChild(c);
 });
 const tbl=document.getElementById('tbl');
@@ -394,6 +434,17 @@ DATA.forEach(d=>{
   h+=`<tr><td class="l"><span class="r1t-seqsm">${d.seq}</span><code>${d.id}</code></td><td>${d.turn}</td><td>${d.v0}</td><td>${d.ade3}</td><td class="${cls}">${d.ade6}</td><td>${d.fde}</td><td>${d.ade3i}</td><td>${d.ade6i}</td><td>${d.fdei}</td><td>${d.ade3a2}</td><td>${d.ade6a2}</td><td>${d.fdea2}</td></tr>`;
 });
 h+='</tbody>';tbl.innerHTML=h;
+// 视频卡片：点击/回车把海报换成播放器并自动播放（懒加载，未点击不请求视频）
+document.querySelectorAll('.r1t-posterwrap').forEach(w=>{
+  const act=()=>{
+    const v=document.createElement('video');
+    v.className='r1t-fig';v.controls=true;v.autoplay=true;v.muted=true;v.playsInline=true;v.preload='auto';
+    v.src=w.dataset.src;
+    w.replaceWith(v);
+  };
+  w.addEventListener('click',act);
+  w.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});
+});
 </script>
 </body>
 </html>
