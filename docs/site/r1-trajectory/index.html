@@ -31,6 +31,12 @@
 .r1t-details summary::-webkit-details-marker{display:none}
 .r1t-details summary::before{content:"▸ "}
 .r1t-details[open] summary::before{content:"▾ "}
+.r1t-sheetdet{margin:6px 0 2px}
+.r1t-sheetdet summary{cursor:pointer;font-size:13.5px;color:var(--ds-accent-strong);font-weight:600;padding:8px 0;user-select:none;list-style:none}
+.r1t-sheetdet summary::-webkit-details-marker{display:none}
+.r1t-sheetdet summary::before{content:"▸ "}
+.r1t-sheetdet[open] summary::before{content:"▾ "}
+.r1t-sheetdet img{margin-top:6px}
 .r1t-card{background:var(--ds-panel);border:1px solid var(--ds-border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
 .r1t-figwrap{position:relative}
 .r1t-fig{width:100%;height:auto;display:block;background:var(--ds-bg)}
@@ -76,7 +82,7 @@ table.ds-table{min-width:560px}
 
   <section class="ds-section">
     <h2 class="ds-h2">演示</h2>
-    <p>两种形态、同一套叠加口径：<b style="color:#16a34a">GT 真值（绿）</b>取自数据集 egomotion 标签、<b style="color:var(--ds-accent)">R1 FP16 预测（蓝实线）</b>、<b style="color:#ff9628">R1 INT4 预测（橙虚线）</b>与 <b style="color:#ff4696">Alpamayo2-Edge 预测（品红点线）</b>均为 Orin 实机推理输出（INT4 = AWQ 量化 backbone、visual/action 仍 FP16；2-Edge = 2.65B 新一代边缘 VLA，PyTorch BF16 免量化直跑），四者都用该片段实测的鱼眼标定投影回<b>前视相机原始帧</b>，因此贴合实际路面。先看<b>滚动预测视频</b>（边前进边每 6s 重预测，4 场景），再看<b>单次预测静态图</b>（6 个困难转弯片段的精度谱）。</p>
+    <p>本页两种形态都把<b>四条轨迹</b>（GT 真值 + 三个模型的预测，线型见下方图例）用各片段实测的鱼眼标定叠回<b>前视相机原始帧</b>，全部为 Jetson Orin 实机推理输出：先看<b>滚动预测视频</b>（边前进边每 6s 重预测，4 场景），再看<b>单次预测静态图</b>（6 个困难转弯片段的精度谱）。</p>
     <div class="r1t-legend">
       <span><i style="background:#16a34a"></i>GT 真值轨迹</span>
       <span><i style="background:var(--ds-accent)"></i>R1 FP16 预测（实线）</span>
@@ -84,16 +90,19 @@ table.ds-table{min-width:560px}
       <span><i style="background:repeating-linear-gradient(90deg,#ff4696 0 3px,transparent 3px 7px)"></i>Alpamayo2-Edge 预测（点线）</span>
       <span style="color:var(--ds-muted)">ADE / FDE 误差公式与口径见下方「评测结果」</span>
     </div>
-    <p><b>滚动预测视频（边前进边预测）</b>：以下 4 段视频里 R1 每 6 秒重新预测一次——这是它在 Orin 上的<b>实测单次推理耗时</b>（FP16 稳态 ~5.3s，非人为缩短的间隔），每段 3 个锚点（t₀=1.5 / 7.5 / 13.5s）。绿 GT、蓝 R1 FP16、橙虚线 R1 INT4、品红点线 Alpamayo2-Edge <b>同锚 t₀</b>（同窗 [t₀, t₀+6.4]s，重叠=预测精度），随车前进被一起「吃掉」、到下个锚点一起刷新；HUD 常显实时车速与「R1 FP16 ~5.7s / INT4 ~4.2s · 2-Edge ~11s(6候选) · 事件级非实时」，信息行标注本段 FP16/INT4/2-Edge 的 ADE@6.4s，刷新瞬间黄色高亮。<b>2-Edge 需 2s 相机历史，首锚 t₀=1.5s 不满足 ⇒ 该锚无品红线</b>（从 t₀=7.5s 起出现，如实缺省非渲染遗漏）。4 段总览见图 1；视频以紧凑卡片呈现（<b>点击卡片播放</b>，CoT 与误差解读折叠在卡片内），逐锚点误差与口径见「评测结果」表 2。</p>
-    <img class="r1t-sheet" src="assets/roll_contactsheet.jpg" alt="滚动预测总览：4 场景 × 4 个视频时刻的轨迹叠加帧" loading="lazy">
-    <p class="ds-figcap">图 1 · 滚动预测总览：4 场景（行）× 视频时刻 t=3/8/13/17s（列）；绿=GT 真值、蓝=R1 FP16、橙虚线=R1 INT4、品红点线=Alpamayo2-Edge（同锚 t₀；t=3s 列 2-Edge 尚未达可用锚点），t=13s 列为刷新闪烁瞬间；对应视频见图 2–5</p>
+    <p><b>滚动预测视频（边前进边预测）</b>：每段视频里 R1 <b>每 6 秒重新预测一次</b>（= Orin 实测单次推理耗时，非人为缩短），每段 3 个锚点（t₀=1.5 / 7.5 / 13.5s）；四线<b>同锚 t₀</b>（同窗 [t₀, t₀+6.4]s，重叠=预测精度），随车前进被一起「吃掉」、到下个锚点一起刷新。<b>2-Edge 需 2s 相机历史 ⇒ 首锚 t₀=1.5s 无品红线</b>（自 t₀=7.5s 起出现，如实缺省非渲染遗漏）。<b>点击卡片播放</b>；CoT 与误差解读折叠在卡片内，逐锚点误差与口径见「评测结果」表 2。</p>
+    <details class="r1t-sheetdet">
+      <summary>图 1 · 滚动预测总览（4 场景 × 4 个视频时刻，点击展开）</summary>
+      <img class="r1t-sheet" src="assets/roll_contactsheet.jpg" alt="滚动预测总览：4 场景 × 4 个视频时刻的轨迹叠加帧" loading="lazy">
+      <p class="ds-figcap">图 1 · 4 场景（行）× 视频时刻 t=3/8/13/17s（列）；t=3s 列 2-Edge 尚未达可用锚点、t=13s 列为刷新闪烁瞬间；对应视频见图 2–5</p>
+    </details>
     <div class="r1t-vgrid">
       <div class="r1t-card">
         <div class="r1t-posterwrap" data-src="assets/roll_straight_0dd3eb7f.mp4" role="button" tabindex="0" aria-label="播放图 2 直行跟车滚动预测视频">
           <img src="assets/roll_poster_0dd3eb7f.jpg" alt="图 2 直行跟车滚动预测海报" loading="lazy">
           <span class="r1t-play" aria-hidden="true"><i></i></span>
         </div>
-        <p class="ds-figcap r1t-figcap">图 2 · 直行跟车 <code>0dd3eb7f</code>（18.7s，点击播放）</p>
+        <p class="ds-figcap r1t-figcap">图 2 · 直行跟车 <code>0dd3eb7f</code>· 18.7s</p>
         <div class="r1t-vmeta"><span class="r1t-metrics">ADE@6.4s 均值 FP16 <b>1.54</b> / INT4 <b>1.51</b> / 2-Edge <b>1.07</b> m</span></div>
         <details class="r1t-details">
           <summary>CoT 原文与误差解读</summary>
@@ -113,7 +122,7 @@ table.ds-table{min-width:560px}
           <img src="assets/roll_poster_ecafce84.jpg" alt="图 3 左转·红灯起停滚动预测海报" loading="lazy">
           <span class="r1t-play" aria-hidden="true"><i></i></span>
         </div>
-        <p class="ds-figcap r1t-figcap">图 3 · 左转·红灯起停 <code>ecafce84</code>（18.7s，点击播放）</p>
+        <p class="ds-figcap r1t-figcap">图 3 · 左转·红灯起停 <code>ecafce84</code>· 18.7s</p>
         <div class="r1t-vmeta"><span class="r1t-metrics">ADE@6.4s 均值 FP16 <b>1.31</b> / INT4 <b>2.47</b> / 2-Edge <b>1.37</b> m</span></div>
         <details class="r1t-details">
           <summary>CoT 原文与误差解读</summary>
@@ -133,7 +142,7 @@ table.ds-table{min-width:560px}
           <img src="assets/roll_poster_1fcf2fef.jpg" alt="图 4 右转滚动预测海报" loading="lazy">
           <span class="r1t-play" aria-hidden="true"><i></i></span>
         </div>
-        <p class="ds-figcap r1t-figcap">图 4 · 右转 <code>1fcf2fef</code>（18.7s，点击播放）</p>
+        <p class="ds-figcap r1t-figcap">图 4 · 右转 <code>1fcf2fef</code>· 18.7s</p>
         <div class="r1t-vmeta"><span class="r1t-metrics">ADE@6.4s 均值 FP16 <b>1.40</b> / INT4 <b>1.43</b> / 2-Edge <b>0.64</b> m</span></div>
         <details class="r1t-details">
           <summary>CoT 原文与误差解读</summary>
@@ -153,7 +162,7 @@ table.ds-table{min-width:560px}
           <img src="assets/roll_poster_1f7ef408.jpg" alt="图 5 变道滚动预测海报" loading="lazy">
           <span class="r1t-play" aria-hidden="true"><i></i></span>
         </div>
-        <p class="ds-figcap r1t-figcap">图 5 · 变道 <code>1f7ef408</code>（18.7s，点击播放）</p>
+        <p class="ds-figcap r1t-figcap">图 5 · 变道 <code>1f7ef408</code>· 18.7s</p>
         <div class="r1t-vmeta"><span class="r1t-metrics">ADE@6.4s 均值 FP16 <b>2.15</b> / INT4 <b>2.13</b> / 2-Edge <b>1.36</b> m</span></div>
         <details class="r1t-details">
           <summary>CoT 原文与误差解读</summary>
@@ -169,7 +178,7 @@ table.ds-table{min-width:560px}
         </details>
       </div>
     </div>
-    <p style="margin-top:26px"><b>单次预测静态图（6 个困难转弯片段）</b>：每张图为一个真实驾驶片段的前视相机原始帧，叠加四条 6.4 秒未来轨迹（GT 真值绿实线 / R1 FP16 蓝实线 / R1 INT4 橙虚线 / Alpamayo2-Edge 品红点线）。卡片标签 <b>「6.4s 终点：前行 X m · 左/右偏 Y m」</b> 是该片段 <b>GT 轨迹在 6.4 秒预测窗末端</b>、相对自车 t₀ 位置的<b>位移分解</b>——前行 X m 为纵向分量、左/右偏 Y m 为横向分量，合起来描述<b>终点落在哪</b>（一个位移矢量的两个分量），<b>不是</b>「先直行 X m 再转弯」这类分段机动指令。卡片另标初速 v₀ 与 ADE@6.4s（误差指标的公式与口径见「评测结果」），以及模型同时产出的思维链（CoT）。每张图右上角的<b>序号 1–6</b> 按 ADE@6.4s 从好到差编排，与「评测结果」表 1 逐行对应。卡片默认只显示图与关键指标，<b>终点位移、CoT 与解读折叠在每张卡片底部（点击展开）</b>。</p>
+    <p style="margin-top:26px"><b>单次预测静态图（6 个困难转弯片段）</b>：每图为前视相机真实帧上叠加四条 6.4 秒未来轨迹。卡片标签 <b>「6.4s 终点：前行 X m · 左/右偏 Y m」</b>是 GT 轨迹终点相对自车 t₀ 位置的<b>位移分解</b>——描述<b>终点落在哪</b>（一个位移矢量的纵/横分量），<b>不是</b>「先直行再转弯」的分段机动指令。右上角<b>序号 1–6</b> 按 FP16 ADE@6.4s 好→差编排，与表 1 逐行对应；终点位移、CoT 与解读<b>折叠在卡片底部（点击展开）</b>。</p>
     <div class="r1t-sgrid" id="grid"></div>
   </section>
 

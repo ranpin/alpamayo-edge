@@ -15,6 +15,8 @@ def main(url):
             pg.on('pageerror', lambda e: errs.append(str(e)))
             pg.goto(url, wait_until='commit')
             pg.wait_for_selector('.r1t-card', timeout=20000)
+            # 联络表默认折叠（display:none 内 img 不触发懒加载）——先展开再滚页
+            pg.evaluate("()=>{const d=document.querySelector('.r1t-sheetdet');if(d)d.open=true;}")
             # 滚全页触发懒加载：静态图在折叠线下、超出 Chrome lazy 阈值，不滚不加载
             pg.evaluate("""async()=>{let h=document.body.scrollHeight;for(let y=0,i=0;y<h&&i<60;y+=400,i++){window.scrollTo(0,y);await new Promise(r=>setTimeout(r,60));h=document.body.scrollHeight;}window.scrollTo(0,0);}""")
             pg.wait_for_function("()=>{const i=[...document.querySelectorAll('img.r1t-fig')];const s=document.querySelector('img.r1t-sheet');const p=[...document.querySelectorAll('.r1t-posterwrap img')];return i.length===6&&p.length===4&&[...i,...p].every(x=>x.complete&&x.naturalWidth>0)&&s&&s.complete&&s.naturalWidth>0;}", timeout=60000)
@@ -30,6 +32,7 @@ def main(url):
               return {
                 imgCards:document.querySelectorAll('.r1t-card img.r1t-fig').length,
                 sheet:document.querySelectorAll('img.r1t-sheet').length,
+                sheetDet:document.querySelectorAll('.r1t-sheetdet').length,
                 cotLists:document.querySelectorAll('.r1t-cotlist').length,
                 cotRows:document.querySelectorAll('.r1t-cotlist div:not(.r1t-cotlabel)').length,
                 cotWarns:document.querySelectorAll('.r1t-cotwarn').length,
@@ -91,7 +94,7 @@ def main(url):
           and l['click']['videos'] == 1 and l['click']['postersLeft'] == 3 and l['click']['srcOk'] and l['click']['playing']
           and l['details_click']['open'] == 1 and l['details_click']['cot']
           and l['rows'] == 6 and l['rollRows'] == 12
-          and l['sheet'] == 1 and l['cotLists'] == 4 and l['cotRows'] == 12 and l['cotWarns'] == 2
+          and l['sheet'] == 1 and l['sheetDet'] == 1 and l['cotLists'] == 4 and l['cotRows'] == 12 and l['cotWarns'] == 2
           and len(l['assetCodes']) == 9 and all(v == 200 for v in l['assetCodes'].values())
           and l['captions'] == ['表 1', '表 2', '表 3'] and l['figcaps'] == exp_fig
           and l['seqBadges'] == 6 and l['seqTexts'] == '1,2,3,4,5,6' and l['tblSeq'] == 6 and l['tblHeader'] == '示例'
